@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import "./Faq.css";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const INITIAL_ACCORDION_DATA = [
   {

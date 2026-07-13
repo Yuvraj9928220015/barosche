@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 // ─────────────────────────────────────────────────────────
@@ -205,13 +205,15 @@ const pendantsContent = [
 
     { type: 'h', text: "Pendant Jewellery Trends 2026" },
     { type: 'p', text: "Modern pendant trends focus on simplicity, personalization, and versatility. Some of the most popular trends include:" },
-    { type: 'ul', items: [
-        "Minimal geometric pendants with clean shapes",
-        "Layered necklace styling with multiple pendants",
-        "Initial and name pendants for personalization",
-        "Nature-inspired designs like leaves and florals",
-        "Mixed-metal pendant styles for modern fashion appeal"
-    ]},
+    {
+        type: 'ul', items: [
+            "Minimal geometric pendants with clean shapes",
+            "Layered necklace styling with multiple pendants",
+            "Initial and name pendants for personalization",
+            "Nature-inspired designs like leaves and florals",
+            "Mixed-metal pendant styles for modern fashion appeal"
+        ]
+    },
     { type: 'p', text: "These trends reflect the shift toward jewellery that is both stylish and meaningful, suitable for everyday wear." },
 
     { type: 'h', text: "How to Care for Pendant Jewellery" },
@@ -677,7 +679,7 @@ function SkeletonCard() {
 // ─────────────────────────────────────────────────────────
 //  MAIN PENDANTS PAGE
 // ─────────────────────────────────────────────────────────
-export default function Pendant() {
+export default function Pendant({ initialProducts = [] }) {
     const router = useRouter();
 
     // ── Translation state ──
@@ -692,11 +694,9 @@ export default function Pendant() {
     // ── Currency ──
     const [currency, setCurrency] = useState(CURRENCY_MAP.default);
 
-    // ── WishlistContext (navbar badge auto-update) ──
     const { wishlistItems, addToWishlist, removeFromWishlist: removeFromWishlistCtx } = useWishlist();
     const wishlist = (wishlistItems || []).map(item => item._id || item);
 
-    // ── Filter / sort state ──
     const [catOpen, setCatOpen] = useState(true);
     const [priceOpen, setPriceOpen] = useState(true);
     const [activePrice, setActivePrice] = useState(null);
@@ -705,9 +705,8 @@ export default function Pendant() {
     const [sort, setSort] = useState("default");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // ── Product state ──
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [products, setProducts] = useState(initialProducts);
+    const [loading, setLoading] = useState(initialProducts.length === 0);
     const [error, setError] = useState(null);
 
     // ── Quick View ──
@@ -720,7 +719,8 @@ export default function Pendant() {
     const layoutRef = useRef(null);
     const sidebarRef = useRef(null);
 
-    // ── Toast helper ──
+    const skippedInitialFetch = useRef(false);
+
     const showToast = useCallback((message) => {
         if (toastTimer.current) clearTimeout(toastTimer.current);
         setToast({ visible: true, message });
@@ -783,6 +783,14 @@ export default function Pendant() {
 
     // ── Fetch products ──
     useEffect(() => {
+        if (!skippedInitialFetch.current) {
+            skippedInitialFetch.current = true;
+            if (initialProducts.length > 0 && activeCategory === "Pendants") {
+                setLoading(false);
+                return;
+            }
+        }
+
         const fetchProducts = async () => {
             try {
                 setLoading(true); setError(null);
@@ -801,7 +809,6 @@ export default function Pendant() {
         fetchProducts();
     }, [activeCategory]);
 
-    // ── Wishlist toggle (WishlistContext) ──
     const toggleWishlist = useCallback((id, productData) => {
         if (wishlist.includes(id)) {
             removeFromWishlistCtx(id);
@@ -810,7 +817,6 @@ export default function Pendant() {
         }
     }, [wishlist, addToWishlist, removeFromWishlistCtx]);
 
-    // ── Add to Cart (custom event — CartContext se connect hoga) ──
     const handleAddToCart = useCallback((product, qty = 1) => {
         const variant = getFirstVariant(product);
         const cartItem = {
@@ -1037,39 +1043,39 @@ export default function Pendant() {
             </div>
             <Reviews />
 
-             {/* Bottom Accordions */}
-                    <div className="jw-bottom-accordions">
-                        <AccordionItem title={ui.everydayJewellery}>
-                            <div className="jw-accordion-text">
-                                {translatedPendantsContent.map((item, i) => {
-                                    if (item.type === 'h') {
-                                        return <h3 key={i} className="jw-accordion-heading">{item.text}</h3>;
-                                    }
-                                    if (item.type === 'ul') {
-                                        return (
-                                            <ul key={i} className="jw-accordion-ul">
-                                                {item.items.map((it, j) => (
-                                                    <li key={j} dangerouslySetInnerHTML={{ __html: it }} />
-                                                ))}
-                                            </ul>
-                                        );
-                                    }
-                                    return <p key={i} dangerouslySetInnerHTML={{ __html: item.text }} />;
-                                })}
-                            </div>
-                        </AccordionItem>
-
-                        <AccordionItem title={ui.faq}>
-                            <div className="jw-faq-list">
-                                {translatedFaq.map((item, i) => (
-                                    <div key={i} className="jw-faq-item">
-                                        <p className="jw-faq-q">{i + 1}. {item.q}</p>
-                                        <p className="jw-faq-a">{item.a}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </AccordionItem>
+            {/* Bottom Accordions */}
+            <div className="jw-bottom-accordions">
+                <AccordionItem title={ui.everydayJewellery}>
+                    <div className="jw-accordion-text">
+                        {translatedPendantsContent.map((item, i) => {
+                            if (item.type === 'h') {
+                                return <h3 key={i} className="jw-accordion-heading">{item.text}</h3>;
+                            }
+                            if (item.type === 'ul') {
+                                return (
+                                    <ul key={i} className="jw-accordion-ul">
+                                        {item.items.map((it, j) => (
+                                            <li key={j} dangerouslySetInnerHTML={{ __html: it }} />
+                                        ))}
+                                    </ul>
+                                );
+                            }
+                            return <p key={i} dangerouslySetInnerHTML={{ __html: item.text }} />;
+                        })}
                     </div>
+                </AccordionItem>
+
+                <AccordionItem title={ui.faq}>
+                    <div className="jw-faq-list">
+                        {translatedFaq.map((item, i) => (
+                            <div key={i} className="jw-faq-item">
+                                <p className="jw-faq-q">{i + 1}. {item.q}</p>
+                                <p className="jw-faq-a">{item.a}</p>
+                            </div>
+                        ))}
+                    </div>
+                </AccordionItem>
+            </div>
         </div>
     );
 }

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import './chosenDetail.css';
 import Reviews from '../../../../components/Home/Reviews/Reviews';
 
-const API_BASE = "https://api.barosche.com";
+const API_BASE = "http://localhost:5000";
 
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];

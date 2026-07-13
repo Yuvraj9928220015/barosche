@@ -4,7 +4,7 @@ import Link from "next/link";
 import "./LatestBlog.css";
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const DEFAULT_UI = {
   heading: "The Barosché Edit",

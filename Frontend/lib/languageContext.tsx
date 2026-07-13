@@ -27,7 +27,7 @@ const LanguageContext = createContext<LanguageContextType>({
   t: (k) => k,
 });
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 const LS_CACHE_KEY = "translationCache_v1";
 const LS_LANG_KEY = "userLang";
 const LS_LANG_NAME_KEY = "userLangName";

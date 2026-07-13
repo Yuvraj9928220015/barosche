@@ -6,8 +6,8 @@ import './braceletsDetail.css';
 import Reviews from '../../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../../context/WishlistContext';
 
-const API_BASE = "https://api.barosche.com";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const API_BASE = "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 // ─── CURRENCY CONFIG ───
 const CURRENCY_MAP = {

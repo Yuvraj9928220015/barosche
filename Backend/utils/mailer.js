@@ -18,7 +18,7 @@ const smtpTransporter = nodemailer.createTransport({
     },
 });
 
-const API_URL = process.env.API_URL || 'https://api.barosche.com';
+const API_URL = process.env.API_URL || 'http://localhost:5000';
 const SITE_URL = process.env.SITE_URL || 'https://barosche.com';
 
 const formatPrice = (val) =>

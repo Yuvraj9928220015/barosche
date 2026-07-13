@@ -22,6 +22,7 @@ const variantSchema = new mongoose.Schema(
     },
     isSale: { type: Boolean, default: false },
     inStock: { type: Boolean, default: true },
+    quantity: { type: Number, default: 0, min: [0, "Quantity cannot be negative"] },
     sizes: { type: [String], default: [] },
   },
   { _id: true }

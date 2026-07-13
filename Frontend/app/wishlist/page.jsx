@@ -8,7 +8,7 @@ import { useCurrency } from "../context/CurrencyContext";
 import { useAuth } from "../context/AuthContext";
 import "./Wishlist.css";
 
-const API_BASE = "https://api.barosche.com";
+const API_BASE = "http://localhost:5000";
 
 function getImgSrc(path) {
     if (!path) return "/placeholder.jpg";

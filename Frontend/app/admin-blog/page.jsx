@@ -33,7 +33,7 @@ export default function AdminPage() {
   const [categoryFilter, setCategoryFilter] = useState("All");
 
   useEffect(() => {
-    fetch("https://api.barosche.com/api/blogs")
+    fetch("http://localhost:5000/api/blogs")
       .then((res) => res.json())
       .then((data) => {
         setBlogs(Array.isArray(data) ? data : []);
@@ -57,7 +57,7 @@ export default function AdminPage() {
   }, [title]);
 
   const fetchBlogs = () => {
-    fetch("https://api.barosche.com/api/blogs")
+    fetch("http://localhost:5000/api/blogs")
       .then((res) => res.json())
       .then((data) => setBlogs(Array.isArray(data) ? data : []))
       .catch((error) => console.error("Error fetching blogs:", error));
@@ -86,7 +86,7 @@ export default function AdminPage() {
     formData.append("script", script);
     formData.append("category", category);
     try {
-      const response = await fetch("https://api.barosche.com/api/blogs", {
+      const response = await fetch("http://localhost:5000/api/blogs", {
         method: "POST",
         body: formData,
       });
@@ -117,7 +117,7 @@ export default function AdminPage() {
   const handleDelete = async (slug) => {
     if (!confirm("Are you sure you want to delete this blog?")) return;
     try {
-      const res = await fetch(`https://api.barosche.com/api/blogs/${slug}`, {
+      const res = await fetch(`http://localhost:5000/api/blogs/${slug}`, {
         method: "DELETE",
       });
       const data = await res.json();

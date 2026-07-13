@@ -3,7 +3,7 @@
 import EarringDetailClient from './EarringDetailClient.jsx';
 import { generateCategoryStaticParams } from '../../staticParamsHelper.js';
 
-const API_BASE = "https://api.barosche.com";
+const API_BASE = "http://localhost:5000";
 
 // ── Fetch single product from backend ──
 async function getProduct(slug) {

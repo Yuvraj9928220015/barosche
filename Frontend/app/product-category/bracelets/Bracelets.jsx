@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 // ────────────────
@@ -864,7 +864,7 @@ function SkeletonCard() {
 // ─────────────────────────────────────────────────────────
 //  MAIN BRACELETS PAGE
 // ─────────────────────────────────────────────────────────
-export default function Bracelets() {
+export default function Bracelets({ initialProducts = [] }) {
     const router = useRouter();
 
     // ── Translation state ──
@@ -887,14 +887,13 @@ export default function Bracelets() {
     const [perPage, setPerPage] = useState(30);
     const [sort, setSort] = useState("default");
 
-    // ── Wishlist — WishlistContext se (navbar count auto update hoga) ──
     const { wishlistItems, addToWishlist, removeFromWishlist: removeFromWishlistCtx } = useWishlist();
     const wishlist = (wishlistItems || []).map(item => item._id || item);
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [products, setProducts] = useState(initialProducts);
+    const [loading, setLoading] = useState(initialProducts.length === 0);
     const [error, setError] = useState(null);
 
     // ── Quick View state ──
@@ -906,6 +905,8 @@ export default function Bracelets() {
 
     const layoutRef = useRef(null);
     const sidebarRef = useRef(null);
+
+    const skippedInitialFetch = useRef(false);
 
     // ── Show toast helper ──
     const showToast = useCallback((message) => {
@@ -970,6 +971,18 @@ export default function Bracelets() {
     };
 
     useEffect(() => {
+        // Pehli baar: agar SSR se already products mile hain (initialProducts),
+        // to unhe hi use karo — dobara fetch mat karo. Static HTML me links
+        // already bake ho chuke hain, Google ko wahi milega.
+        // Category badalne par (ya SSR data khaali hone par) hi client-fetch karo.
+        if (!skippedInitialFetch.current) {
+            skippedInitialFetch.current = true;
+            if (initialProducts.length > 0 && activeCategory === "Bracelets") {
+                setLoading(false);
+                return;
+            }
+        }
+
         const fetchProducts = async () => {
             try {
                 setLoading(true);

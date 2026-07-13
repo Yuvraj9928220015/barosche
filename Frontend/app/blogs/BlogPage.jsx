@@ -1,10 +1,10 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import "./blog.css";
 import Image from "next/image";
 import Link from "next/link";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -28,29 +28,38 @@ const DEFAULT_UI_TEXTS = {
   readMore: "Read More"
 };
 
-export default function BlogPage() {
-  const [blogs, setBlogs] = useState([]);
+export default function BlogPage({ initialBlogs = [] }) {
+  const [blogs, setBlogs] = useState(initialBlogs);
   const [uiTexts, setUiTexts] = useState(DEFAULT_UI_TEXTS);
-  const [translationStatus, setTranslationStatus] = useState("loading");
+  const [translationStatus, setTranslationStatus] = useState(
+    initialBlogs.length > 0 ? "done" : "loading"
+  );
+
+  const skippedInitialFetch = useRef(false);
 
   const fetchAndTranslateBlogs = useCallback(async () => {
     try {
       setTranslationStatus("loading");
 
       let fetchedBlogs = [];
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/blogs`);
-        if (!res.ok) throw new Error("Fetch failed");
-        const data = await res.json();
-        fetchedBlogs = Array.isArray(data) ? data : [];
-      } catch (err) {
-        console.error("Blog fetch error:", err);
-        fetchedBlogs = [];
+      if (!skippedInitialFetch.current && initialBlogs.length > 0) {
+        fetchedBlogs = initialBlogs;
+      } else {
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/blogs`);
+          if (!res.ok) throw new Error("Fetch failed");
+          const data = await res.json();
+          fetchedBlogs = Array.isArray(data) ? data : [];
+        } catch (err) {
+          console.error("Blog fetch error:", err);
+          fetchedBlogs = [];
+        }
+        fetchedBlogs = fetchedBlogs.filter(
+          (blog) => (blog.category || "Blog") === "Blog"
+        );
       }
 
-      fetchedBlogs = fetchedBlogs.filter(
-        (blog) => (blog.category || "Blog") === "Blog"
-      );
+      skippedInitialFetch.current = true;
 
       if (fetchedBlogs.length === 0) {
         setBlogs([]);
@@ -119,10 +128,9 @@ export default function BlogPage() {
 
     } catch (err) {
       console.error("Blog page error:", err);
-      setBlogs([]);
       setTranslationStatus("error");
     }
-  }, []);
+  }, [initialBlogs]);
 
   useEffect(() => {
     fetchAndTranslateBlogs();

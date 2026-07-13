@@ -4,7 +4,7 @@ import "./Guide.css";
 import Image from "next/image";
 import Link from "next/link";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";

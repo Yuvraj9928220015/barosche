@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 // ─────────────────────────────────────────────────────────
 //  CURRENCY CONFIG — same as Jewellery.js
@@ -56,9 +56,6 @@ function useTranslation(strings) {
 
                 const { languageCode } = detectData;
 
-                // DEBUG: backend kabhi "countryCode", kabhi "country", kabhi "country_code"
-                // bhejta hai — jab tak backend response 100% confirm nahi hota, sab possible
-                // keys check karo. Yeh console.log hata dena jab issue solve ho jaye.
                 console.log("[Rings] detect-language response:", detectData);
 
                 const cc =
@@ -69,8 +66,6 @@ function useTranslation(strings) {
                     detectData.geo?.country ??
                     null;
 
-                // FIX: normalize country code casing (backend can return lowercase,
-                // e.g. "us" instead of "US") so it matches CURRENCY_MAP keys.
                 if (!cancelled) {
                     if (cc) {
                         setCountryCode(String(cc).trim().toUpperCase());
@@ -112,7 +107,6 @@ function useTranslation(strings) {
         }
         run();
         return () => { cancelled = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key]);
 
     return { translated, status, countryCode };
@@ -150,14 +144,6 @@ const categorySlugMap = {
     "Womens": "womens",
 };
 
-// ─────────────────────────────────────────────────────────
-//  UI_STRINGS
-//  0-32   : fixed UI labels / categories / price ranges
-//  33-52  : FAQ Questions (20)
-//  53-72  : FAQ Answers (20)
-//  73-227 : Main content (headings / paragraphs / list items)
-//  228-233: Utilities (SALE, wishlist, quick view, add to cart, price na, "in")
-// ─────────────────────────────────────────────────────────
 const UI_STRINGS = [
     // 0-17
     "Filters", "Product Categories", "Price",
@@ -929,9 +915,6 @@ function ProductCard({ p, wishlist, toggleWishlist, T, currency, onQuickView, on
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  SKELETON CARD
-// ─────────────────────────────────────────────────────────
 function SkeletonCard() {
     return (
         <div className="jw-card jw-skeleton">
@@ -945,10 +928,7 @@ function SkeletonCard() {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  MAIN RINGS PAGE
-// ─────────────────────────────────────────────────────────
-export default function Rings() {
+export default function Rings({ initialProducts = [] }) {
     const router = useRouter();
 
     // ── Translation + country detection ──
@@ -988,8 +968,9 @@ export default function Rings() {
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    // ── SSR se initialProducts — pehli load par re-fetch skip karega (crawl fix) ──
+    const [products, setProducts] = useState(initialProducts);
+    const [loading, setLoading] = useState(initialProducts.length === 0);
     const [error, setError] = useState(null);
 
     // ── Quick View state ──
@@ -1001,6 +982,8 @@ export default function Rings() {
 
     const layoutRef = useRef(null);
     const sidebarRef = useRef(null);
+
+    const skippedInitialFetch = useRef(false);
 
     // ── Show toast helper ──
     const showToast = useCallback((message) => {
@@ -1020,6 +1003,14 @@ export default function Rings() {
     };
 
     useEffect(() => {
+        if (!skippedInitialFetch.current) {
+            skippedInitialFetch.current = true;
+            if (initialProducts.length > 0 && activeCategory === "Rings") {
+                setLoading(false);
+                return;
+            }
+        }
+
         const fetchProducts = async () => {
             try {
                 setLoading(true);

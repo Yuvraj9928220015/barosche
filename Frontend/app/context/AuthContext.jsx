@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 
 const AuthContext = createContext(null);
 
-const API_BASE = "https://api.barosche.com";
+const API_BASE = "http://localhost:5000";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

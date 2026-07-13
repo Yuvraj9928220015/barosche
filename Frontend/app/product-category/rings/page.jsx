@@ -1,4 +1,44 @@
 import Rings from './Rings';
+
+const API_BASE = "http://localhost:5000";
+const FETCH_TIMEOUT_MS = 15000;
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+ 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+ 
+async function fetchWithTimeout(url, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+async function getInitialProducts(category) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetchWithTimeout(
+        `${API_BASE}/api/products?category=${encodeURIComponent(category)}`,
+        FETCH_TIMEOUT_MS
+      );
+      if (!res.ok) throw new Error(`API responded with status ${res.status}`);
+      const data = await res.json();
+      if (data.success) return data.products || [];
+      throw new Error(data.message || "Failed to fetch products");
+    } catch (err) {
+      console.error(`[BraceletsPage] Attempt ${attempt}/${MAX_RETRIES} failed: ${err.message}`);
+      if (attempt < MAX_RETRIES) await sleep(RETRY_DELAY_MS * attempt);
+    }
+  }
+  console.error("[BraceletsPage] All retries failed — page will render with empty product list.");
+  return [];
+}
+
+
+
+
 export const metadata = {
   title: "Buy Daily Wear Rings for Men & Women Online",
   description:
@@ -23,6 +63,7 @@ export const metadata = {
   },
 };
 
-export default function Page() {
-  return <Rings />;
+export default async function Page() {
+  const initialProducts = await getInitialProducts("Rings");
+  return <Rings initialProducts={initialProducts} />;
 }

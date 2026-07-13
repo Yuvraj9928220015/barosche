@@ -5,7 +5,7 @@ import Link from "next/link";
 import "./Collection.css";
 import { useWishlist } from "../../../app/context/WishlistContext";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const DEFAULT_CONTENT = {
   mainTitle: "Modern Fine Jewellery. Minimal. Intentional. Yours.",

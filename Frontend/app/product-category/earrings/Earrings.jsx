@@ -7,7 +7,7 @@ import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useRouter } from 'next/navigation';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 const CURRENCY_MAP = {
@@ -358,7 +358,6 @@ const EarringContent = [
     { type: 'p', text: "Experimenting with different designs, shapes, and materials allows you to discover your personal style while staying aligned with modern fashion trends. The key is to choose <a href='/product-category/jewellery/' style='color: #007bff; text-decoration: underline;'>fine jewellery</a> pieces that reflect your personality and make you feel confident every time you wear them." },
 ];
 
-// ── FIXED: now also flattens/rebuilds 'ul' items correctly ──
 const flattenEarringContent = (content) => {
     const arr = [];
     content.forEach((item) => {
@@ -404,9 +403,6 @@ function getFirstVariant(product) {
     };
 }
 
-// ─────────────────────────────────────────────────────────
-//  TOAST
-// ─────────────────────────────────────────────────────────
 function Toast({ message, visible }) {
     if (!visible) return null;
     return (
@@ -419,9 +415,6 @@ function Toast({ message, visible }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  QUICK VIEW MODAL
-// ─────────────────────────────────────────────────────────
 function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist, onToggleWishlist }) {
     const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
@@ -441,7 +434,6 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
             <div style={{ background: '#fff', borderRadius: '8px', maxWidth: '860px', width: '100%', maxHeight: '90vh', overflow: 'auto', display: 'flex', flexDirection: 'row', position: 'relative', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
                 <button onClick={onClose} style={{ position: 'absolute', top: '12px', right: '16px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#555', zIndex: 1, lineHeight: 1 }} aria-label="Close">✕</button>
 
-                {/* Images */}
                 <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
                     <div style={{ background: '#f7f6f4', borderRadius: '6px', aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px' }}>
                         {images.length > 0
@@ -459,7 +451,6 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
                     )}
                 </div>
 
-                {/* Details */}
                 <div style={{ flex: '1 1 280px', padding: '32px 24px 24px 16px', minWidth: '240px' }}>
                     {variant.isSale && <span style={{ background: '#1a1a1a', color: '#fff', fontSize: '11px', letterSpacing: '1px', padding: '3px 8px', borderRadius: '2px', display: 'inline-block', marginBottom: '10px' }}>{ui.sale}</span>}
                     <p style={{ fontSize: '12px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>{product.category}</p>
@@ -500,9 +491,6 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  ACCORDION ITEM
-// ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children }) {
     const [open, setOpen] = useState(false);
     const bodyRef = useRef(null);
@@ -519,9 +507,6 @@ function AccordionItem({ title, children }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  PRODUCT CARD
-// ─────────────────────────────────────────────────────────
 function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, onAddToCart }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
@@ -553,7 +538,6 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
                     </div>
                 )}
                 <div className="jw-card-actions">
-                    {/* Wishlist */}
                     <button
                         className={`jw-action-btn ${wishlist.includes(p._id) ? 'jw-action-btn--active' : ''}`}
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(p._id, { _id: p._id, slug: p.slug, title: p.title, category: p.category, images: variant.images || [], oldPrice: variant.oldPrice, newPrice: variant.newPrice, isSale: variant.isSale }); }}
@@ -563,14 +547,12 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
                             <path d="M8 13.5C8 13.5 1 9 1 4.5C1 2.567 2.567 1 4.5 1C5.892 1 7.1 1.8 8 3C8.9 1.8 10.108 1 11.5 1C13.433 1 15 2.567 15 4.5C15 9 8 13.5 8 13.5Z" stroke="currentColor" strokeWidth="1.3" fill={wishlist.includes(p._id) ? 'currentColor' : 'none'} />
                         </svg>
                     </button>
-                    {/* Quick View */}
                     <button className="jw-action-btn" title={ui.quickView} aria-label={ui.quickView} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(p); }}>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.3" />
                             <path d="M1 8C2.5 4 5 2 8 2C11 2 13.5 4 15 8C13.5 12 11 14 8 14C5 14 2.5 12 1 8Z" stroke="currentColor" strokeWidth="1.3" />
                         </svg>
                     </button>
-                    {/* Add to Cart */}
                     <button className="jw-action-btn jw-add-cart" title={ui.addToCart} aria-label={ui.addToCart} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddToCart(p, 1); }}>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path d="M1 1H3L4.5 9H12.5L14 4H4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -610,7 +592,7 @@ function SkeletonCard() {
 // ─────────────────────────────────────────────────────────
 //  MAIN EARRINGS PAGE
 // ─────────────────────────────────────────────────────────
-export default function Earrings() {
+export default function Earrings({ initialProducts = [] }) {
     const router = useRouter();
 
     const [ui, setUi] = useState(DEFAULT_UI);
@@ -627,23 +609,24 @@ export default function Earrings() {
     const [perPage, setPerPage] = useState(30);
     const [sort, setSort] = useState("default");
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+
+    // ── SSR se initialProducts — pehli load par re-fetch skip karega (crawl fix) ──
+    const [products, setProducts] = useState(initialProducts);
+    const [loading, setLoading] = useState(initialProducts.length === 0);
     const [error, setError] = useState(null);
 
-    // ── Wishlist — WishlistContext ──
     const { wishlistItems, addToWishlist, removeFromWishlist: removeFromWishlistCtx } = useWishlist();
     const wishlist = (wishlistItems || []).map(item => item._id || item);
 
-    // ── Quick View ──
     const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-    // ── Toast ──
     const [toast, setToast] = useState({ visible: false, message: '' });
     const toastTimer = useRef(null);
 
     const layoutRef = useRef(null);
     const sidebarRef = useRef(null);
+
+    const skippedInitialFetch = useRef(false);
 
     const showToast = useCallback((message) => {
         if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -653,7 +636,6 @@ export default function Earrings() {
 
     useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
-    // ── Translation ──
     const translateContent = useCallback(async () => {
         try {
             setTranslationStatus("loading");
@@ -671,7 +653,6 @@ export default function Earrings() {
 
             const all = translateData.translations;
             const uiCount = flattenUI(DEFAULT_UI).length;
-            // FIXED: count must match flattened length (ul items expand into multiple strings)
             const contentCount = flattenEarringContent(EarringContent).length;
             const faqCount = faqData.length * 2;
 
@@ -694,6 +675,18 @@ export default function Earrings() {
     };
 
     useEffect(() => {
+        // Pehli baar: agar SSR se already products mile hain (initialProducts),
+        // to unhe hi use karo — dobara fetch mat karo. Static HTML me links
+        // already bake ho chuke hain, Google ko wahi milega.
+        // Category badalne par (ya SSR data khaali hone par) hi client-fetch karo.
+        if (!skippedInitialFetch.current) {
+            skippedInitialFetch.current = true;
+            if (initialProducts.length > 0 && activeCategory === "Earrings") {
+                setLoading(false);
+                return;
+            }
+        }
+
         const fetchProducts = async () => {
             try {
                 setLoading(true); setError(null);
@@ -707,12 +700,10 @@ export default function Earrings() {
         fetchProducts();
     }, [activeCategory]);
 
-    // ── Wishlist toggle ──
     const toggleWishlist = useCallback((id, productData) => {
         if (wishlist.includes(id)) { removeFromWishlistCtx(id); } else { addToWishlist(productData || { _id: id }); }
     }, [wishlist, addToWishlist, removeFromWishlistCtx]);
 
-    // ── Add to Cart ──
     const handleAddToCart = useCallback((product, qty = 1) => {
         const variant = getFirstVariant(product);
         window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { item: { _id: product._id, slug: product.slug, title: product.title, category: product.category, images: variant.images || [], oldPrice: variant.oldPrice, newPrice: variant.newPrice, isSale: variant.isSale, qty } } }));
@@ -733,7 +724,7 @@ export default function Earrings() {
 
     const filtered = sortedProducts.filter((p) => {
         if (!activePrice) return true;
-        const range = DEFAULT_PRICES.find((pr) => pr.label === activePrice);
+        const range = DEFAULT_PRICES?.find((pr) => pr.label === activePrice);
         if (!range) return true;
         const price = getFirstVariant(p).newPrice || 0;
         return price >= range.min && price <= range.max;

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./OurServices.css";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const DEFAULT_CONTENT = {
   mainHeader: "Custom Jewellery Design & Personalised Jewellery Services",

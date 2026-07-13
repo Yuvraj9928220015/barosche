@@ -6,8 +6,8 @@ import './earringDetail.css';
 import Reviews from '../../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../../context/WishlistContext';
 
-const API_BASE = "https://api.barosche.com";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const API_BASE = "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const ALL_METAL = '__ALL_METAL__';
 
@@ -290,14 +290,14 @@ function MetalTypeSelector({ metalTypes, selectedMetal, onSelect, T }) {
                     background: 'linear-gradient(135deg, #c9a96e 0%, #e8c97a 50%, #b8873a 100%)',
                     color: '#fff',
                     border: '1.5px solid #b8873a',
-                    boxShadow: '0 2px 8px rgba(201,169,110,0.45)',
+                    boxShadow: '0 2px 8px #c9a96e73',
                 };
             default:
                 return {
                     background: 'linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%)',
                     color: '#fff',
                     border: '1.5px solid #1a1a1a',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                    boxShadow: '0 2px 8px #00000040',
                 };
         }
     };

@@ -15,7 +15,7 @@ import { Country, State } from "country-state-city";
 import "./checkout.css";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const PENDING_ORDER_KEY = "barosche_pending_checkout";
 
 const CURRENCY_MAP = {

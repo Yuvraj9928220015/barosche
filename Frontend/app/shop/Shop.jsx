@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Reviews from '../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 // ─────────────────────────────────────────────────────────

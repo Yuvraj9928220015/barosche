@@ -28,8 +28,8 @@ const popularSearches = [
   "Women Pendants", "Men Pendants", "Earrings", "Rings", "Bracelets",
 ];
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const DEFAULT_STRINGS = {
   searchPlaceholder:      "Search",

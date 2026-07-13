@@ -1,7 +1,7 @@
 import BraceletsDetailClient from './braceletsDetailClient';
 import { generateCategoryStaticParams } from '../../staticParamsHelper.js';
 
-const API_BASE = "https://api.barosche.com";
+const API_BASE = "http://localhost:5000";
 
 async function getProduct(slug) {
     try {

@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import "./admin.css";
 
-const API_BASE = "https://api.barosche.com/api/products";
-const API_ORDERS = "https://api.barosche.com/api/orders";
+const API_BASE = "http://localhost:5000/api/products";
+const API_ORDERS = "http://localhost:5000/api/orders";
 
 // ── Hardcoded credentials ──
 const ADMIN_USERNAME = "barosche";
@@ -36,6 +36,10 @@ const GEMSTONE_OPTIONS = [
 
 const METAL_TYPE_OPTIONS = ["Gold", "Silver"];
 
+// A variant is out of stock if quantity is 0/negative, OR the manual inStock toggle was switched off.
+// This keeps old records (saved before quantity existed, where inStock defaulted to true) accurate too.
+const isVariantOutOfStock = (v) => (Number(v?.quantity) || 0) <= 0 || v?.inStock === false;
+
 const slugify = (val) =>
   val.toLowerCase().trim()
     .replace(/[^a-z0-9\s-]/g, "")
@@ -64,6 +68,7 @@ const emptyVariant = (idx = 0) => ({
   newPrice: "",
   isSale: false,
   inStock: true,
+  quantity: "0",
   sizes: [],
   existingImages: [],
   newImages: [],
@@ -84,9 +89,9 @@ const PAYMENT_STATUS_COLORS = {
   refunded: { bg: "#e0f2fe", color: "#075985", border: "#7dd3fc" },
 };
 
-// ════════════════════════════════════════════════════════
+// ═══════════════════
 //  ORDER DETAIL MODAL
-// ════════════════════════════════════════════════════════
+// ═══════════════════
 function OrderDetailModal({ order, onClose }) {
   const ci = order.customerInfo || {};
   const statusStyle = PAYMENT_STATUS_COLORS[order.paymentStatus] || PAYMENT_STATUS_COLORS.pending;
@@ -176,7 +181,7 @@ function OrderDetailModal({ order, onClose }) {
               }}>
                 {item.image && (
                   <img
-                    src={item.image.startsWith("http") ? item.image : `https://api.barosche.com${item.image}`}
+                    src={item.image.startsWith("http") ? item.image : `http://localhost:5000${item.image}`}
                     alt={item.name}
                     style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb", flexShrink: 0 }}
                   />
@@ -214,9 +219,9 @@ function OrderDetailModal({ order, onClose }) {
 }
 
 
-// ════════════════════════════════════════════════════════
+// ═══════════════
 //  ORDERS SECTION
-// ════════════════════════════════════════════════════════
+// ═══════════════
 function OrdersSection() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -570,7 +575,7 @@ function ProductForm({ initial, onClose, onSaved }) {
         _id: v._id, name: v.name, title: v.title || "", description: v.description || "",
         materials: v.materials || [], gemstones: v.gemstones || [], metalType: v.metalType || [],
         oldPrice: v.oldPrice ?? "", newPrice: v.newPrice ?? "", isSale: v.isSale || false,
-        inStock: v.inStock ?? true, sizes: v.sizes || [], existingImages: v.images || [], newImages: [],
+        inStock: v.inStock ?? true, quantity: v.quantity ?? 0, sizes: v.sizes || [], existingImages: v.images || [], newImages: [],
       }))
       : [emptyVariant(0)]
   );
@@ -614,6 +619,17 @@ function ProductForm({ initial, onClose, onSaved }) {
   const removeExistingImg = (varIdx, imgIdx) => setVariants((prev) => prev.map((v, i) => i === varIdx ? { ...v, existingImages: v.existingImages.filter((_, j) => j !== imgIdx) } : v));
   const removeNewImg = (varIdx, imgIdx) => setVariants((prev) => prev.map((v, i) => i === varIdx ? { ...v, newImages: v.newImages.filter((_, j) => j !== imgIdx) } : v));
 
+  // Auto-toggle inStock off when quantity hits 0, keeps admin from forgetting to flip it manually
+  const setVariantQuantity = (idx, rawValue) => {
+    const cleaned = rawValue.replace(/[^0-9]/g, "");
+    setVariants((prev) => prev.map((v, i) => {
+      if (i !== idx) return v;
+      const nextQty = cleaned;
+      const numeric = Number(cleaned || 0);
+      return { ...v, quantity: nextQty, inStock: numeric > 0 ? v.inStock : false };
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault(); setError("");
     if (categories.length === 0) { setError("Please select at least one category."); return; }
@@ -624,13 +640,14 @@ function ProductForm({ initial, onClose, onSaved }) {
       if (!v.name.trim()) { setError(`Variant ${i + 1} needs a name.`); return; }
       if (!v.oldPrice || !v.newPrice) { setError(`Variant "${v.name}" needs both prices.`); return; }
       if (v.existingImages.length + v.newImages.length === 0) { setError(`Variant "${v.name}" needs at least one image.`); return; }
+      if (v.quantity === "" || Number(v.quantity) < 0) { setError(`Variant "${v.name}" needs a valid quantity (0 or more).`); return; }
     }
     setLoading(true);
     const formData = new FormData();
     formData.append("title", title); formData.append("slug", slug); formData.append("description", description);
     formData.append("category", categories[0] || ""); formData.append("categories", JSON.stringify(categories));
     formData.append("materials", JSON.stringify(materials)); formData.append("gemstones", JSON.stringify(gemstones));
-    const variantsData = variants.map((v) => ({ _id: v._id, name: v.name, title: v.title, description: v.description, materials: v.materials, gemstones: v.gemstones, metalType: v.metalType, oldPrice: v.oldPrice, newPrice: v.newPrice, isSale: v.isSale, inStock: v.inStock, sizes: v.sizes, existingImages: v.existingImages }));
+    const variantsData = variants.map((v) => ({ _id: v._id, name: v.name, title: v.title, description: v.description, materials: v.materials, gemstones: v.gemstones, metalType: v.metalType, oldPrice: v.oldPrice, newPrice: v.newPrice, isSale: v.isSale, inStock: v.inStock, quantity: v.quantity, sizes: v.sizes, existingImages: v.existingImages }));
     formData.append("variantsData", JSON.stringify(variantsData));
     variants.forEach((v, i) => v.newImages.forEach((img) => formData.append(`variantImages_${i}`, img)));
     try {
@@ -723,6 +740,22 @@ function ProductForm({ initial, onClose, onSaved }) {
                   <TagSelector label="Metal Type" icon="🥇" presets={METAL_TYPE_OPTIONS} selected={av.metalType || []} onChange={(val) => setVariantField(activeIdx, "metalType", val)} placeholder="e.g. Gold, Silver…" />
                   <div className="form-group"><label className="form-label">Old Price (€) *</label><input className="form-input" type="number" value={av.oldPrice} onChange={(e) => setVariantField(activeIdx, "oldPrice", e.target.value)} required placeholder="0" min="0" /></div>
                   <div className="form-group"><label className="form-label">New Price (€) *</label><input className="form-input" type="number" value={av.newPrice} onChange={(e) => setVariantField(activeIdx, "newPrice", e.target.value)} required placeholder="0" min="0" /></div>
+                  <div className="form-group">
+                    <label className="form-label">Quantity in Stock *</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      value={av.quantity}
+                      onChange={(e) => setVariantQuantity(activeIdx, e.target.value)}
+                      required
+                      placeholder="0"
+                      min="0"
+                      step="1"
+                    />
+                    <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+                      Units available for this variant. Setting this to 0 auto-marks it Out of Stock.
+                    </p>
+                  </div>
                   <div className="form-group full">
                     <label className="form-label">Available Sizes{av.sizes?.length > 0 && <span style={{ color: "#8b5cf6", marginLeft: 8, fontWeight: 400 }}>({av.sizes.join(", ")})</span>}</label>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -741,7 +774,7 @@ function ProductForm({ initial, onClose, onSaved }) {
                     <label className="file-upload-label"><span>📁 Choose Images</span><input type="file" accept="image/*" multiple onChange={(e) => handleVariantImages(activeIdx, e)} style={{ display: "none" }} /></label>
                     {(av.existingImages?.length > 0 || av.newImages?.length > 0) && (
                       <div className="img-preview-grid">
-                        {(av.existingImages || []).map((src, i) => (<div key={`ex-${i}`} className="img-preview-item"><img src={`https://api.barosche.com${src}`} alt="" className="img-preview-thumb" /><button type="button" className="btn-remove-img" onClick={() => removeExistingImg(activeIdx, i)}>✕</button></div>))}
+                        {(av.existingImages || []).map((src, i) => (<div key={`ex-${i}`} className="img-preview-item"><img src={`http://localhost:5000${src}`} alt="" className="img-preview-thumb" /><button type="button" className="btn-remove-img" onClick={() => removeExistingImg(activeIdx, i)}>✕</button></div>))}
                         {(av.newImages || []).map((f, i) => (<div key={`nw-${i}`} className="img-preview-item"><img src={URL.createObjectURL(f)} alt="" className="img-preview-thumb" /><button type="button" className="btn-remove-img" onClick={() => removeNewImg(activeIdx, i)}>✕</button></div>))}
                       </div>
                     )}
@@ -789,6 +822,8 @@ function ProductDetail({ product, onClose, onEdit, onDelete }) {
   const displayMetalType = variant.metalType || [];
   const displayTitle = variant.title || product.title;
   const displayDesc = variant.description || product.description;
+  const qty = Number(variant.quantity ?? 0);
+  const outOfStockVariant = isVariantOutOfStock(variant);
 
   return (
     <div className="modal-overlay">
@@ -801,13 +836,13 @@ function ProductDetail({ product, onClose, onEdit, onDelete }) {
           <div className="detail-grid">
             <div className="main-img-wrap-container">
               <div className="main-img-wrap">
-                {variant.images?.length > 0 && <img src={`https://api.barosche.com${variant.images[imgIdx]}`} alt={displayTitle} className="main-img" />}
+                {variant.images?.length > 0 && <img src={`http://localhost:5000${variant.images[imgIdx]}`} alt={displayTitle} className="main-img" />}
                 {variant.isSale && <span className="detail-badge-sale">SALE</span>}
-                {!variant.inStock && <span className="detail-badge-out">OUT OF STOCK</span>}
+                {outOfStockVariant && <span className="detail-badge-out">OUT OF STOCK</span>}
               </div>
               {variant.images?.length > 1 && (
                 <div className="thumb-row">
-                  {variant.images.map((img, i) => (<img key={i} src={`https://api.barosche.com${img}`} alt="" className={`thumb-img ${imgIdx === i ? "active" : ""}`} onClick={() => setImgIdx(i)} />))}
+                  {variant.images.map((img, i) => (<img key={i} src={`http://localhost:5000${img}`} alt="" className={`thumb-img ${imgIdx === i ? "active" : ""}`} onClick={() => setImgIdx(i)} />))}
                 </div>
               )}
             </div>
@@ -841,7 +876,8 @@ function ProductDetail({ product, onClose, onEdit, onDelete }) {
                 <div className="meta-item"><span className="meta-label">Variants</span><span className="meta-value">{product.variants?.length || 1}</span></div>
                 <div className="meta-item"><span className="meta-label">Images</span><span className="meta-value">{variant.images?.length || 0} photos</span></div>
                 <div className="meta-item"><span className="meta-label">Created</span><span className="meta-value">{new Date(product.createdAt).toLocaleDateString("en-IN")}</span></div>
-                <div className="meta-item"><span className="meta-label">Stock</span><span className={`meta-value ${variant.inStock ? "in-stock" : "out-stock"}`}>{variant.inStock ? "✓ Available" : "✗ Out of Stock"}</span></div>
+                <div className="meta-item"><span className="meta-label">Stock</span><span className={`meta-value ${!outOfStockVariant ? "in-stock" : "out-stock"}`}>{!outOfStockVariant ? "✓ Available" : "✗ Out of Stock"}</span></div>
+                <div className="meta-item"><span className="meta-label">Quantity</span><span className={`meta-value ${qty === 0 ? "out-stock" : qty <= 3 ? "" : "in-stock"}`} style={qty > 0 && qty <= 3 ? { color: "#b45309" } : undefined}>{qty} unit{qty !== 1 ? "s" : ""}{qty > 0 && qty <= 3 ? " (low)" : ""}</span></div>
                 <div className="meta-item"><span className="meta-label">Materials</span><span className="meta-value">{displayMaterials.length}</span></div>
                 <div className="meta-item"><span className="meta-label">Gemstones</span><span className="meta-value">{displayGemstones.length}</span></div>
                 <div className="meta-item"><span className="meta-label">Categories</span><span className="meta-value">{displayCategories.length}</span></div>
@@ -894,13 +930,20 @@ function ProductCard({ product, onClick, onEdit, onDelete }) {
   const cardMaterials = firstVariant.materials?.length ? firstVariant.materials : (product.materials || []);
   const cardGemstones = firstVariant.gemstones?.length ? firstVariant.gemstones : (product.gemstones || []);
   const cardMetalType = firstVariant.metalType || [];
+  const cardQty = Number(firstVariant.quantity ?? 0);
+  const cardOutOfStock = isVariantOutOfStock(firstVariant);
 
   return (
     <div className="product-card" onClick={onClick}>
       <div className="card-img-wrap">
-        {firstVariant.images?.[0] ? <img src={`https://api.barosche.com${firstVariant.images[0]}`} alt={product.title} className="card-img" /> : <div className="card-img-placeholder">📷</div>}
+        {firstVariant.images?.[0] ? <img src={`http://localhost:5000${firstVariant.images[0]}`} alt={product.title} className="card-img" /> : <div className="card-img-placeholder">📷</div>}
         {firstVariant.isSale && <span className="badge-sale">SALE</span>}
-        {!firstVariant.inStock && <span className="badge-out">OUT OF STOCK</span>}
+        {cardOutOfStock && <span className="badge-out">OUT OF STOCK</span>}
+        {!cardOutOfStock && cardQty > 0 && cardQty <= 3 && (
+          <span className="badge-out" style={{ background: "#fffbeb", color: "#b45309", border: "1px solid #fde68a" }}>
+            LOW STOCK · {cardQty}
+          </span>
+        )}
         {variantCount > 1 && <span className="badge-img-count">{variantCount} variants</span>}
       </div>
       <div className="card-body">
@@ -919,6 +962,7 @@ function ProductCard({ product, onClick, onEdit, onDelete }) {
           <span className="card-new-price">{fmtPrice(firstVariant.newPrice)}</span>
           <span className="card-old-price">{fmtPrice(firstVariant.oldPrice)}</span>
         </div>
+        <p style={{ fontSize: 12, color: "#9ca3af", margin: "4px 0 0" }}>Qty: {cardQty}</p>
       </div>
       <div className="card-actions" onClick={(e) => e.stopPropagation()}>
         <button className="btn-card-edit" title="Edit" onClick={(e) => { e.stopPropagation(); onEdit(); }}>✏️ Edit</button>
@@ -946,6 +990,7 @@ function ProductsSection({ onAddProduct, showAddForm, setShowAddForm, editProduc
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [quickFilter, setQuickFilter] = useState("");
 
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
 
@@ -982,8 +1027,7 @@ function ProductsSection({ onAddProduct, showAddForm, setShowAddForm, editProduc
 
   const filtered = products.filter((p) => {
     const q = search.toLowerCase();
-    if (!q) return true;
-    return (
+    const matchSearch = !q || (
       p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q) ||
       (p.categories || [p.category]).some((c) => c?.toLowerCase().includes(q)) ||
       (p.materials || []).some((m) => m.toLowerCase().includes(q)) ||
@@ -995,6 +1039,10 @@ function ProductsSection({ onAddProduct, showAddForm, setShowAddForm, editProduc
         (v.metalType || []).some((mt) => mt.toLowerCase().includes(q))
       )
     );
+    if (!matchSearch) return false;
+    if (quickFilter === "outOfStock") return p.variants?.every((v) => isVariantOutOfStock(v));
+    if (quickFilter === "sale") return p.variants?.some((v) => v.isSale);
+    return true;
   });
 
   const allMaterials = [...new Set(products.flatMap((p) => [...(p.materials || []), ...(p.variants || []).flatMap((v) => v.materials || [])]))].sort();
@@ -1002,7 +1050,8 @@ function ProductsSection({ onAddProduct, showAddForm, setShowAddForm, editProduc
   const allMetalTypes = [...new Set(products.flatMap((p) => (p.variants || []).flatMap((v) => v.metalType || [])))].sort();
   const totalValue = products.reduce((s, p) => s + (p.variants?.[0]?.newPrice || 0), 0);
   const saleCount = products.filter((p) => p.variants?.some((v) => v.isSale)).length;
-  const outOfStock = products.filter((p) => p.variants?.every((v) => !v.inStock)).length;
+  const outOfStock = products.filter((p) => p.variants?.every((v) => isVariantOutOfStock(v))).length;
+  const totalUnits = products.reduce((s, p) => s + (p.variants || []).reduce((vs, v) => vs + (Number(v.quantity) || 0), 0), 0);
 
   return (
     <div>
@@ -1011,13 +1060,51 @@ function ProductsSection({ onAddProduct, showAddForm, setShowAddForm, editProduc
       <div className="stats-row">
         {[
           { label: "Total Products", value: products.length, icon: "📦" },
-          { label: "On Sale", value: saleCount, icon: "🏷" },
-          { label: "Out of Stock", value: outOfStock, icon: "⚠️" },
+          { label: "On Sale", value: saleCount, icon: "🏷", filterKey: "sale" },
+          { label: "Out of Stock", value: outOfStock, icon: "⚠️", filterKey: "outOfStock" },
+          { label: "Total Units", value: totalUnits, icon: "🔢" },
           { label: "Catalogue Value", value: fmtPrice(totalValue), icon: "💰" },
-        ].map(({ label, value, icon }) => (
-          <div key={label} className="stat-card"><span className="stat-icon">{icon}</span><div><p className="stat-value">{value}</p><p className="stat-label">{label}</p></div></div>
-        ))}
+        ].map(({ label, value, icon, filterKey }) => {
+          const clickable = !!filterKey;
+          const active = clickable && quickFilter === filterKey;
+          return (
+            <div
+              key={label}
+              className="stat-card"
+              onClick={clickable ? () => setQuickFilter(active ? "" : filterKey) : undefined}
+              style={{
+                cursor: clickable ? "pointer" : "default",
+                border: active ? "1.5px solid #8b5cf6" : undefined,
+                background: active ? "#f5f3ff" : undefined,
+                transition: "all 0.15s",
+              }}
+              title={clickable ? (active ? "Click to clear filter" : `Click to show only ${label.toLowerCase()}`) : undefined}
+            >
+              <span className="stat-icon">{icon}</span>
+              <div>
+                <p className="stat-value">{value}</p>
+                <p className="stat-label">{label}{active ? " ✓" : ""}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {quickFilter && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10, margin: "12px 0 4px",
+          padding: "8px 14px", borderRadius: 10, background: "#f5f3ff", border: "1.5px solid #ddd6fe",
+          fontSize: 13, color: "#6d28d9", fontWeight: 600, width: "fit-content",
+        }}>
+          Showing only: {quickFilter === "outOfStock" ? "⚠️ Out of Stock" : "🏷 On Sale"} products
+          <button
+            onClick={() => setQuickFilter("")}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#8b5cf6", fontWeight: 700, fontSize: 13 }}
+          >
+            ✕ Clear
+          </button>
+        </div>
+      )}
 
       <div className="filters-bar">
         <input className="filter-input search" type="text" placeholder="🔍 Search by title, material, gemstone…" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -1159,12 +1246,21 @@ function AdminDashboard({ onLogout }) {
    ROOT — Auth Gate
 ═══════════════════════════════════════════════════════ */
 export default function AdminRoot() {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    if (typeof window !== "undefined") {
-      return sessionStorage.getItem(AUTH_KEY) === "true";
-    }
-    return false;
-  });
+  const [mounted, setMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(sessionStorage.getItem(AUTH_KEY) === "true");
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize: 13, color: "#9ca3af" }}>Loading…</span>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return <LoginForm onLogin={() => setIsLoggedIn(true)} />;

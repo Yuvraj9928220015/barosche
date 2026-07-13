@@ -10,7 +10,7 @@ import "swiper/css/navigation";
 
 import "./Reviews.css";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const CURRENCY_MAP = {
   US: { code: "USD", symbol: "$", rate: 1.14 },

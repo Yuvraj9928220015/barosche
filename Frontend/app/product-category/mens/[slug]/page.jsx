@@ -3,7 +3,7 @@
 import MensDetailClient from './MensDetailClient.jsx';
 import { generateCategoryStaticParams } from '../../staticParamsHelper.js';
 
-const API_BASE = "https://api.barosche.com";
+const API_BASE = "http://localhost:5000";
 
 async function getProduct(slug) {
     try {

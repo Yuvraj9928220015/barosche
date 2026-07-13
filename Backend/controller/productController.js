@@ -48,6 +48,7 @@ const buildVariants = (variantsData, filesByVariant, existingVariants = []) =>
     newPrice: Number(v.newPrice),
     isSale: v.isSale === true || v.isSale === "true",
     inStock: v.inStock === true || v.inStock === "true",
+    quantity: Number.isFinite(Number(v.quantity)) ? Math.max(0, Number(v.quantity)) : 0,
     sizes: Array.isArray(v.sizes) ? v.sizes : [],
     images: [...(v.existingImages || []), ...(filesByVariant[i] || [])],
   }));
@@ -99,6 +100,10 @@ const addProduct = async (req, res) => {
       if (!variants[i].images.length) {
         cleanupFiles(req.files);
         return res.status(400).json({ success: false, message: `Variant "${variants[i].name}" needs at least one image.` });
+      }
+      if (variants[i].quantity < 0) {
+        cleanupFiles(req.files);
+        return res.status(400).json({ success: false, message: `Variant "${variants[i].name}" has an invalid quantity.` });
       }
     }
 
@@ -174,6 +179,10 @@ const updateProduct = async (req, res) => {
       if (!variants[i].images.length) {
         cleanupFiles(req.files);
         return res.status(400).json({ success: false, message: `Variant "${variants[i].name}" needs at least one image.` });
+      }
+      if (variants[i].quantity < 0) {
+        cleanupFiles(req.files);
+        return res.status(400).json({ success: false, message: `Variant "${variants[i].name}" has an invalid quantity.` });
       }
     }
 

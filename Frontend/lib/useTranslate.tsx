@@ -20,7 +20,7 @@ const LanguageContext = createContext<LanguageContextType>({
   setLanguage: () => {}, t: (k) => k,
 });
 
-const BACKEND_URL = "https://api.barosche.com";
+const BACKEND_URL = "http://localhost:5000";
 
 // { nav: { home: "Home" } } → { "nav.home": "Home" }
 function flatten(obj: Record<string, any>, prefix = ""): Record<string, string> {
