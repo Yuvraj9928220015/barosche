@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 // ─────────────────────────────────────────────────────────
@@ -350,9 +350,9 @@ const rebuildFaq = (translatedArr) => {
 
 const TOP_OFFSET = 40;
 
-// ─────────────────────────────────────────────────────────
+// ───────
 //  HELPER
-// ─────────────────────────────────────────────────────────
+// ───────
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];
     return {
@@ -364,9 +364,9 @@ function getFirstVariant(product) {
     };
 }
 
-// ─────────────────────────────────────────────────────────
+// ───────
 //  TOAST
-// ─────────────────────────────────────────────────────────
+// ───────
 function Toast({ message, visible }) {
     if (!visible) return null;
     return (
@@ -377,7 +377,7 @@ function Toast({ message, visible }) {
             padding: '12px 24px', borderRadius: '4px',
             fontSize: '14px', zIndex: 9999,
             pointerEvents: 'none', whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            boxShadow: '0 4px 12px #00000033',
             opacity: visible ? 1 : 0,
             transition: 'opacity 0.3s ease',
         }}>

@@ -2,7 +2,7 @@
 
 import NewInDetailClient from './newInDetailClient.jsx';
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
 
 // ── REQUIRED for output: export ──
 export const dynamicParams = false;

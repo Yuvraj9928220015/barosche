@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 
 const AuthContext = createContext(null);
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -64,13 +64,22 @@ export const AuthProvider = ({ children }) => {
     return data;
   }, []);
 
+  const setSession = useCallback((token, userData) => {
+    if (!token || !userData) {
+      console.error("setSession called with missing token/user:", token, userData);
+      return;
+    }
+    localStorage.setItem("jewellery_token", token);
+    setUser(userData);
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem("jewellery_token");
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, setSession }}>
       {children}
     </AuthContext.Provider>
   );

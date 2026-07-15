@@ -15,7 +15,7 @@ import { Country, State } from "country-state-city";
 import "./checkout.css";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 const PENDING_ORDER_KEY = "barosche_pending_checkout";
 
 const CURRENCY_MAP = {
@@ -66,9 +66,6 @@ const getImgSrc = (path) => {
     return path.startsWith("http") ? path : `${API_URL}${path}`;
 };
 
-// ─── Builds the URL to the product page for a cart/success item ───
-// Matches the exact route pattern used in Navbar.jsx's getProductHref:
-// /product-category/{category-slug}/{product-slug}
 const getProductUrl = (item) => {
     const category = item.category || item.categorySlug || item.categoryName || "";
     const productSlug = item.slug || item.urlHandle || item.handle || "";
@@ -369,7 +366,6 @@ const GoogleApplePayButton = ({ subtotal, cartItems, customerInfo, onSuccess, on
     );
 };
 
-// ─── PayPal Button ───
 const PayPalButton = ({ subtotal, cartItems, customerInfo, onSuccess, onError }) => {
     const reactId = useId();
     const containerId = "paypal-container-" + reactId.replace(/:/g, "");
@@ -417,12 +413,49 @@ const PayPalButton = ({ subtotal, cartItems, customerInfo, onSuccess, onError })
                             amount: { currency_code: "EUR", value: subtotal.toFixed(2) },
                             description: "Barosche Order",
                         }],
-                        application_context: { shipping_preference: "NO_SHIPPING" },
+                        application_context: { shipping_preference: "GET_FROM_FILE" },
                     }),
                 onApprove: async (data, actions) => {
                     setIsProcessing(true);
                     try {
                         const details = await actions.order.capture();
+
+                        // ── NEW: PayPal se mile payer + shipping details nikaalo ──
+                        const payer = details.payer || {};
+                        const shippingAddress = details.purchase_units?.[0]?.shipping?.address || {};
+                        const shippingName = details.purchase_units?.[0]?.shipping?.name?.full_name || "";
+                        const [shipFirst, ...shipRest] = shippingName ? shippingName.split(" ") : [];
+
+                        const paypalDerivedInfo = {
+                            firstName: payer.name?.given_name || shipFirst || "Customer",
+                            lastName: payer.name?.surname || shipRest.join(" ") || "",
+                            email: payer.email_address || "",
+                            phone: payer.phone?.phone_number?.national_number || "",
+                            country: shippingAddress.country_code || "DE",
+                            streetAddress1: shippingAddress.address_line_1 || "",
+                            streetAddress2: shippingAddress.address_line_2 || "",
+                            city: shippingAddress.admin_area_2 || "",
+                            state: shippingAddress.admin_area_1 || "",
+                            zip: shippingAddress.postal_code || "",
+                        };
+
+                        const hasValue = (v) => typeof v === "string" && v.trim() !== "";
+                        const mergedCustomerInfo = { ...paypalDerivedInfo };
+                        Object.entries(customerInfo || {}).forEach(([key, value]) => {
+                            if (hasValue(value)) mergedCustomerInfo[key] = value;
+                        });
+
+                        if (!hasValue(mergedCustomerInfo.phone)) mergedCustomerInfo.phone = "Not provided";
+                        if (!hasValue(mergedCustomerInfo.streetAddress1)) mergedCustomerInfo.streetAddress1 = "Not provided";
+                        if (!hasValue(mergedCustomerInfo.city)) mergedCustomerInfo.city = "Not provided";
+                        if (!hasValue(mergedCustomerInfo.zip)) mergedCustomerInfo.zip = "Not provided";
+
+                        if (!hasValue(mergedCustomerInfo.email)) {
+                            onError?.("PayPal account me email nahi mila. Kripya pehle apna email daalein.");
+                            setIsProcessing(false);
+                            return;
+                        }
+
                         const res = await fetch(`${API_URL}/api/payment/paypal-capture`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -432,7 +465,7 @@ const PayPalButton = ({ subtotal, cartItems, customerInfo, onSuccess, onError })
                                 amount: Math.round(subtotal * 100),
                                 browserId: getBrowserId(),
                                 userId: getLoggedInUserId(),
-                                customerInfo: customerInfo || {},
+                                customerInfo: mergedCustomerInfo,
                                 items: mapCartItems(cartItems),
                             }),
                         });
@@ -903,12 +936,9 @@ const CheckoutInner = () => {
         return sum + price * (item.qty ?? item.quantity ?? 1);
     }, 0);
 
-    // NEW: shipping cost derived from selected method + subtotal, and grand total.
     const shippingCost = getShippingCost(shippingMethod, subtotal);
     const orderTotal = subtotal + shippingCost;
 
-    // NEW: customerInfo payload merged with shipping selection, so the backend
-    // can store which method was chosen and what it cost.
     const customerInfoWithShipping = { ...formData, shippingMethod, shippingCost };
 
     const handleChange = (e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -985,7 +1015,6 @@ const CheckoutInner = () => {
                         const variantLabel = getVariantLabel(item);
                         const productUrl = getProductUrl(item);
 
-                        // The actual clickable content of one product row.
                         const rowContent = (
                             <>
                                 <div className="product-thumb-container">
@@ -1005,8 +1034,6 @@ const CheckoutInner = () => {
                             </>
                         );
 
-                        // NEW: if we can build a product URL, wrap the row in a Link
-                        // so clicking the product navigates to its page.
                         return productUrl ? (
                             <Link
                                 href={productUrl}
@@ -1071,7 +1098,6 @@ const CheckoutInner = () => {
         );
     }
 
-    // ── Success / Thank You Screen ──
     if (step === "success" && successData) {
         const itemCount = successItems.reduce((sum, it) => sum + (it.qty ?? it.quantity ?? 1), 0);
         const paidAmount = successData.amount
@@ -1129,7 +1155,6 @@ const CheckoutInner = () => {
                                     </>
                                 );
 
-                                // NEW: same click-to-navigate behavior on the success page.
                                 return productUrl ? (
                                     <Link
                                         href={productUrl}
@@ -1319,11 +1344,6 @@ const CheckoutInner = () => {
                                     </div>
                                 </div>
 
-                                {/* NEW: Shipping method selection — deliberately NOT using the
-                                    "form-group" class here. That class is built for the floating-label
-                                    text inputs (fixed height + overflow:hidden + absolutely positioned
-                                    label), which clipped/misplaced this multi-line block. Using a plain
-                                    div with explicit full-width sizing instead. */}
                                 <div
                                     style={{
                                         gridColumn: "1 / -1",

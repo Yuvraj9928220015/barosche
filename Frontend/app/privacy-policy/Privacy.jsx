@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./Privacy.css";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 const DEFAULT_CONTENT = {
     title: "Privacy Policy & Data Protection",

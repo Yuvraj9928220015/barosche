@@ -5,7 +5,7 @@ import "./Footer.css";
 import { FaApple } from "react-icons/fa";
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 const DEFAULT_CONTENT = {
   subscribeTitle: "Subscribe to BAROSCHE",

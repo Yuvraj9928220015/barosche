@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import './ShopDetail.css';
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
 
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];

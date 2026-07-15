@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { notFound } from "next/navigation";
 import GuideClient from "./GuideClient";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 function getSlugFromURL() {
   if (typeof window === "undefined") return null;

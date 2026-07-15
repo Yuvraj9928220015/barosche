@@ -280,10 +280,89 @@ const logoutUser = (req, res) => {
   res.status(200).json({ success: true, message: "Logged out successfully" });
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone } = req.body;
+
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "First name, last name and email are required.",
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    if (normalizedEmail !== user.email) {
+      const existing = await User.findOne({ email: normalizedEmail });
+      if (existing) {
+        return res.status(400).json({ success: false, message: "This email is already in use." });
+      }
+      user.email = normalizedEmail;
+    }
+
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.phone = phone || user.phone;
+
+    await user.save();
+
+    const updatedUser = await User.findById(user._id).select(
+      "-password -authOTP -resetPasswordOTP"
+    );
+
+    return res.status(200).json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    return res.status(500).json({ success: false, message: "Server error. Please try again." });
+  }
+};
+
+// ────────────────────────────────────────────────────────────
+// UPDATE ADDRESS
+// ────────────────────────────────────────────────────────────
+const updateAddress = async (req, res) => {
+  try {
+    const { line1, line2, city, state, postalCode, country, phone } = req.body;
+
+    if (!line1 || !city || !postalCode || !country) {
+      return res.status(400).json({
+        success: false,
+        message: "Address line, city, postal code and country are required.",
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    user.address = { line1, line2, city, state, postalCode, country, phone };
+
+    await user.save();
+
+    const updatedUser = await User.findById(user._id).select(
+      "-password -authOTP -resetPasswordOTP"
+    );
+
+    return res.status(200).json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error("Update Address Error:", error);
+    return res.status(500).json({ success: false, message: "Server error. Please try again." });
+  }
+};
+
 module.exports = {
   requestOTP,
   verifyLoginOTP,
   resendAuthOTP,
   getMe,
   logoutUser,
+  updateProfile,
+  updateAddress,
 };

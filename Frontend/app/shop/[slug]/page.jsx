@@ -2,7 +2,7 @@
 
 import ShopDetailClient from './ShopDetailClient.jsx';
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
 
 async function getProduct(slug) {
     try {

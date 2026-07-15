@@ -4,7 +4,7 @@ import "./blog.css";
 import Image from "next/image";
 import Link from "next/link";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -20,6 +20,16 @@ function resolveImage(img) {
   return img.startsWith("http") ? img : `${BACKEND_URL}${img}`;
 }
 
+// category ko normalize karke compare karo — case/whitespace mismatch se bachne ke liye
+function normalizeCategory(cat) {
+  return (cat || "Blog").toString().trim().toLowerCase();
+}
+
+function filterByCategory(list, targetCategory) {
+  const target = targetCategory.toLowerCase();
+  return list.filter((blog) => normalizeCategory(blog.category) === target);
+}
+
 const DEFAULT_UI_TEXTS = {
   mainHeader: "Jewellery Tips, Trends & Guides for Everyday Elegance",
   loadingText: "Loading blogs...",
@@ -29,7 +39,7 @@ const DEFAULT_UI_TEXTS = {
 };
 
 export default function BlogPage({ initialBlogs = [] }) {
-  const [blogs, setBlogs] = useState(initialBlogs);
+  const [blogs, setBlogs] = useState(() => filterByCategory(initialBlogs, "Blog"));
   const [uiTexts, setUiTexts] = useState(DEFAULT_UI_TEXTS);
   const [translationStatus, setTranslationStatus] = useState(
     initialBlogs.length > 0 ? "done" : "loading"
@@ -42,11 +52,12 @@ export default function BlogPage({ initialBlogs = [] }) {
       setTranslationStatus("loading");
 
       let fetchedBlogs = [];
+
       if (!skippedInitialFetch.current && initialBlogs.length > 0) {
         fetchedBlogs = initialBlogs;
       } else {
         try {
-          const res = await fetch(`${BACKEND_URL}/api/blogs`);
+          const res = await fetch(`${BACKEND_URL}/api/blogs`, { cache: "no-store" });
           if (!res.ok) throw new Error("Fetch failed");
           const data = await res.json();
           fetchedBlogs = Array.isArray(data) ? data : [];
@@ -54,10 +65,9 @@ export default function BlogPage({ initialBlogs = [] }) {
           console.error("Blog fetch error:", err);
           fetchedBlogs = [];
         }
-        fetchedBlogs = fetchedBlogs.filter(
-          (blog) => (blog.category || "Blog") === "Blog"
-        );
       }
+
+      fetchedBlogs = filterByCategory(fetchedBlogs, "Blog");
 
       skippedInitialFetch.current = true;
 

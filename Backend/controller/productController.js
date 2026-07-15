@@ -34,7 +34,6 @@ const parseJsonArray = (raw, fallback = []) => {
   }
 };
 
-/* ─── Build variant objects (shared by add & update) ─── */
 const buildVariants = (variantsData, filesByVariant, existingVariants = []) =>
   variantsData.map((v, i) => ({
     ...(v._id ? { _id: v._id } : {}),

@@ -1,54 +1,71 @@
-// app/blogs/[slug]/page.js
-import BlogSlugClient from "./BlogSlugClient";
-
-const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
+import BlogClient from "./BlogClient";
+import { notFound } from "next/navigation";
+import { fetchAllBlogsOnce, getBlog, API_URL } from "@/lib/getBlogs";
 
 export async function generateStaticParams() {
-  try {
-    console.log("🔍 [blogs] API_URL:", API_URL);
+  const blogs = await fetchAllBlogsOnce();
 
-    if (!API_URL) {
-      console.log("⚠️ [blogs] API_URL missing, sirf placeholder return ho raha hai");
-      return [{ slug: "placeholder" }];
-    }
-
-    const res = await fetch(`${API_URL}/api/blogs`, { cache: "no-store" });
-    console.log("🔍 [blogs] API response status:", res.status);
-
-    if (!res.ok) {
-      return [{ slug: "placeholder" }];
-    }
-
-    const blogs = await res.json();
-    console.log("🔍 [blogs] Total blogs mile:", Array.isArray(blogs) ? blogs.length : "not an array");
-
-    if (!Array.isArray(blogs) || blogs.length === 0) {
-      return [{ slug: "placeholder" }];
-    }
-
-    blogs.forEach((blog) => {
-      const s = blog.urlHandle || blog.slug;
-      if (!s || typeof s !== "string" || s.trim().length === 0) {
-        console.log("❌ [blogs] Slug missing is blog mein — id:", blog._id, "| title:", blog.title);
-      }
-    });
-
-    const validSlugs = blogs
-      .map((blog) => blog.urlHandle || blog.slug)
-      .filter((slug) => typeof slug === "string" && slug.trim().length > 0)
-      .map((slug) => ({ slug: slug.trim() }));
-
-    const uniqueSlugs = Array.from(
-      new Map(validSlugs.map((item) => [item.slug, item])).values()
-    );
-
-    return [{ slug: "placeholder" }, ...uniqueSlugs];
-  } catch (error) {
-    console.error("[blogs] generateStaticParams error:", error);
+  if (blogs.length === 0) {
     return [{ slug: "placeholder" }];
   }
+
+  blogs.forEach((blog) => {
+    const s = blog.urlHandle || blog.slug;
+    if (!s || typeof s !== "string" || s.trim().length === 0) {
+      console.log("❌ [blogs] Slug missing is blog mein — id:", blog._id, "| title:", blog.title);
+    }
+  });
+
+  const validSlugs = blogs
+    .map((blog) => blog.urlHandle || blog.slug)
+    .filter((slug) => typeof slug === "string" && slug.trim().length > 0)
+    .map((slug) => ({ slug: slug.trim() }));
+
+  const uniqueSlugs = Array.from(
+    new Map(validSlugs.map((item) => [item.slug, item])).values()
+  );
+
+  console.log("🔍 [blogs] Generated slugs count:", uniqueSlugs.length);
+
+  return [{ slug: "placeholder" }, ...uniqueSlugs];
 }
 
-export default function BlogSlugPage() {
-  return <BlogSlugClient />;
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const blog = await getBlog(slug);
+
+  if (!blog) {
+    return {
+      title: "Barosché | Fine Jewellery Blog",
+      description: "Explore fine jewellery guides, trends and tips from Barosché.",
+    };
+  }
+
+  const imageUrl = blog.image
+    ? blog.image.startsWith("http")
+      ? blog.image
+      : `${API_URL}${blog.image}`
+    : undefined;
+
+  return {
+    title: blog.pageTitle || blog.title,
+    description: blog.metaDescription || "",
+    openGraph: {
+      title: blog.pageTitle || blog.title,
+      description: blog.metaDescription || "",
+      images: imageUrl ? [imageUrl] : [],
+    },
+  };
+}
+
+export default async function BlogSlugPage({ params }) {
+  const { slug } = await params;
+
+  if (slug === "placeholder") {
+    return notFound();
+  }
+
+  const blog = await getBlog(slug);
+
+  return <BlogClient initialBlog={blog} slug={slug} />;
 }

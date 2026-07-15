@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const SITE_URL = "https://barosche.com";
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://api.barosche.com";
 
 async function generateSitemap() {
     const urls = [];

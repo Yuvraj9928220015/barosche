@@ -45,7 +45,7 @@ next-env.d.ts
 
 Frontend
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_############
-NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_API_URL=https://api.barosche.com
 NEXT_PUBLIC_GOOGLE_PAY_MERCHANT_ID=BCR2DN4TXXXXXXXX
 
 

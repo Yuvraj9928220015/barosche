@@ -6,8 +6,8 @@ import './braceletsDetail.css';
 import Reviews from '../../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../../context/WishlistContext';
 
-const API_BASE = "http://localhost:5000";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 // ─── CURRENCY CONFIG ───
 const CURRENCY_MAP = {
@@ -34,143 +34,143 @@ function formatPrice(eurPrice, currency) {
 
 // ─── TRANSLATOR SETUP ───
 const DEFAULT_UI = {
-  breadcrumb: {
-    home: "Home",
-    jewellery: "Jewellery",
-  },
-  labels: {
-    brandTag: "Barosche Fine Jewellery",
-    metalType: "Metal Type",
-    style: "Style",
-    option: "Option",
-    qty: "Qty",
-    outOfStock: "OUT OF STOCK",
-    addedToBag: "✓ ADDED TO BAG",
-    addToBag: "ADD TO BAG",
-    wishlistAdd: "Add to wishlist",
-    wishlistRemove: "Remove from wishlist",
-    quickView: "Quick view",
-    vatIncluded: "VAT included",
-    sale: "Sale",
-    youMayAlsoLike: "You May Also Like",
-    returnToCollection: "← Return to Collection",
-    productNotFound: "Product Not Found",
-    reviews: "reviews",
-    braceletSize: "Bracelet Size:",
-    selectSize: "Select a size",
-    sizeGuide: "Need help with sizing?",
-  },
-  delivery: {
-    standardTitle: "Standard Delivery",
-    standardSub: "Germany: 2 – 4 Working Days | EU: 4 – 8 Working Days",
-    standardPrice: "Free",
-    expressVariants: "On orders above €200",
-    expressTitle: "Express Delivery",
-    expressSub: "Germany: 2 – 3 Working Days | EU: 2 – 4 Working Days",
-  },
-  installment: {
-    promoText: "This price is up to",
-    promoHighlight: "49% lower",
-    promoSuffix: "in comparison to traditional jewellery shops.",
-    klarnaText: "In 3 interest-free installments from {amount} or flexible payments in up to 12 installments",
-    paypalText: "In 4 interest-free installments from {amount} or flexible payments in up to 24 installments",
-  },
-  accordion: {
-    details: "Product Description",
-    detailsFallback: "An exploration of colour and form, inspired by the pure beauty of hand-set stones and masterful craftsmanship.",
-    shipping: "Shipping Information",
-    shippingItems: [
-      "Complimentary shipping across Germany",
-      "Worldwide shipping available at checkout",
-      "Presented in eco-conscious, fully paper-based packaging, ready for gifting",
-      "Carefully crafted to be treasured for years to come",
-      "Covered by our 365-day warranty against manufacturing defects",
-    ],
-    care: "Care Instructions",
-    careItems: [
-      "Avoid contact with perfumes, lotions, and chemicals",
-      "Clean gently with a soft cloth after use",
-      "Store in a dry pouch or box away from sunlight",
-      "Handle carefully to prevent scratches or damage",
-    ],
-    material: "Material",
-    gemstone: "Gemstone",
-  },
+    breadcrumb: {
+        home: "Home",
+        jewellery: "Jewellery",
+    },
+    labels: {
+        brandTag: "Barosche Fine Jewellery",
+        metalType: "Metal Type",
+        style: "Style",
+        option: "Option",
+        qty: "Qty",
+        outOfStock: "OUT OF STOCK",
+        addedToBag: "✓ ADDED TO BAG",
+        addToBag: "ADD TO BAG",
+        wishlistAdd: "Add to wishlist",
+        wishlistRemove: "Remove from wishlist",
+        quickView: "Quick view",
+        vatIncluded: "VAT included",
+        sale: "Sale",
+        youMayAlsoLike: "You May Also Like",
+        returnToCollection: "← Return to Collection",
+        productNotFound: "Product Not Found",
+        reviews: "reviews",
+        braceletSize: "Bracelet Size:",
+        selectSize: "Select a size",
+        sizeGuide: "Need help with sizing?",
+    },
+    delivery: {
+        standardTitle: "Standard Delivery",
+        standardSub: "Germany: 2 – 4 Working Days | EU: 4 – 8 Working Days",
+        standardPrice: "Free",
+        expressVariants: "On orders above €200",
+        expressTitle: "Express Delivery",
+        expressSub: "Germany: 2 – 3 Working Days | EU: 2 – 4 Working Days",
+    },
+    installment: {
+        promoText: "This price is up to",
+        promoHighlight: "49% lower",
+        promoSuffix: "in comparison to traditional jewellery shops.",
+        klarnaText: "In 3 interest-free installments from {amount} or flexible payments in up to 12 installments",
+        paypalText: "In 4 interest-free installments from {amount} or flexible payments in up to 24 installments",
+    },
+    accordion: {
+        details: "Product Description",
+        detailsFallback: "An exploration of colour and form, inspired by the pure beauty of hand-set stones and masterful craftsmanship.",
+        shipping: "Shipping Information",
+        shippingItems: [
+            "Complimentary shipping across Germany",
+            "Worldwide shipping available at checkout",
+            "Presented in eco-conscious, fully paper-based packaging, ready for gifting",
+            "Carefully crafted to be treasured for years to come",
+            "Covered by our 365-day warranty against manufacturing defects",
+        ],
+        care: "Care Instructions",
+        careItems: [
+            "Avoid contact with perfumes, lotions, and chemicals",
+            "Clean gently with a soft cloth after use",
+            "Store in a dry pouch or box away from sunlight",
+            "Handle carefully to prevent scratches or damage",
+        ],
+        material: "Material",
+        gemstone: "Gemstone",
+    },
 };
 
 const flattenUI = (ui) => [
-  ui.breadcrumb.home,
-  ui.breadcrumb.jewellery,
-  ui.labels.brandTag,
-  ui.labels.metalType,
-  ui.labels.style,
-  ui.labels.option,
-  ui.labels.qty,
-  ui.labels.outOfStock,
-  ui.labels.addedToBag,
-  ui.labels.addToBag,
-  ui.labels.wishlistAdd,
-  ui.labels.wishlistRemove,
-  ui.labels.quickView,
-  ui.labels.vatIncluded,
-  ui.labels.sale,
-  ui.labels.youMayAlsoLike,
-  ui.labels.returnToCollection,
-  ui.labels.productNotFound,
-  ui.labels.reviews,
-  ui.labels.braceletSize,
-  ui.labels.selectSize,
-  ui.labels.sizeGuide,
-  ui.delivery.standardTitle,
-  ui.delivery.standardSub,
-  ui.delivery.standardPrice,
-  ui.delivery.expressTitle,
-  ui.delivery.expressSub,
-  ui.delivery.expressVariants,
-  ui.installment.promoText,
-  ui.installment.promoHighlight,
-  ui.installment.promoSuffix,
-  ui.installment.klarnaText,
-  ui.installment.paypalText,
-  ui.accordion.details,
-  ui.accordion.detailsFallback,
-  ui.accordion.shipping,
-  ...ui.accordion.shippingItems,
-  ui.accordion.care,
-  ...ui.accordion.careItems,
-  ui.accordion.material,
-  ui.accordion.gemstone,
+    ui.breadcrumb.home,
+    ui.breadcrumb.jewellery,
+    ui.labels.brandTag,
+    ui.labels.metalType,
+    ui.labels.style,
+    ui.labels.option,
+    ui.labels.qty,
+    ui.labels.outOfStock,
+    ui.labels.addedToBag,
+    ui.labels.addToBag,
+    ui.labels.wishlistAdd,
+    ui.labels.wishlistRemove,
+    ui.labels.quickView,
+    ui.labels.vatIncluded,
+    ui.labels.sale,
+    ui.labels.youMayAlsoLike,
+    ui.labels.returnToCollection,
+    ui.labels.productNotFound,
+    ui.labels.reviews,
+    ui.labels.braceletSize,
+    ui.labels.selectSize,
+    ui.labels.sizeGuide,
+    ui.delivery.standardTitle,
+    ui.delivery.standardSub,
+    ui.delivery.standardPrice,
+    ui.delivery.expressTitle,
+    ui.delivery.expressSub,
+    ui.delivery.expressVariants,
+    ui.installment.promoText,
+    ui.installment.promoHighlight,
+    ui.installment.promoSuffix,
+    ui.installment.klarnaText,
+    ui.installment.paypalText,
+    ui.accordion.details,
+    ui.accordion.detailsFallback,
+    ui.accordion.shipping,
+    ...ui.accordion.shippingItems,
+    ui.accordion.care,
+    ...ui.accordion.careItems,
+    ui.accordion.material,
+    ui.accordion.gemstone,
 ];
 
 const rebuildUI = (translations) => {
-  let i = 0;
-  const g = () => translations[i++];
-  return {
-    breadcrumb: { home: g(), jewellery: g() },
-    labels: {
-      brandTag: g(), metalType: g(), style: g(), option: g(),
-      qty: g(), outOfStock: g(), addedToBag: g(), addToBag: g(),
-      wishlistAdd: g(), wishlistRemove: g(), quickView: g(), vatIncluded: g(),
-      sale: g(), youMayAlsoLike: g(), returnToCollection: g(),
-      productNotFound: g(), reviews: g(), braceletSize: g(),
-      selectSize: g(), sizeGuide: g(),
-    },
-    delivery: {
-      standardTitle: g(), standardSub: g(), standardPrice: g(),
-      expressTitle: g(), expressSub: g(), expressVariants: g(),
-    },
-    installment: {
-      promoText: g(), promoHighlight: g(), promoSuffix: g(),
-      klarnaText: g(), paypalText: g(),
-    },
-    accordion: {
-      details: g(), detailsFallback: g(), shipping: g(),
-      shippingItems: [g(), g(), g(), g(), g()],
-      care: g(),
-      careItems: [g(), g(), g(), g()],
-      material: g(), gemstone: g(),
-    },
-  };
+    let i = 0;
+    const g = () => translations[i++];
+    return {
+        breadcrumb: { home: g(), jewellery: g() },
+        labels: {
+            brandTag: g(), metalType: g(), style: g(), option: g(),
+            qty: g(), outOfStock: g(), addedToBag: g(), addToBag: g(),
+            wishlistAdd: g(), wishlistRemove: g(), quickView: g(), vatIncluded: g(),
+            sale: g(), youMayAlsoLike: g(), returnToCollection: g(),
+            productNotFound: g(), reviews: g(), braceletSize: g(),
+            selectSize: g(), sizeGuide: g(),
+        },
+        delivery: {
+            standardTitle: g(), standardSub: g(), standardPrice: g(),
+            expressTitle: g(), expressSub: g(), expressVariants: g(),
+        },
+        installment: {
+            promoText: g(), promoHighlight: g(), promoSuffix: g(),
+            klarnaText: g(), paypalText: g(),
+        },
+        accordion: {
+            details: g(), detailsFallback: g(), shipping: g(),
+            shippingItems: [g(), g(), g(), g(), g()],
+            care: g(),
+            careItems: [g(), g(), g(), g()],
+            material: g(), gemstone: g(),
+        },
+    };
 };
 
 function getFirstVariant(product) {
@@ -404,10 +404,10 @@ function DeliverySection({ t, currency }) {
                     <span className="jd-delivery-title">{t.delivery.standardTitle}</span>
                     <span className="jd-delivery-sub">{t.delivery.standardSub}</span>
                 </div>
-                 <div className="jd-delivery-right">
+                <div className="jd-delivery-right">
                     <span className="jd-delivery-price jd-delivery-free">{t.delivery.standardPrice}</span>
                     <span className="jd-delivery-variant">{t.delivery.expressVariants}</span>
-                 </div>
+                </div>
             </div>
 
             <div className="jd-delivery-item">
@@ -500,13 +500,13 @@ function SizeSelector({ sizes, selectedSize, setSelectedSize, t }) {
 function CardActionIcons({ onWishlist, onQuickView, onAddToCart, wishlisted, t }) {
     return (
         <div className="jd-card-icons">
-           
+
         </div>
     );
 }
 
 function MobileSlider({ images, getImgSrc, productName, isSale, selectedImageIndex, setSelectedImageIndex, onImageClick }) {
-    const sliderRef   = useRef(null);
+    const sliderRef = useRef(null);
     const touchStartX = useRef(null);
     const touchStartY = useRef(null);
     const autoPlayRef = useRef(null);
@@ -715,39 +715,39 @@ function Lightbox({ images, getImgSrc, productName, startIndex, onClose }) {
 // ─── MAIN COMPONENT ───
 
 export default function BraceletsDetailClient({ slug, initialProduct = null, initialRelated = [] }) {
-    const [product,         setProduct]         = useState(initialProduct);
-    const [relatedProducts, setRelatedProducts]  = useState(initialRelated);
-    const [loading,         setLoading]          = useState(!initialProduct);
-    const [error,           setError]            = useState(null);
+    const [product, setProduct] = useState(initialProduct);
+    const [relatedProducts, setRelatedProducts] = useState(initialRelated);
+    const [loading, setLoading] = useState(!initialProduct);
+    const [error, setError] = useState(null);
     const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
-    const [qty,                  setQty]                  = useState(1);
-    const [addedToCart,          setAddedToCart]          = useState(false);
-    const [openAccordion,        setOpenAccordion]        = useState('details');
-    const [selectedImageIndex,   setSelectedImageIndex]   = useState(0);
-    const [scrollState,          setScrollState]          = useState('locked');
-    const [isMobile,             setIsMobile]             = useState(false);
-    const [selectedSize,         setSelectedSize]         = useState(null);
-    const [selectedMetal,        setSelectedMetal]        = useState('All');
-    const [lightboxOpen,         setLightboxOpen]         = useState(false);
-    const [lightboxIndex,        setLightboxIndex]        = useState(0);
+    const [qty, setQty] = useState(1);
+    const [addedToCart, setAddedToCart] = useState(false);
+    const [openAccordion, setOpenAccordion] = useState('details');
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [scrollState, setScrollState] = useState('locked');
+    const [isMobile, setIsMobile] = useState(false);
+    const [selectedSize, setSelectedSize] = useState(null);
+    const [selectedMetal, setSelectedMetal] = useState('All');
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
     const { toggleWishlist, isInWishlist } = useWishlist();
 
     // ── Translator + Currency state ──
-    const [t,                 setT]                 = useState(DEFAULT_UI);
-    const [currency,          setCurrency]          = useState(CURRENCY_MAP.default);
+    const [t, setT] = useState(DEFAULT_UI);
+    const [currency, setCurrency] = useState(CURRENCY_MAP.default);
     const [translationStatus, setTranslationStatus] = useState('idle');
 
     const galleryRef = useRef(null);
-    const infoRef    = useRef(null);
+    const infoRef = useRef(null);
     const wrapperRef = useRef(null);
 
     const stoneColors = [
         { name: 'Blue Topaz', hex: '#7bc4e1' },
-        { name: 'Amethyst',   hex: '#8a4f7d' },
-        { name: 'Citrine',    hex: '#e8b84b' },
-        { name: 'Peridot',    hex: '#a3be6b' },
+        { name: 'Amethyst', hex: '#8a4f7d' },
+        { name: 'Citrine', hex: '#e8b84b' },
+        { name: 'Peridot', hex: '#a3be6b' },
         { name: 'Prasiolite', hex: '#c5d0bc' },
-        { name: 'Garnet',     hex: '#7a2021' },
+        { name: 'Garnet', hex: '#7a2021' },
     ];
     const [selectedColor, setSelectedColor] = useState(0);
 
@@ -759,7 +759,7 @@ export default function BraceletsDetailClient({ slug, initialProduct = null, ini
             try {
                 setTranslationStatus('loading');
 
-                const detectRes  = await fetch(`${BACKEND_URL}/api/translate/detect-language`);
+                const detectRes = await fetch(`${BACKEND_URL}/api/translate/detect-language`);
                 const detectData = await detectRes.json();
                 if (!detectData.success) throw new Error('Language detection failed');
 
@@ -777,10 +777,10 @@ export default function BraceletsDetailClient({ slug, initialProduct = null, ini
                 const allStrings = flattenUI(DEFAULT_UI);
 
                 const translateRes = await fetch(`${BACKEND_URL}/api/translate/translate`, {
-                    method:  'POST',
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({
-                        texts:          allStrings,
+                    body: JSON.stringify({
+                        texts: allStrings,
                         targetLanguage: languageCode,
                         sourceLanguage: 'en',
                     }),
@@ -810,59 +810,59 @@ export default function BraceletsDetailClient({ slug, initialProduct = null, ini
         return () => window.removeEventListener('resize', check);
     }, []);
 
-useEffect(() => {
-    if (!slug) return;
+    useEffect(() => {
+        if (!slug) return;
 
-    const fetchProduct = async () => {
-        const isBackgroundRefresh = !!initialProduct;
-        if (!isBackgroundRefresh) setLoading(true);
-        setError(null);
+        const fetchProduct = async () => {
+            const isBackgroundRefresh = !!initialProduct;
+            if (!isBackgroundRefresh) setLoading(true);
+            setError(null);
 
-        try {
-            const res = await fetch(`${API_BASE}/api/products/${slug}`);
-            if (!res.ok) throw new Error(`Server error: ${res.status}`);
-            const data = await res.json();
+            try {
+                const res = await fetch(`${API_BASE}/api/products/${slug}`);
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+                const data = await res.json();
 
-            if (data.success) {
-                setProduct(data.product);
-                if (!isBackgroundRefresh) {
-                    setSelectedVariantIndex(0);
-                    setSelectedImageIndex(0);
-                    setSelectedSize(null);
-                    setSelectedMetal('All');
-                }
-
-                if (data.product?.category && relatedProducts.length === 0) {
-                    try {
-                        const relRes = await fetch(
-                            `${API_BASE}/api/products?category=${encodeURIComponent(data.product.category)}`
-                        );
-                        if (relRes.ok) {
-                            const relData = await relRes.json();
-                            if (relData.success) {
-                                setRelatedProducts(
-                                    (relData.products || []).filter(p => p.slug !== slug).slice(0, 5)
-                                );
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Non-critical error fetching related products:', e);
+                if (data.success) {
+                    setProduct(data.product);
+                    if (!isBackgroundRefresh) {
+                        setSelectedVariantIndex(0);
+                        setSelectedImageIndex(0);
+                        setSelectedSize(null);
+                        setSelectedMetal('All');
                     }
+
+                    if (data.product?.category && relatedProducts.length === 0) {
+                        try {
+                            const relRes = await fetch(
+                                `${API_BASE}/api/products?category=${encodeURIComponent(data.product.category)}`
+                            );
+                            if (relRes.ok) {
+                                const relData = await relRes.json();
+                                if (relData.success) {
+                                    setRelatedProducts(
+                                        (relData.products || []).filter(p => p.slug !== slug).slice(0, 5)
+                                    );
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Non-critical error fetching related products:', e);
+                        }
+                    }
+                } else {
+                    throw new Error(data.message || 'Product not found');
                 }
-            } else {
-                throw new Error(data.message || 'Product not found');
+            } catch (err) {
+
+                if (!isBackgroundRefresh) setError(err.message);
+                else console.error('Background refresh error:', err.message);
+            } finally {
+                if (!isBackgroundRefresh) setLoading(false);
             }
-        } catch (err) {
+        };
 
-            if (!isBackgroundRefresh) setError(err.message);
-            else console.error('Background refresh error:', err.message);
-        } finally {
-            if (!isBackgroundRefresh) setLoading(false);
-        }
-    };
-
-    fetchProduct();
-}, [slug]);
+        fetchProduct();
+    }, [slug]);
 
     useEffect(() => {
         setSelectedImageIndex(0);
@@ -874,7 +874,7 @@ useEffect(() => {
     useEffect(() => {
         if (isMobile) return;
         const gallery = galleryRef.current;
-        const info    = infoRef.current;
+        const info = infoRef.current;
         const wrapper = wrapperRef.current;
         if (!gallery || !info || !wrapper) return;
 
@@ -885,8 +885,8 @@ useEffect(() => {
 
         const handleWheel = (e) => {
             if (scrollState === 'unlocked') return;
-            const wrapperRect     = wrapper.getBoundingClientRect();
-            const midX            = wrapperRect.left + wrapperRect.width / 2;
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const midX = wrapperRect.left + wrapperRect.width / 2;
             const isOnGallerySide = e.clientX < midX;
             e.preventDefault();
             if (isOnGallerySide) {
@@ -909,7 +909,7 @@ useEffect(() => {
         if (!gallery) return;
         let touchStartY = 0;
         const handleTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
-        const handleTouchEnd   = (e) => {
+        const handleTouchEnd = (e) => {
             const delta = touchStartY - e.changedTouches[0].clientY;
             if (delta > 0) {
                 const { scrollTop, scrollHeight, clientHeight } = gallery;
@@ -917,10 +917,10 @@ useEffect(() => {
             }
         };
         gallery.addEventListener('touchstart', handleTouchStart, { passive: true });
-        gallery.addEventListener('touchend',   handleTouchEnd,   { passive: true });
+        gallery.addEventListener('touchend', handleTouchEnd, { passive: true });
         return () => {
             gallery.removeEventListener('touchstart', handleTouchStart);
-            gallery.removeEventListener('touchend',   handleTouchEnd);
+            gallery.removeEventListener('touchend', handleTouchEnd);
         };
     }, [isMobile]);
 
@@ -947,19 +947,19 @@ useEffect(() => {
                 : [product.img].filter(Boolean);
 
         return {
-            _id:       product._id,
+            _id: product._id,
             variantId: activeVariant._id || selectedVariantIndex,
-            title:     activeVariant.title || product.title || product.name,
-            newPrice:  activeVariant.newPrice ?? product.newPrice ?? product.price ?? 0,
-            oldPrice:  activeVariant.oldPrice ?? product.oldPrice ?? null,
-            images:    varImgs,
-            img:       varImgs[0] || '',
-            metal:     selectedMetal !== 'All' ? selectedMetal : (activeVariant.metal || null),
-            stone:     stoneColors[selectedColor] || null,
-            size:      selectedSize || null,
-            slug:      product.slug,
-            category:  product.category,
-            isSale:    activeVariant.isSale ?? product.isSale ?? false,
+            title: activeVariant.title || product.title || product.name,
+            newPrice: activeVariant.newPrice ?? product.newPrice ?? product.price ?? 0,
+            oldPrice: activeVariant.oldPrice ?? product.oldPrice ?? null,
+            images: varImgs,
+            img: varImgs[0] || '',
+            metal: selectedMetal !== 'All' ? selectedMetal : (activeVariant.metal || null),
+            stone: stoneColors[selectedColor] || null,
+            size: selectedSize || null,
+            slug: product.slug,
+            category: product.category,
+            isSale: activeVariant.isSale ?? product.isSale ?? false,
         };
     }, [product, selectedVariantIndex, selectedMetal, selectedColor, selectedSize, stoneColors]);
 
@@ -967,7 +967,7 @@ useEffect(() => {
         ? isInWishlist(
             product._id,
             (product.variants?.[selectedVariantIndex])?._id || selectedVariantIndex
-          )
+        )
         : false;
 
     const handleMetalSelect = useCallback((metal) => {
@@ -997,19 +997,19 @@ useEffect(() => {
                 : [product.img].filter(Boolean);
 
         const cartItem = {
-            _id:       product._id,
+            _id: product._id,
             variantId: activeVariant._id || selectedVariantIndex,
-            title:     activeVariant.title || product.title || product.name,
+            title: activeVariant.title || product.title || product.name,
             variantName: activeVariant.name || null,
-            newPrice:  activeVariant.newPrice ?? product.newPrice ?? product.price ?? 0,
-            images:    varImgs,
-            img:       varImgs[0] || '',
-            metal:     selectedMetal !== 'All' ? selectedMetal : (activeVariant.metal || null),
-            stone:     stoneColors[selectedColor] || null,
-            size:      selectedSize || null,
+            newPrice: activeVariant.newPrice ?? product.newPrice ?? product.price ?? 0,
+            images: varImgs,
+            img: varImgs[0] || '',
+            metal: selectedMetal !== 'All' ? selectedMetal : (activeVariant.metal || null),
+            stone: stoneColors[selectedColor] || null,
+            size: selectedSize || null,
             qty,
-            slug:      product.slug,
-            category:  product.category,
+            slug: product.slug,
+            category: product.category,
         };
 
         window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { item: cartItem } }));
@@ -1077,15 +1077,18 @@ useEffect(() => {
             ? product.images
             : [product.img].filter(Boolean);
 
-    const oldPrice           = activeVariant.oldPrice ?? product.oldPrice ?? null;
-    const newPrice           = activeVariant.newPrice ?? product.newPrice ?? product.price ?? 0;
-    const isSale             = activeVariant.isSale   ?? product.isSale   ?? false;
-    const inStock            = activeVariant.inStock  ?? product.inStock  ?? true;
-    const displayTitle       = activeVariant.title       || product.title || product.name;
+    const oldPrice = activeVariant.oldPrice ?? product.oldPrice ?? null;
+    const newPrice = activeVariant.newPrice ?? product.newPrice ?? product.price ?? 0;
+    const isSale = activeVariant.isSale ?? product.isSale ?? false;
+    const variantQtyRaw = activeVariant.quantity;
+    const variantQty = variantQtyRaw !== undefined ? Number(variantQtyRaw) : null;
+    const inStock = (variantQty !== null ? variantQty > 0 : true)
+        && (activeVariant.inStock ?? product.inStock ?? true) !== false;
+    const displayTitle = activeVariant.title || product.title || product.name;
     const displayDescription = activeVariant.description || product.description || '';
-    const displayMaterials   = (activeVariant.materials && activeVariant.materials.length > 0)
+    const displayMaterials = (activeVariant.materials && activeVariant.materials.length > 0)
         ? activeVariant.materials : (product.materials || []);
-    const displayGemstones   = (activeVariant.gemstones && activeVariant.gemstones.length > 0)
+    const displayGemstones = (activeVariant.gemstones && activeVariant.gemstones.length > 0)
         ? activeVariant.gemstones : (product.gemstones || []);
 
     const allMetalTypes = [...new Set(
@@ -1099,7 +1102,7 @@ useEffect(() => {
         .filter(v => selectedMetal === 'All' || variantHasMetal(v, selectedMetal));
 
     const getRelatedImgSrc = (rp) => {
-        const rv  = getFirstVariant(rp);
+        const rv = getFirstVariant(rp);
         const img = (rv.images && rv.images.length > 0) ? rv.images[0] : rp.img || '';
         return getImgSrc(img);
     };
@@ -1235,7 +1238,7 @@ useEffect(() => {
                                         </span>
                                         <div className="jd-variant-grid">
                                             {filteredVariants.map((v) => {
-                                                const idx  = v._origIdx;
+                                                const idx = v._origIdx;
                                                 const vImg = v.images && v.images.length > 0 ? v.images[0] : null;
                                                 return (
                                                     <button
@@ -1410,7 +1413,7 @@ useEffect(() => {
                                             </span>
                                             <div className="jd-variant-grid">
                                                 {filteredVariants.map((v) => {
-                                                    const idx  = v._origIdx;
+                                                    const idx = v._origIdx;
                                                     const vImg = v.images && v.images.length > 0 ? v.images[0] : null;
                                                     return (
                                                         <button

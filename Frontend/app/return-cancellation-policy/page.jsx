@@ -1,23 +1,57 @@
 import ReturnPolicy from "./ReturnPolicy";
 
+const PAGE_URL = "https://barosche.com/return-cancellation-policy/";
+const OG_IMAGE = "https://barosche.com/logo.png";
+const TITLE = "Return & Cancellation Policy | Barosche Jewellery India";
+const DESCRIPTION =
+  "Check Barosche's return and cancellation policy for a simple, secure, and hassle-free process on all your jewelry purchases.";
+
 export const metadata = {
-  title: "Return & Cancellation Policy | Barosche Jewellery India",
-  description:
-    "Check Barosche’s return and cancellation policy for a simple, secure, and hassle-free process on all your jewelry purchases.",
-  keywords: [
-    "Barosche Jewellery",
-    "About Barosche",
-    "Luxury Jewellery",
-    "Diamond Jewellery",
-    "Gold Jewellery",
-    "Custom Jewellery",
-    "Fine Jewellery"
-  ],
+  title: TITLE,
+  description: DESCRIPTION,
+
+  alternates: {
+    canonical: PAGE_URL,
+  },
+
   openGraph: {
-    title: "Custom & Personalised Jewellery Design, Remaking & Resizing Services",
-    description:
-      "Check Barosche’s return and cancellation policy for a simple, secure, and hassle-free process on all your jewelry purchases.",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    siteName: "Barosche",
     type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 2048,
+        height: 997,
+        alt: "Barosche Return & Cancellation Policy",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    site: "@barosche",
+    creator: "@barosche",
+    images: [
+      {
+        url: OG_IMAGE,
+        alt: "Barosche Return & Cancellation Policy",
+      },
+    ],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import "./admin.css";
 
-const API_BASE = "http://localhost:5000/api/products";
-const API_ORDERS = "http://localhost:5000/api/orders";
+const API_BASE = "https://api.barosche.com/api/products";
+const API_ORDERS = "https://api.barosche.com/api/orders";
 
 // ── Hardcoded credentials ──
 const ADMIN_USERNAME = "barosche";
@@ -36,8 +36,6 @@ const GEMSTONE_OPTIONS = [
 
 const METAL_TYPE_OPTIONS = ["Gold", "Silver"];
 
-// A variant is out of stock if quantity is 0/negative, OR the manual inStock toggle was switched off.
-// This keeps old records (saved before quantity existed, where inStock defaulted to true) accurate too.
 const isVariantOutOfStock = (v) => (Number(v?.quantity) || 0) <= 0 || v?.inStock === false;
 
 const slugify = (val) =>
@@ -181,7 +179,7 @@ function OrderDetailModal({ order, onClose }) {
               }}>
                 {item.image && (
                   <img
-                    src={item.image.startsWith("http") ? item.image : `http://localhost:5000${item.image}`}
+                    src={item.image.startsWith("http") ? item.image : `https://api.barosche.com${item.image}`}
                     alt={item.name}
                     style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb", flexShrink: 0 }}
                   />
@@ -774,7 +772,7 @@ function ProductForm({ initial, onClose, onSaved }) {
                     <label className="file-upload-label"><span>📁 Choose Images</span><input type="file" accept="image/*" multiple onChange={(e) => handleVariantImages(activeIdx, e)} style={{ display: "none" }} /></label>
                     {(av.existingImages?.length > 0 || av.newImages?.length > 0) && (
                       <div className="img-preview-grid">
-                        {(av.existingImages || []).map((src, i) => (<div key={`ex-${i}`} className="img-preview-item"><img src={`http://localhost:5000${src}`} alt="" className="img-preview-thumb" /><button type="button" className="btn-remove-img" onClick={() => removeExistingImg(activeIdx, i)}>✕</button></div>))}
+                        {(av.existingImages || []).map((src, i) => (<div key={`ex-${i}`} className="img-preview-item"><img src={`https://api.barosche.com${src}`} alt="" className="img-preview-thumb" /><button type="button" className="btn-remove-img" onClick={() => removeExistingImg(activeIdx, i)}>✕</button></div>))}
                         {(av.newImages || []).map((f, i) => (<div key={`nw-${i}`} className="img-preview-item"><img src={URL.createObjectURL(f)} alt="" className="img-preview-thumb" /><button type="button" className="btn-remove-img" onClick={() => removeNewImg(activeIdx, i)}>✕</button></div>))}
                       </div>
                     )}
@@ -836,13 +834,13 @@ function ProductDetail({ product, onClose, onEdit, onDelete }) {
           <div className="detail-grid">
             <div className="main-img-wrap-container">
               <div className="main-img-wrap">
-                {variant.images?.length > 0 && <img src={`http://localhost:5000${variant.images[imgIdx]}`} alt={displayTitle} className="main-img" />}
+                {variant.images?.length > 0 && <img src={`https://api.barosche.com${variant.images[imgIdx]}`} alt={displayTitle} className="main-img" />}
                 {variant.isSale && <span className="detail-badge-sale">SALE</span>}
                 {outOfStockVariant && <span className="detail-badge-out">OUT OF STOCK</span>}
               </div>
               {variant.images?.length > 1 && (
                 <div className="thumb-row">
-                  {variant.images.map((img, i) => (<img key={i} src={`http://localhost:5000${img}`} alt="" className={`thumb-img ${imgIdx === i ? "active" : ""}`} onClick={() => setImgIdx(i)} />))}
+                  {variant.images.map((img, i) => (<img key={i} src={`https://api.barosche.com${img}`} alt="" className={`thumb-img ${imgIdx === i ? "active" : ""}`} onClick={() => setImgIdx(i)} />))}
                 </div>
               )}
             </div>
@@ -936,7 +934,7 @@ function ProductCard({ product, onClick, onEdit, onDelete }) {
   return (
     <div className="product-card" onClick={onClick}>
       <div className="card-img-wrap">
-        {firstVariant.images?.[0] ? <img src={`http://localhost:5000${firstVariant.images[0]}`} alt={product.title} className="card-img" /> : <div className="card-img-placeholder">📷</div>}
+        {firstVariant.images?.[0] ? <img src={`https://api.barosche.com${firstVariant.images[0]}`} alt={product.title} className="card-img" /> : <div className="card-img-placeholder">📷</div>}
         {firstVariant.isSale && <span className="badge-sale">SALE</span>}
         {cardOutOfStock && <span className="badge-out">OUT OF STOCK</span>}
         {!cardOutOfStock && cardQty > 0 && cardQty <= 3 && (

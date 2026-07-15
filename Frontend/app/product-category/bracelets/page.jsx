@@ -1,9 +1,15 @@
 import Bracelets from './Bracelets';
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
 const FETCH_TIMEOUT_MS = 15000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
+
+const PAGE_URL = "https://barosche.com/product-category/bracelets/";
+const OG_IMAGE = "https://api.barosche.com/uploads/product-1782451784924-120020543.jpg";
+const TITLE = "Gold Bracelets for Women & Men | 18K Gold & Minimal Designs";
+const DESCRIPTION =
+  "Shop modern bracelet designs at Barosche. Find gold bracelets for women, refined men’s styles, and timeless 18K pieces crafted for everyday luxury.";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -38,27 +44,51 @@ async function getInitialProducts(category) {
 }
 
 export const metadata = {
-  title: "Buy Daily Wear Bracelets for Men & Women Online",
-  description:
-    "Buy bracelets for men and women online with elegant daily wear and statement designs. Explore minimal, stylish, and gemstone bracelets for every occasion.",
-  keywords: [
-    "Barosche Jewellery",
-    "About Barosche",
-    "Bracelets",
-    "Luxury Jewellery",
-    "Diamond Jewellery",
-    "Gold Jewellery",
-    "Custom Jewellery",
-    "Fine Jewellery"
-  ],
-  openGraph: {
-    title: "Buy Daily Wear Bracelets for Men & Women Online",
-    description:
-      "Buy bracelets for men and women online with elegant daily wear and statement designs. Explore minimal, stylish, and gemstone bracelets for every occasion.",
-    type: "website",
+  title: TITLE,
+  description: DESCRIPTION,
+
+  alternates: {
+    canonical: PAGE_URL,
   },
-  icons: {
-    icon: "/BaroscheSymbol.png",
+
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    siteName: "Barosche",
+    type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 480,
+        height: 600,
+        alt: "Barosche Bracelets Collection",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    site: "@barosche",
+    creator: "@barosche",
+    images: [
+      {
+        url: OG_IMAGE,
+        alt: "Barosche Bracelets Collection",
+      },
+    ],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

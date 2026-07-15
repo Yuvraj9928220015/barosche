@@ -5,7 +5,7 @@ import Link from 'next/link';
 import './WomensDetailClient.css';
 import Reviews from '../../../../components/Home/Reviews/Reviews';
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
 
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];
@@ -583,7 +583,10 @@ export default function WomensDetailClient({ slug }) {
     const oldPrice = activeVariant.oldPrice ?? product.oldPrice ?? null;
     const newPrice = activeVariant.newPrice ?? product.newPrice ?? product.price ?? 0;
     const isSale = activeVariant.isSale ?? product.isSale ?? false;
-    const inStock = activeVariant.inStock ?? product.inStock ?? true;
+    const variantQtyRaw = activeVariant.quantity;
+    const variantQty    = variantQtyRaw !== undefined ? Number(variantQtyRaw) : null;
+    const inStock = (variantQty !== null ? variantQty > 0 : true)
+    && (activeVariant.inStock ?? product.inStock ?? true) !== false;
 
     const displayTitle       = activeVariant.title       || product.title || product.name;
     const displayDescription = activeVariant.description || product.description || '';

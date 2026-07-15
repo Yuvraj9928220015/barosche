@@ -1,16 +1,20 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import "./LatestBlog.css";
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 const DEFAULT_UI = {
   heading: "The Barosché Edit",
   subheading: "Thoughts, perspectives, and quiet reflections on living and choosing what feels right now.",
   readMore: "READ MORE",
 };
+
+function normalizeCategory(cat) {
+  return (cat || "Blog").toString().trim().toLowerCase();
+}
 
 function getExcerpt(content = "", length = 110) {
   const plain = content
@@ -40,6 +44,8 @@ function formatDate(dateStr) {
 }
 
 export default function LatestBlog() {
+  const router = useRouter();
+
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uiText, setUiText] = useState(DEFAULT_UI);
@@ -56,7 +62,11 @@ export default function LatestBlog() {
           return;
         }
 
-        const sorted = [...data].sort(
+        const onlyBlogs = data.filter(
+          (b) => normalizeCategory(b.category) === "blog"
+        );
+
+        const sorted = [...onlyBlogs].sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
 
@@ -85,7 +95,6 @@ export default function LatestBlog() {
         if (!detectData.success) return;
 
         const { languageCode } = detectData;
-        console.log("Detected language:", languageCode);
 
         if (languageCode === "en") return;
 
@@ -135,6 +144,14 @@ export default function LatestBlog() {
     translateContent();
   }, [blogs.length]);
 
+  const handleBlogClick = useCallback(
+    (slug) => {
+      if (!slug) return;
+      router.push(`/blogs/${slug}`);
+    },
+    [router]
+  );
+
   return (
     <section className="latest-blog-section">
       <div className="latest-blog-header">
@@ -161,10 +178,14 @@ export default function LatestBlog() {
 
         {!loading &&
           blogs.map((blog) => (
-            <Link
-              href={`/blogs/${blog.slug}`}
+            <div
               className="blog-card"
               key={blog._id}
+              role="button"
+              tabIndex={0}
+              onClick={() => handleBlogClick(blog.slug)}
+              onKeyDown={(e) => e.key === "Enter" && handleBlogClick(blog.slug)}
+              style={{ cursor: "pointer" }}
             >
               <div className="blog-image-wrapper">
                 <img
@@ -182,7 +203,7 @@ export default function LatestBlog() {
                 <p className="blog-excerpt">{getExcerpt(blog.content)}</p>
                 <span className="blog-readmore">{uiText.readMore} →</span>
               </div>
-            </Link>
+            </div>
           ))}
       </div>
     </section>

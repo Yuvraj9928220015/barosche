@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 // ─────────────────────────────────────────────────────────
@@ -61,6 +61,7 @@ const DEFAULT_UI = {
     showingResults: "results",
     pageTitle: "Lightweight Daily Wear Fine Jewellery for Everyday Style",
     priceOnRequest: "Price on request",
+    outOfStock: "Out of Stock",
 };
 
 const flattenUI = (ui) => [
@@ -68,7 +69,7 @@ const flattenUI = (ui) => [
     ui.priceLowHigh, ui.priceHighLow, ui.newest, ui.filtersText, ui.everydayJewellery,
     ui.faq, ui.retry, ui.gridView, ui.addToWishlist, ui.quickView, ui.addToCart,
     ui.sale, ui.noProductsBase, ui.checkConsole, ui.showingOf, ui.showingResults, ui.pageTitle,
-    ui.priceOnRequest,
+    ui.priceOnRequest, ui.outOfStock,
 ];
 
 const rebuildUI = (translations) => {
@@ -78,7 +79,7 @@ const rebuildUI = (translations) => {
         priceLowHigh: get(), priceHighLow: get(), newest: get(), filtersText: get(), everydayJewellery: get(),
         faq: get(), retry: get(), gridView: get(), addToWishlist: get(), quickView: get(), addToCart: get(),
         sale: get(), noProductsBase: get(), checkConsole: get(), showingOf: get(), showingResults: get(),
-        pageTitle: get(), priceOnRequest: get(),
+        pageTitle: get(), priceOnRequest: get(), outOfStock: get(),
     };
 };
 
@@ -282,7 +283,13 @@ function getFirstVariant(product) {
         newPrice: product.newPrice ?? product.price,
         isSale: product.isSale || false,
         inStock: product.inStock ?? true,
+        quantity: product.quantity,
     };
+}
+
+// Ek hi jagah stock-check logic — Earrings jaisa hi (quantity + inStock dono check)
+function isVariantOutOfStock(v) {
+    return (Number(v?.quantity) || 0) <= 0 || v?.inStock === false;
 }
 
 // ─────────────────────────────────────────────────────────
@@ -315,6 +322,7 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
     const [qty, setQty] = useState(1);
     const variant = getFirstVariant(product);
     const images = variant.images || [];
+    const outOfStock = isVariantOutOfStock(variant);
 
     const categoryArr = Array.isArray(product.category) ? product.category : [product.category];
     const categoryUrl = categoryArr.map(c => categorySlugMap[c]).find(Boolean) || 'pendants';
@@ -405,7 +413,7 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
 
                 {/* Details */}
                 <div style={{ flex: '1 1 280px', padding: '32px 24px 24px 16px', minWidth: '240px' }}>
-                    {variant.isSale && (
+                    {variant.isSale && !outOfStock && (
                         <span style={{
                             background: '#1a1a1a', color: '#fff',
                             fontSize: '11px', letterSpacing: '1px',
@@ -413,6 +421,16 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
                             display: 'inline-block', marginBottom: '10px',
                         }}>
                             {ui.sale}
+                        </span>
+                    )}
+                    {outOfStock && (
+                        <span style={{
+                            background: '#999', color: '#fff',
+                            fontSize: '11px', letterSpacing: '1px',
+                            padding: '3px 8px', borderRadius: '2px',
+                            display: 'inline-block', marginBottom: '10px',
+                        }}>
+                            {ui.outOfStock}
                         </span>
                     )}
                     <p style={{ fontSize: '12px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>
@@ -457,16 +475,17 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
                     {/* Actions */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <button
-                            onClick={() => onAddToCart(product, qty)}
+                            onClick={() => { if (!outOfStock) onAddToCart(product, qty); }}
+                            disabled={outOfStock}
                             style={{
-                                background: '#1a1a1a', color: '#fff',
+                                background: outOfStock ? '#bbb' : '#1a1a1a', color: '#fff',
                                 border: 'none', padding: '13px 20px',
                                 fontSize: '13px', letterSpacing: '0.5px',
-                                cursor: 'pointer', borderRadius: '4px',
+                                cursor: outOfStock ? 'not-allowed' : 'pointer', borderRadius: '4px',
                                 textTransform: 'uppercase',
                             }}
                         >
-                            {ui.addToCart}
+                            {outOfStock ? ui.outOfStock : ui.addToCart}
                         </button>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button
@@ -552,6 +571,8 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
     const [currentImg, setCurrentImg] = useState(0);
     const intervalRef = useRef(null);
 
+    const outOfStock = isVariantOutOfStock(variant);
+
     const startHover = () => {
         if (images.length <= 1) return;
         let idx = 1;
@@ -572,7 +593,8 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
         <Link href={`/product-category/${categoryUrl}/${p.slug}`} className="jw-card"
             onMouseEnter={startHover} onMouseLeave={stopHover}>
             <div className="jw-card-img-wrap">
-                {isSale && <span className="jw-sale-badge">{ui.sale}</span>}
+                {isSale && !outOfStock && <span className="jw-sale-badge">{ui.sale}</span>}
+                {outOfStock && <span className="jw-sale-badge" style={{ background: '#999' }}>{ui.outOfStock}</span>}
                 <img src={imgSrc} alt={p.title} className="jw-card-img" loading="lazy"
                     onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
                 {images.length > 1 && (
@@ -629,10 +651,13 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
                     {/* Add to Cart */}
                     <button
                         className="jw-action-btn jw-add-cart"
-                        title={ui.addToCart}
-                        aria-label={ui.addToCart}
+                        title={outOfStock ? ui.outOfStock : ui.addToCart}
+                        aria-label={outOfStock ? ui.outOfStock : ui.addToCart}
+                        disabled={outOfStock}
+                        style={outOfStock ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
                         onClick={(e) => {
                             e.preventDefault(); e.stopPropagation();
+                            if (outOfStock) return;
                             onAddToCart(p, 1);
                         }}
                     >
@@ -758,7 +783,6 @@ export default function Pendant({ initialProducts = [] }) {
 
             const all = translateData.translations;
             const uiCount = flattenUI(DEFAULT_UI).length;
-            // FIXED: count must match flattened length (ul items expand into multiple strings)
             const contentCount = flattenContent(pendantsContent).length;
             const faqCount = faqData.length * 2;
 
@@ -819,6 +843,7 @@ export default function Pendant({ initialProducts = [] }) {
 
     const handleAddToCart = useCallback((product, qty = 1) => {
         const variant = getFirstVariant(product);
+        if (isVariantOutOfStock(variant)) return; // safety net — UI already blocks this, but double-check
         const cartItem = {
             _id: product._id,
             slug: product.slug,

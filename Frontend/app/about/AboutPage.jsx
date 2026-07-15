@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./About.css";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 const DEFAULT_CONTENT = {
   tabs: {
@@ -227,6 +227,7 @@ const AboutPage = () => {
       </nav>
 
       <main className="about-content-section">
+         <h1>About Barosche – Modern Jewellery with Timeless Elegance</h1> <br />
         <h2 className="content-title">{currentTab.title}</h2>
         <div className="content-body">
           {currentTab.paragraphs.map((para, index) =>

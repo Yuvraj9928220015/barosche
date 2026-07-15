@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
  
 const FETCH_TIMEOUT_MS = 15000;
 const MAX_RETRIES = 3;

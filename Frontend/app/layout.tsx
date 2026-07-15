@@ -20,15 +20,32 @@ export const metadata: Metadata = {
     template: "",
   },
   description: "Shop minimalist, fine & diamond jewellery online at Barosche. Discover luxury semi-handcrafted designs, elegant accessories & timeless jewellery pieces.",
-  metadataBase: new URL("https://www.barosche.com"),
+  metadataBase: new URL("https://barosche.com"),
   openGraph: {
-    siteName: "Barosche",
-    locale: "en_IN",
-    type: "website",
+  title: "Buy Minimalist Luxury, Fine & Diamond Jewellery Online",
+  description:
+    "Shop minimalist, fine & diamond jewellery online at Barosche. Discover luxury semi-handcrafted designs, elegant accessories & timeless jewellery pieces.",
+  url: "https://barosche.com",
+  siteName: "Barosche",
+  locale: "en_IN",
+  type: "website",
+  images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Barosche",
+      },
+    ],
   },
-  twitter: {
-    card: "summary_large_image",
+   twitter: {
+   card: "summary_large_image",
+   title: "Buy Minimalist Luxury, Fine & Diamond Jewellery Online",
+   description:
+    "Shop minimalist, fine & diamond jewellery online at Barosche. Discover luxury semi-handcrafted designs, elegant accessories & timeless jewellery pieces.",
+   images: ["/logo.png"],
   },
+
   icons: {
     icon: "/BaroscheSymbol.png",
   },

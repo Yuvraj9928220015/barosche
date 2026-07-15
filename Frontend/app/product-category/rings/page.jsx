@@ -1,12 +1,18 @@
 import Rings from './Rings';
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
 const FETCH_TIMEOUT_MS = 15000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
- 
+
+const PAGE_URL = "https://barosche.com/product-category/rings/";
+const OG_IMAGE = "https://api.barosche.com/uploads/product-1780895710494-301031940.webp";
+const TITLE = "Buy Daily Wear Rings for Men & Women Online";
+const DESCRIPTION =
+  "Buy rings for men and women online with elegant daily wear and statement designs. Explore minimal, stylish, and gemstone rings for every occasion.";
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
- 
+
 async function fetchWithTimeout(url, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -36,30 +42,52 @@ async function getInitialProducts(category) {
   return [];
 }
 
-
-
-
 export const metadata = {
-  title: "Buy Daily Wear Rings for Men & Women Online",
-  description:
-    "Buy rings for men and women online with elegant daily wear and statement designs. Explore minimal, stylish, and gemstone rings for every occasion.",
-  keywords: [
-    "Barosche Jewellery",
-    "About Barosche",
-    "Luxury Jewellery",
-    "Diamond Jewellery",
-    "Gold Jewellery",
-    "Custom Jewellery",
-    "Fine Jewellery"
-  ],
-  openGraph: {
-    title: "Buy Daily Wear Rings for Men & Women Online",
-    description:
-      "Buy rings for men and women online with elegant daily wear and statement designs. Explore minimal, stylish, and gemstone rings for every occasion.",
-    type: "website",
+  title: TITLE,
+  description: DESCRIPTION,
+
+  alternates: {
+    canonical: PAGE_URL,
   },
-  icons: {
-    icon: "/BaroscheSymbol.png",
+
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    siteName: "Barosche",
+    type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 480,
+        height: 600,
+        alt: "Barosche Rings Collection",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    site: "@barosche",
+    creator: "@barosche",
+    images: [
+      {
+        url: OG_IMAGE,
+        alt: "Barosche Rings Collection",
+      },
+    ],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

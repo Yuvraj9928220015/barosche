@@ -4,7 +4,7 @@ import "./Guide.css";
 import Image from "next/image";
 import Link from "next/link";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -18,6 +18,10 @@ function formatDate(dateStr) {
 function resolveImage(img) {
   if (!img) return "/placeholder.png";
   return img.startsWith("http") ? img : `${BACKEND_URL}${img}`;
+}
+
+function normalizeCategory(cat) {
+  return (cat || "Blog").toString().trim().toLowerCase();
 }
 
 const DEFAULT_UI_TEXTS = {
@@ -39,7 +43,7 @@ export default function GuidePage() {
 
       let fetchedBlogs = [];
       try {
-        const res = await fetch(`${BACKEND_URL}/api/blogs`);
+        const res = await fetch(`${BACKEND_URL}/api/blogs`, { cache: "no-store" });
         if (!res.ok) throw new Error("Fetch failed");
         const data = await res.json();
         fetchedBlogs = Array.isArray(data) ? data : [];
@@ -49,7 +53,7 @@ export default function GuidePage() {
       }
 
       fetchedBlogs = fetchedBlogs.filter(
-        (blog) => (blog.category || "Blog") === "Guides"
+        (blog) => normalizeCategory(blog.category) === "guides"
       );
 
       if (fetchedBlogs.length === 0) {

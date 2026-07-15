@@ -1,23 +1,57 @@
 import Terms from "./Terms";
 
+const PAGE_URL = "https://barosche.com/terms-of-service/";
+const OG_IMAGE = "https://barosche.com/logo.png";
+const TITLE = "Terms of Service | Website Policy";
+const DESCRIPTION =
+  "Read Barosche's terms of service for complete details about shopping, payments, policies, and customer responsibilities.";
+
 export const metadata = {
-  title: "Terms of Service | Website Policy",
-  description:
-    "Read Barosche’s terms of service for complete details about shopping, payments, policies, and customer responsibilities.",
-  keywords: [
-    "Barosche Jewellery",
-    "About Barosche",
-    "Luxury Jewellery",
-    "Diamond Jewellery",
-    "Gold Jewellery",
-    "Custom Jewellery",
-    "Fine Jewellery"
-  ],
+  title: TITLE,
+  description: DESCRIPTION,
+
+  alternates: {
+    canonical: PAGE_URL,
+  },
+
   openGraph: {
-    title: "Terms of Service | Website Policy",
-    description:
-      "Read Barosche’s terms of service for complete details about shopping, payments, policies, and customer responsibilities.",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    siteName: "Barosche",
     type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 2048,
+        height: 997,
+        alt: "Barosche Terms of Service",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    site: "@barosche",
+    creator: "@barosche",
+    images: [
+      {
+        url: OG_IMAGE,
+        alt: "Barosche Terms of Service",
+      },
+    ],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

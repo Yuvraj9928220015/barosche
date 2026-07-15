@@ -1,12 +1,12 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./blog-detail.css";
 import Image from "next/image";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -32,20 +32,44 @@ const DEFAULT_UI_TEXTS = {
   backText: "← Back to Blogs",
 };
 
-export default function BlogClient({ blog }) {
-  const [content, setContent] = useState(blog);
+export default function BlogClient({ initialBlog = null, slug = null }) {
+  const [rawBlog, setRawBlog] = useState(initialBlog);
+  const [content, setContent] = useState(initialBlog);
   const [uiTexts, setUiTexts] = useState(DEFAULT_UI_TEXTS);
-  const [status, setStatus] = useState("loading");
+  const [status, setStatus] = useState(initialBlog ? "translating" : "fetching");
 
+  const skippedInitialFetch = useRef(false);
+
+  // STEP 1: Agar SSR se blog nahi mila (build-time list-match fail hua),
+  // client-side fallback fetch karo — yeh safety net hai
+  useEffect(() => {
+    async function fetchFallback() {
+      if (initialBlog || !slug || slug === "placeholder") {
+        return;
+      }
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/blogs/${slug}`);
+        if (!res.ok) throw new Error("Blog not found");
+        const data = await res.json();
+        setRawBlog(data);
+        setStatus("translating");
+      } catch (err) {
+        console.error("Blog client fallback fetch error:", err);
+        setStatus("notfound");
+      }
+    }
+    fetchFallback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, initialBlog]);
+
+  // STEP 2: Translation
   useEffect(() => {
     async function translateBlog() {
-      try {
-        setStatus("loading");
+      if (!rawBlog) return;
 
-        if (!blog) {
-          setStatus("done");
-          return;
-        }
+      try {
+        skippedInitialFetch.current = true;
+        setStatus("translating");
 
         const detectRes = await fetch(`${BACKEND_URL}/api/translate/detect-language`);
         const detectData = await detectRes.json();
@@ -55,7 +79,7 @@ export default function BlogClient({ blog }) {
         const { languageCode } = detectData;
 
         if (languageCode === "en") {
-          setContent(blog);
+          setContent(rawBlog);
           setStatus("done");
           return;
         }
@@ -63,9 +87,9 @@ export default function BlogClient({ blog }) {
         const flatTexts = [
           DEFAULT_UI_TEXTS.byText,
           DEFAULT_UI_TEXTS.backText,
-          blog.title || "",
-          blog.metaDescription || blog.description || "",
-          blog.content || blog.body || "",
+          rawBlog.title || "",
+          rawBlog.metaDescription || rawBlog.description || "",
+          rawBlog.content || rawBlog.body || "",
         ];
 
         const translateRes = await fetch(`${BACKEND_URL}/api/translate/translate`, {
@@ -89,7 +113,7 @@ export default function BlogClient({ blog }) {
         });
 
         setContent({
-          ...blog,
+          ...rawBlog,
           title: t[2],
           description: t[3],
           content: t[4],
@@ -98,15 +122,15 @@ export default function BlogClient({ blog }) {
         setStatus("done");
       } catch (err) {
         console.error("Blog detail translation error:", err);
-        setContent(blog);
+        setContent(rawBlog);
         setStatus("done");
       }
     }
 
     translateBlog();
-  }, [blog]);
+  }, [rawBlog]);
 
-  if (status === "loading") {
+  if (status === "fetching") {
     return (
       <div className="blog-detail-container">
         <p className="loading-text">Loading...</p>
@@ -114,7 +138,7 @@ export default function BlogClient({ blog }) {
     );
   }
 
-  if (!content) {
+  if (status === "notfound") {
     return (
       <div className="blog-detail-container">
         <p className="error-text">Blog not found.</p>
@@ -122,28 +146,45 @@ export default function BlogClient({ blog }) {
     );
   }
 
+  const activeContent = content || rawBlog || initialBlog;
+
+  if (!activeContent) {
+    return (
+      <div className="blog-detail-container">
+        <p className="loading-text">Loading...</p>
+      </div>
+    );
+  }
+
   const cleanedBody = stripUnderlineTags(
-    content.content || content.body || content.description || ""
+    activeContent.content || activeContent.body || activeContent.description || ""
   );
 
   return (
     <div className="blog-detail-container">
+      {activeContent.script && (
+        <div
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: activeContent.script }}
+        />
+      )}
+
       <Link href="/blogs" className="blog-back-btn">
         {uiTexts.backText}
       </Link>
 
-      <h1 className="blog-title">{content.title}</h1>
+      <h1 className="blog-title">{activeContent.title}</h1>
 
       <div className="blog-meta">
-        <span>{uiTexts.byText} {content.author || "Barosche"}</span>
+        <span>{uiTexts.byText} {activeContent.author || "Barosche"}</span>
         {"  •  "}
-        <span>{formatDate(content.createdAt)}</span>
+        <span>{formatDate(activeContent.createdAt)}</span>
       </div>
 
       <div className="blog-cover-wrapper">
         <Image
-          src={resolveImage(content.image)}
-          alt={content.altTag || content.title}
+          src={resolveImage(activeContent.image)}
+          alt={activeContent.altTag || activeContent.title}
           fill
           className="blog-cover-image"
           unoptimized

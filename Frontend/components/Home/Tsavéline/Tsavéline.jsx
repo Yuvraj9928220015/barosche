@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import "./Tsavéline.css";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 const DEFAULT_CONTENT = {
   mainHeading: "Featured Products - Picked Just For You",

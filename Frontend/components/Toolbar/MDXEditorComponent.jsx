@@ -43,7 +43,7 @@ export default function MDXEditorComponent({
   async function imageUploadHandler(file) {
     const formData = new FormData();
     formData.append('image', file);
-    const response = await fetch('http://localhost:5000/api/upload-image', {
+    const response = await fetch('https://api.barosche.com/api/upload-image', {
       method: 'POST',
       body: formData
     });

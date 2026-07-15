@@ -7,12 +7,12 @@ import { useRouter } from 'next/navigation';
 import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
-// ─────────────────────────────────────────────────────────
+// ────────────────
 //  CURRENCY CONFIG
-// ─────────────────────────────────────────────────────────
+// ────────────────
 const CURRENCY_MAP = {
     US: { code: "USD", symbol: "$", rate: 1.14 },
     GB: { code: "GBP", symbol: "£", rate: 0.86 },
@@ -34,9 +34,9 @@ function formatPrice(eurPrice, currency) {
     return `${currency.symbol}${converted.toLocaleString()}`;
 }
 
-// ─────────────────────────────────────────────────────────
+// ─────────────────
 //  TRANSLATION HOOK
-// ─────────────────────────────────────────────────────────
+// ─────────────────
 function useTranslation(strings) {
     const [translated, setTranslated] = useState(strings);
     const [status, setStatus] = useState("idle");
@@ -87,15 +87,14 @@ function useTranslation(strings) {
         }
         run();
         return () => { cancelled = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key]);
 
     return { translated, status, countryCode };
 }
 
-// ─────────────────────────────────────────────────────────
+// ────────────
 //  STATIC DATA
-// ─────────────────────────────────────────────────────────
+// ────────────
 const categories = [
     { name: "Chosen" },
     { name: "Earrings" },
@@ -133,12 +132,8 @@ const UI_STRINGS = [
     "Default sorting", "Price: Low to High", "Price: High to Low", "Newest",
     "No products found", "Check browser console (F12) for errors.", "Retry",
     "Everyday Wear Jewellery", "Frequently Asked Questions",
-    // 18-26 categories
     "Chosen", "Earrings", "For Today", "Jewellery", "Mens", "New", "Pendants", "Rings", "Womens",
-    // 27-32 price ranges
     "€1–€500", "€500–€1000", "€1000–€2000", "€2000–€5000", "€5000–€10000", "€10000+",
-
-    // ── FAQ Questions (33-52) ──
     "What is everyday fine jewellery?",
     "Can fine jewellery be worn every day?",
     "What materials are used in everyday fine jewellery?",
@@ -159,8 +154,6 @@ const UI_STRINGS = [
     "How do I store fine jewellery properly?",
     "Can fine jewellery be worn with both ethnic and western outfits?",
     "Why choose everyday fine jewellery?",
-
-    // ── FAQ Answers (53-72) ──
     "Everyday fine jewellery refers to high-quality, lightweight jewellery designed for daily wear, combining durability with elegant, minimal designs.",
     "Yes, everyday fine jewellery is specifically designed to be worn daily due to its comfort, durability, and timeless style.",
     "Common materials include gold, sterling silver, platinum, and sometimes semi-precious gemstones.",
@@ -186,14 +179,11 @@ const UI_STRINGS = [
     //  MAIN CONTENT (73 onward)
     // ════════════════════════════════════════════════════
 
-    // 73-77
     "Daily Wear Jewellery – Lightweight, Stylish & Perfect for Everyday Use",
     "Discover a thoughtfully curated collection of <b>daily wear jewellery</b>, including <b>daily wear gold jewellery</b>, <b>dainty jewellery</b>, and <b>everyday fine jewellery</b> designed to bring together comfort, simplicity, and modern style. Created for today's fast-paced lifestyle, our jewellery blends elegance with practicality, allowing you to look polished, confident, and effortlessly stylish every day without compromising on comfort.",
     "Each piece in our collection is crafted with a focus on lightweight construction, smooth finishing, and minimal design, making it ideal for long hours of wear. Whether you prefer subtle elegance or a slightly layered look, our jewellery offers versatile styling options that seamlessly adapt to your daily routine. From delicate chains and refined rings to minimal earrings and understated pendants, every design is created to enhance your natural style without feeling heavy or overwhelming.",
     "Whether you are heading to work, attending casual outings, traveling, or managing your day-to-day activities, our jewellery for everyday wear is designed to complement your lifestyle effortlessly. Its clean and modern aesthetic ensures that it pairs beautifully with both western and traditional outfits, making it a reliable choice for any setting.",
     "Beyond style, durability and ease of maintenance are key features of our <b>everyday jewellery</b> collection. Each piece is made to retain its shine and quality over time, allowing you to enjoy long-lasting wear with minimal effort. This combination of comfort, versatility, and timeless appeal makes our daily wear jewellery an essential part of your everyday wardrobe.",
-
-    // 78-88 Daily Wear Gold Jewellery
     "<h2>Daily Wear Gold Jewellery – Effortless Elegance for Everyday Lifestyle</h2>",
     "<b>Daily wear gold jewellery</b> is thoughtfully designed for those who appreciate the timeless elegance of gold while prioritizing comfort and simplicity in their everyday style. Unlike traditional heavy pieces, modern designs focus on lightweight construction, clean lines, and minimal aesthetics, making them easy to wear throughout the day without feeling bulky or restrictive.",
     "Blending subtle luxury with practical design, today's <b>gold jewellery for daily use</b> is perfect for a variety of settings. Whether you're at the office, heading out for casual outings, traveling, or managing your daily routine, these pieces add a refined touch to your look without appearing excessive. Their understated elegance helps you maintain a polished and confident appearance with minimal effort.",
@@ -205,8 +195,6 @@ const UI_STRINGS = [
     "Ideal for office, travel, and daily routine",
     "Easy to pair with western and ethnic outfits",
     "Daily wear gold jewellery offers the perfect balance of elegance and practicality, making it a reliable choice for enhancing your everyday style with effortless sophistication.",
-
-    // 89-99 Daily Wear Jewellery – Modern Minimal Fashion Essentials
     "<h2>Daily Wear Jewellery – Modern Minimal Fashion Essentials</h2>",
     "<b>Daily wear jewellery</b> reflects a modern approach to fashion where simplicity, comfort, and elegance come together effortlessly. Designed for everyday use, these pieces focus on clean aesthetics and lightweight construction, making them ideal for long hours of wear. From dainty rings and minimal earrings to delicate chains and subtle pendants, each design enhances your natural look without appearing too bold or overwhelming.",
     "This category is built around versatility and ease. <b>Daily wear jewellery</b> is created to blend seamlessly with a variety of outfits, allowing you to maintain a consistent and polished style without the need to frequently change accessories. Whether you prefer a minimal, understated look or enjoy layering pieces for a more contemporary style, these designs offer flexibility to suit your personal preference.",
@@ -219,7 +207,6 @@ const UI_STRINGS = [
     "Long-lasting style with timeless appeal",
     "Daily wear jewellery is more than just an accessory—it's an essential part of your everyday style, offering a perfect balance of practicality, elegance, and modern fashion.",
 
-    // 100-110 Jewellery for Everyday Use
     "<h2>Jewellery for Everyday Use – Practical, Durable & Stylish</h2>",
     "<b>Jewellery for everyday use</b> is thoughtfully designed to combine durability, comfort, and effortless style. Created for regular wear, these pieces are perfect for individuals who prefer a consistent and refined look without the need for heavy or occasion-specific accessories. With a focus on practicality, everyday jewellery allows you to maintain a polished appearance throughout your daily routine.",
     "This category includes essential pieces such as stud earrings, thin chains, minimal rings, and subtle pendants—each crafted to be easy to wear and simple to style. The designs are intentionally minimal, ensuring they complement your natural look while blending seamlessly with a wide range of outfits. Whether you're dressing for work, casual outings, or travel, these pieces adapt effortlessly to your lifestyle.",
@@ -232,7 +219,6 @@ const UI_STRINGS = [
     "Ideal for work, travel, and daily activities",
     "Jewellery for everyday use is more than just a fashion choice—it's a dependable style essential that combines function, comfort, and elegance for modern living.",
 
-    // 111-120 Best Jewellery for Everyday Wear
     "<h2>Best Jewellery for Everyday Wear – Comfort Meets Style</h2>",
     "The best jewellery for everyday wear is all about achieving the perfect balance between comfort, elegance, and versatility. These pieces are thoughtfully designed to become a seamless part of your daily routine, enhancing your look without ever feeling heavy or overwhelming. Whether you're heading to work, meeting friends, or managing a busy day, the right jewellery adds a subtle touch of refinement to your overall appearance.",
     "Modern everyday jewellery embraces minimalism, focusing on lightweight designs, smooth finishes, and clean aesthetics. This ensures maximum comfort for long hours of wear while maintaining a polished and stylish look. From delicate chains and simple studs to sleek rings and understated pendants, these essentials are easy to mix, match, and layer according to your personal style.",
@@ -244,7 +230,6 @@ const UI_STRINGS = [
     "Essential accessories for a clean and refined everyday look",
     "Everyday jewellery is more than just an accessory—it's a style essential that brings effortless elegance and confidence to your daily life.",
 
-    // 121-127 Trending Styles
     "<h2>Trending Styles in Everyday Jewellery</h2>",
     "Stay updated with the latest trends in <b>everyday jewellery</b> that combine minimalism with modern fashion. From layered chains to stackable rings and tiny statement studs, these styles are perfect for elevating your daily look without overdoing it. Trend-inspired yet timeless, these designs allow you to express your personality while keeping your style effortless and refined.",
     "<b>Popular Trends:</b>",
@@ -253,7 +238,6 @@ const UI_STRINGS = [
     "Minimal hoop and stud earrings",
     "Sleek and delicate bracelets",
 
-    // 128-138 Dainty Jewellery
     "<h2>Dainty Jewellery – Delicate & Elegant Everyday Style</h2>",
     "<b>Dainty jewellery</b> is the perfect expression of subtle elegance, designed for those who appreciate refined, lightweight, and minimalist accessories. Known for its delicate craftsmanship and understated charm, dainty jewellery enhances your natural look without appearing bold or overpowering, making it ideal for everyday wear.",
     "These pieces are thoughtfully created with fine details, slim profiles, and soft finishes that provide both comfort and sophistication. Whether it's a thin chain, petite pendant, minimal ring, or tiny stud earrings, dainty jewellery offers a graceful touch that effortlessly complements your personal style.",
@@ -266,7 +250,6 @@ const UI_STRINGS = [
     "Ideal for everyday wear, from casual to professional settings",
     "Dainty jewellery is more than just an accessory—it's a timeless style choice that brings effortless elegance and sophistication to your everyday fashion.",
 
-    // 139-145 How to Style Everyday Jewellery
     "<h2>How to Style Everyday Jewellery</h2>",
     "<strong>Styling everyday jewellery </strong>is all about balance and simplicity. Choose pieces that complement your outfit rather than overpower it. For a minimal look, wear a single delicate chain or stud earrings. For a more fashionable approach, layer multiple pieces while keeping the overall look clean and coordinated.",
     "<b>Styling Tips:</b>",
@@ -275,7 +258,6 @@ const UI_STRINGS = [
     "Pair gold tones with warm outfits and silver with cool tones",
     "Keep it simple for professional settings",
 
-    // 146-156 Everyday Fine Jewellery
     "<h2>Everyday Fine Jewellery – Timeless Pieces for Daily Wear</h2>",
     "<b>Everyday fine jewellery</b> is the perfect blend of premium craftsmanship, refined design, and practical wearability. Created for those who appreciate subtle luxury, these pieces offer an elegant yet understated look that fits effortlessly into your daily routine. Unlike heavy or occasion-specific jewellery, everyday fine jewellery focuses on simplicity, comfort, and long-term value.",
     "Designed with high-quality materials and expert finishing, these pieces are built to last while maintaining their shine and sophistication over time. From delicate chains and classic studs to minimal rings and elegant pendants, each item is crafted to deliver both durability and style without compromising on comfort.",
@@ -288,17 +270,13 @@ const UI_STRINGS = [
     "Perfect for daily wear and versatile styling across occasions",
     "Everyday fine jewellery is more than just an accessory—it's a dependable expression of style, offering lasting elegance, comfort, and sophistication for modern living.",
 
-    // 157-159 Perfect Jewellery for Work & Office Wear (heading, intro, list label)
     "<h2>Perfect Jewellery for Work & Office Wear</h2>",
     "Office jewellery should be subtle, elegant, and distraction-free. <b>Everyday jewellery</b> is ideal for professional environments as it enhances your appearance without being too flashy.",
     "<b>Best Picks for Office Wear:</b>",
-    // 160-163 link labels (rendered as styled links, see OFFICE_LINKS below)
     "Small stud earrings",
     "Thin chains with simple pendants",
     "Minimal rings",
     "Lightweight bracelets",
-
-    // 164-170 Jewellery Care Tips
     "<h2>Jewellery Care Tips for Daily Wear</h2>",
     "Taking proper care of your <b>everyday jewellery</b> helps maintain its shine and longevity. Even though these pieces are designed for regular use, simple care practices can keep them looking new for years.",
     "<b>Care Tips:</b>",
@@ -306,8 +284,6 @@ const UI_STRINGS = [
     "Avoid contact with perfumes and chemicals",
     "Clean regularly with a soft cloth",
     "Remove before heavy activities",
-
-    // 171-177 Gifting
     "<h2>Gifting Everyday Jewellery – A Perfect Choice</h2>",
     "<b>Everyday jewellery</b> makes an excellent gift due to its versatility and practicality. Whether for birthdays, anniversaries, or special occasions, these pieces are thoughtful and easy to wear.",
     "<b>Why It's a Great Gift:</b>",

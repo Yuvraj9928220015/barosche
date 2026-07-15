@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import "./Header.css";
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 const DEFAULT_CONTENT = {
   title: "The Valdorian Signet Ring",
@@ -16,7 +16,7 @@ export default function Header() {
   useEffect(() => {
     const translateContent = async () => {
       try {
-        // ✅ FIXED: "detect-languag" → "detect-language"
+        
         const detectRes = await fetch(
           `${BACKEND_URL}/api/translate/detect-language`
         );
@@ -69,11 +69,16 @@ export default function Header() {
       <video autoPlay loop muted playsInline className="hero-video mobile-video">
         <source src="/Sequence 05.mp4" type="video/mp4" />
       </video>
-{/* header section me translation wala section add kiya h us type se collection wali file me bi add karna h please generate tha full code collections.jsx file */}
+
       <div className="hero-overlay"></div>
 
       <div className="hero-content">
-        <h1 className="hero-title">{content.title}</h1>
+       
+        <h1 className="sr-only">
+          Fine Jewellery, Diamond & Minimalist Luxury Jewellery Online
+        </h1>
+
+        <h2 className="hero-title">{content.title}</h2>
         <a href="/product-category/rings/">
           <button className="hero-btn">{content.button}</button>
         </a>

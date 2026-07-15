@@ -1,12 +1,18 @@
 import Pendant from './Pendant';
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
 const FETCH_TIMEOUT_MS = 15000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
- 
+
+const PAGE_URL = "https://barosche.com/product-category/pendants/";
+const OG_IMAGE = "https://api.barosche.com/uploads/product-1782453326085-355591573.jpg";
+const TITLE = "Shop Stylish Minimal & Gemstone Daily-Wear Pendants for Women";
+const DESCRIPTION =
+  "Shop pendants jewellery online with elegant, minimal, and gemstone designs. Perfect for daily wear, gifting, and adding effortless style to any outfit.";
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
- 
+
 async function fetchWithTimeout(url, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -37,26 +43,51 @@ async function getInitialProducts(category) {
 }
 
 export const metadata = {
-  title: "Shop Stylish Minimal & Gemstone Daily-Wear Pendants for Women",
-  description:
-    "Shop pendants jewellery online with elegant, minimal, and gemstone designs. Perfect for daily wear, gifting, and adding effortless style to any outfit.",
-  keywords: [
-    "Barosche Jewellery",
-    "About Barosche",
-    "Luxury Jewellery",
-    "Diamond Jewellery",
-    "Gold Jewellery",
-    "Custom Jewellery",
-    "Fine Jewellery"
-  ],
-  openGraph: {
-    title: "Shop Stylish Minimal & Gemstone Daily-Wear Pendants for Women",
-    description:
-      "Shop pendants jewellery online with elegant, minimal, and gemstone designs. Perfect for daily wear, gifting, and adding effortless style to any outfit.",
-    type: "website",
+  title: TITLE,
+  description: DESCRIPTION,
+
+  alternates: {
+    canonical: PAGE_URL,
   },
-  icons: {
-    icon: "/BaroscheSymbol.png",
+
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    siteName: "Barosche",
+    type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 480,
+        height: 600,
+        alt: "Barosche Pendants Collection",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    site: "@barosche",
+    creator: "@barosche",
+    images: [
+      {
+        url: OG_IMAGE,
+        alt: "Barosche Pendants Collection",
+      },
+    ],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

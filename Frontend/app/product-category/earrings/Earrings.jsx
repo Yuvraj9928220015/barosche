@@ -7,7 +7,7 @@ import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useRouter } from 'next/navigation';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 const CURRENCY_MAP = {
@@ -57,6 +57,7 @@ const DEFAULT_UI = {
     priceOnRequest: "Price on request",
     viewDetails: "View Details",
     qty: "Qty",
+    outOfStock: "Out of Stock",
 };
 
 const flattenUI = (ui) => [
@@ -65,7 +66,7 @@ const flattenUI = (ui) => [
     ui.filtersText, ui.everydayWear, ui.faq, ui.retry,
     ui.gridView, ui.addToWishlist, ui.quickView, ui.addToCart,
     ui.sale, ui.noProductsBase, ui.checkConsole, ui.showingOf,
-    ui.showingResults, ui.pageTitle,
+    ui.showingResults, ui.pageTitle, ui.outOfStock,
 ];
 
 const rebuildUI = (translations) => {
@@ -77,7 +78,7 @@ const rebuildUI = (translations) => {
         filtersText: get(), everydayWear: get(), faq: get(), retry: get(),
         gridView: get(), addToWishlist: get(), quickView: get(), addToCart: get(),
         sale: get(), noProductsBase: get(), checkConsole: get(), showingOf: get(),
-        showingResults: get(), pageTitle: get(),
+        showingResults: get(), pageTitle: get(), outOfStock: get(),
         priceOnRequest: "Price on request", viewDetails: "View Details", qty: "Qty",
     };
 };
@@ -400,7 +401,13 @@ function getFirstVariant(product) {
         newPrice: product.newPrice ?? product.price,
         isSale: product.isSale || false,
         inStock: product.inStock ?? true,
+        quantity: product.quantity,
     };
+}
+
+// Ek hi jagah stock-check logic — admin dashboard jaisa hi (quantity + inStock dono check)
+function isVariantOutOfStock(v) {
+    return (Number(v?.quantity) || 0) <= 0 || v?.inStock === false;
 }
 
 function Toast({ message, visible }) {
@@ -421,6 +428,7 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
     const variant = getFirstVariant(product);
     const images = variant.images || [];
     const categoryUrl = categorySlugMap[product.category] || 'earrings';
+    const outOfStock = isVariantOutOfStock(variant);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -452,7 +460,8 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
                 </div>
 
                 <div style={{ flex: '1 1 280px', padding: '32px 24px 24px 16px', minWidth: '240px' }}>
-                    {variant.isSale && <span style={{ background: '#1a1a1a', color: '#fff', fontSize: '11px', letterSpacing: '1px', padding: '3px 8px', borderRadius: '2px', display: 'inline-block', marginBottom: '10px' }}>{ui.sale}</span>}
+                    {variant.isSale && !outOfStock && <span style={{ background: '#1a1a1a', color: '#fff', fontSize: '11px', letterSpacing: '1px', padding: '3px 8px', borderRadius: '2px', display: 'inline-block', marginBottom: '10px' }}>{ui.sale}</span>}
+                    {outOfStock && <span style={{ background: '#999', color: '#fff', fontSize: '11px', letterSpacing: '1px', padding: '3px 8px', borderRadius: '2px', display: 'inline-block', marginBottom: '10px' }}>{ui.outOfStock}</span>}
                     <p style={{ fontSize: '12px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>{product.category}</p>
                     <h2 style={{ fontSize: '20px', fontWeight: '500', margin: '0 0 14px', lineHeight: 1.3 }}>{product.title}</h2>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '20px' }}>
@@ -471,7 +480,17 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
                         </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <button onClick={() => onAddToCart(product, qty)} style={{ background: '#1a1a1a', color: '#fff', border: 'none', padding: '13px 20px', fontSize: '13px', letterSpacing: '0.5px', cursor: 'pointer', borderRadius: '4px', textTransform: 'uppercase' }}>{ui.addToCart}</button>
+                        <button
+                            onClick={() => { if (!outOfStock) onAddToCart(product, qty); }}
+                            disabled={outOfStock}
+                            style={{
+                                background: outOfStock ? '#bbb' : '#1a1a1a', color: '#fff', border: 'none', padding: '13px 20px',
+                                fontSize: '13px', letterSpacing: '0.5px', cursor: outOfStock ? 'not-allowed' : 'pointer',
+                                borderRadius: '4px', textTransform: 'uppercase',
+                            }}
+                        >
+                            {outOfStock ? ui.outOfStock : ui.addToCart}
+                        </button>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button
                                 onClick={() => onToggleWishlist(product._id, { _id: product._id, slug: product.slug, title: product.title, category: product.category, images: variant.images || [], oldPrice: variant.oldPrice, newPrice: variant.newPrice, isSale: variant.isSale })}
@@ -513,6 +532,8 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
     const [currentImg, setCurrentImg] = useState(0);
     const intervalRef = useRef(null);
 
+    const outOfStock = isVariantOutOfStock(variant);
+
     const startHover = () => {
         if (images.length <= 1) return;
         let idx = 1;
@@ -530,7 +551,8 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
     return (
         <Link href={`/product-category/${categoryUrl}/${p.slug}`} className="jw-card" onMouseEnter={startHover} onMouseLeave={stopHover}>
             <div className="jw-card-img-wrap">
-                {isSale && <span className="jw-sale-badge">{ui.sale}</span>}
+                {isSale && !outOfStock && <span className="jw-sale-badge">{ui.sale}</span>}
+                {outOfStock && <span className="jw-sale-badge" style={{ background: '#999' }}>{ui.outOfStock}</span>}
                 <img src={imgSrc} alt={p.title} className="jw-card-img" loading="lazy" onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
                 {images.length > 1 && (
                     <div className="jw-img-dots">
@@ -553,7 +575,19 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
                             <path d="M1 8C2.5 4 5 2 8 2C11 2 13.5 4 15 8C13.5 12 11 14 8 14C5 14 2.5 12 1 8Z" stroke="currentColor" strokeWidth="1.3" />
                         </svg>
                     </button>
-                    <button className="jw-action-btn jw-add-cart" title={ui.addToCart} aria-label={ui.addToCart} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddToCart(p, 1); }}>
+                    <button
+                        className="jw-action-btn jw-add-cart"
+                        title={outOfStock ? ui.outOfStock : ui.addToCart}
+                        aria-label={outOfStock ? ui.outOfStock : ui.addToCart}
+                        disabled={outOfStock}
+                        style={outOfStock ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (outOfStock) return;
+                            onAddToCart(p, 1);
+                        }}
+                    >
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path d="M1 1H3L4.5 9H12.5L14 4H4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
                             <circle cx="6" cy="12" r="1.2" fill="currentColor" />
@@ -610,7 +644,7 @@ export default function Earrings({ initialProducts = [] }) {
     const [sort, setSort] = useState("default");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // ── SSR se initialProducts — pehli load par re-fetch skip karega (crawl fix) ──
+    // ── SSR se initialProducts — pehli load par instantly render karne ke liye ──
     const [products, setProducts] = useState(initialProducts);
     const [loading, setLoading] = useState(initialProducts.length === 0);
     const [error, setError] = useState(null);
@@ -675,27 +709,35 @@ export default function Earrings({ initialProducts = [] }) {
     };
 
     useEffect(() => {
-        // Pehli baar: agar SSR se already products mile hain (initialProducts),
-        // to unhe hi use karo — dobara fetch mat karo. Static HTML me links
-        // already bake ho chuke hain, Google ko wahi milega.
-        // Category badalne par (ya SSR data khaali hone par) hi client-fetch karo.
-        if (!skippedInitialFetch.current) {
-            skippedInitialFetch.current = true;
-            if (initialProducts.length > 0 && activeCategory === "Earrings") {
-                setLoading(false);
-                return;
-            }
-        }
+        // FIX: Pehle yahan pe agar SSR se initialProducts mil jaate the (activeCategory
+        // === "Earrings") to hum dobara fetch hi skip kar dete the — isliye admin me
+        // stock/quantity update karne ke baad bhi listing page purana (stale) data
+        // dikhata rehta tha jab tak SSR cache refresh na ho. Detail page live
+        // client-fetch karta hai isliye wahan turant sahi dikhta tha.
+        //
+        // Ab: SSR data se instant render (SEO ke liye first paint fast rehta hai),
+        // lekin background me hamesha ek fresh fetch chalta hai (no-store) jo
+        // products ko silently update kar deta hai — bina skeleton flash kiye.
+        const hasSSRData = !skippedInitialFetch.current && initialProducts.length > 0 && activeCategory === "Earrings";
+        skippedInitialFetch.current = true;
 
         const fetchProducts = async () => {
             try {
-                setLoading(true); setError(null);
+                if (!hasSSRData) setLoading(true);
+                setError(null);
                 const url = `${API_BASE}/api/products?${new URLSearchParams(activeCategory ? { category: activeCategory } : {}).toString()}`;
-                const response = await fetch(url);
+                const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) throw new Error(`Server Error: ${response.status}`);
                 const data = await response.json();
                 if (data.success) { setProducts(data.products || []); } else { throw new Error(data.message || "Failed to fetch data."); }
-            } catch (err) { console.error("[Earrings] Fetch error:", err); setError(err.message); } finally { setLoading(false); }
+            } catch (err) {
+                console.error("[Earrings] Fetch error:", err);
+                // agar SSR data already dikha hua hai to error sirf log karo,
+                // UI ko error state me mat le jao (stale-but-shown data > blank error)
+                if (!hasSSRData) setError(err.message);
+            } finally {
+                setLoading(false);
+            }
         };
         fetchProducts();
     }, [activeCategory]);
@@ -706,6 +748,7 @@ export default function Earrings({ initialProducts = [] }) {
 
     const handleAddToCart = useCallback((product, qty = 1) => {
         const variant = getFirstVariant(product);
+        if (isVariantOutOfStock(variant)) return; // safety net — UI already blocks this, but double-check
         window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { item: { _id: product._id, slug: product.slug, title: product.title, category: product.category, images: variant.images || [], oldPrice: variant.oldPrice, newPrice: variant.newPrice, isSale: variant.isSale, qty } } }));
         setTimeout(() => window.dispatchEvent(new CustomEvent('open-cart-drawer')), 400);
         showToast(`"${product.title}" added to cart`);

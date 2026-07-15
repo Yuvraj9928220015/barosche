@@ -9,6 +9,11 @@
     color: #333333;
 }
 
+.about-content-section h1 {
+    font-weight: 400;
+    text-align: center;
+}
+
 /* --- Tabs Header Section --- */
 .about-tabs-nav {
     display: flex;

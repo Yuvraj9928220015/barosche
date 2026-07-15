@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 // ────────────────
@@ -61,6 +61,7 @@ const DEFAULT_UI = {
     showingResults: "results",
     pageTitle: "Bracelets for Men & Women Online – Elegant Everyday & Statement Designs",
     priceOnRequest: "Price on request",
+    outOfStock: "Out of Stock",
 };
 
 const flattenUI = (ui) => [
@@ -68,7 +69,7 @@ const flattenUI = (ui) => [
     ui.priceLowHigh, ui.priceHighLow, ui.newest, ui.filtersText, ui.everydayJewellery,
     ui.faq, ui.retry, ui.gridView, ui.addToWishlist, ui.quickView, ui.addToCart,
     ui.sale, ui.noProductsBase, ui.checkConsole, ui.showingOf, ui.showingResults, ui.pageTitle,
-    ui.priceOnRequest,
+    ui.priceOnRequest, ui.outOfStock,
 ];
 
 const rebuildUI = (translations) => {
@@ -78,7 +79,7 @@ const rebuildUI = (translations) => {
         priceLowHigh: get(), priceHighLow: get(), newest: get(), filtersText: get(), everydayJewellery: get(),
         faq: get(), retry: get(), gridView: get(), addToWishlist: get(), quickView: get(), addToCart: get(),
         sale: get(), noProductsBase: get(), checkConsole: get(), showingOf: get(), showingResults: get(),
-        pageTitle: get(), priceOnRequest: get(),
+        pageTitle: get(), priceOnRequest: get(), outOfStock: get(),
     };
 };
 
@@ -157,12 +158,14 @@ const bracelets_content = [
     { type: 'p', text: "Everyday bracelets are thoughtfully designed to offer long-lasting comfort along with effortless, understated style. With lightweight construction, smooth finishing, and skin-friendly designs, they can be worn throughout the day without causing irritation or heaviness, making them ideal for continuous use." },
     { type: 'p', text: "These bracelets focus on simplicity and practicality while still maintaining a refined and elegant appearance. Their minimal yet stylish designs make them suitable for people who prefer subtle fashion that blends naturally with daily life." },
     { type: 'p', text: "<strong>They are perfect for a wide range of everyday activities, including:</strong>" },
-    { type: 'ul', items: [
-        "Office wear and professional settings",
-        "Daily routines and casual styling",
-        "Travel and long-hour comfort",
-        "Minimal fashion preferences"
-    ]},
+    {
+        type: 'ul', items: [
+            "Office wear and professional settings",
+            "Daily routines and casual styling",
+            "Travel and long-hour comfort",
+            "Minimal fashion preferences"
+        ]
+    },
     { type: 'p', text: "Their versatile design ensures they pair effortlessly with both western and traditional outfits, allowing you to maintain a polished and consistent look without changing accessories frequently." },
 
     { type: 'h', text: "Trending Bracelet Styles You Should Explore" },
@@ -203,38 +206,44 @@ const bracelets_content = [
 
     { type: 'h', text: "Styling Tips – Elevate Your Look with Bracelets" },
     { type: 'p', text: "Bracelets are versatile fashion accessories that can instantly enhance your overall appearance and add a refined finishing touch to any outfit. With the right styling approach, you can create looks that feel balanced, modern, and effortlessly elegant while expressing your personal style." },
-    { type: 'ul', items: [
-        "Wear a single bracelet for a clean, minimal, and refined everyday look that feels simple yet sophisticated",
-        "Stack multiple bracelets together to create a trendy layered style that adds depth, texture, and a fashion-forward edge",
-        "Pair bold or statement bracelets with simple outfits to maintain visual balance and allow the jewellery to stand out as the focal point",
-        "Match bracelets with watches for a coordinated, polished, and well-put-together appearance",
-        "Choose minimal designs for everyday elegance, ensuring comfort, versatility, and effortless styling throughout the day"
-    ]},
+    {
+        type: 'ul', items: [
+            "Wear a single bracelet for a clean, minimal, and refined everyday look that feels simple yet sophisticated",
+            "Stack multiple bracelets together to create a trendy layered style that adds depth, texture, and a fashion-forward edge",
+            "Pair bold or statement bracelets with simple outfits to maintain visual balance and allow the jewellery to stand out as the focal point",
+            "Match bracelets with watches for a coordinated, polished, and well-put-together appearance",
+            "Choose minimal designs for everyday elegance, ensuring comfort, versatility, and effortless styling throughout the day"
+        ]
+    },
 
     { type: 'h', text: "Bracelets as Meaningful Gifts" },
     { type: 'p', text: "Bracelets are timeless and thoughtful gifts that carry deep emotional value and personal significance. More than just a fashion accessory, they symbolize love, connection, care, and lasting memories, making them a meaningful way to express appreciation for someone special." },
     { type: 'p', text: "Their versatile and elegant nature makes them suitable for people of all ages and styles, ensuring they always feel personal and memorable. Whether simple or detailed, a bracelet reflects thoughtfulness and turns any occasion into a lasting memory." },
     { type: 'p', text: "<strong>They are ideal for a wide range of special occasions, including:</strong>" },
-    { type: 'ul', items: [
-        "Birthdays",
-        "Anniversaries",
-        "Festivals",
-        "Romantic occasions",
-        "Personal milestones"
-    ]},
+    {
+        type: 'ul', items: [
+            "Birthdays",
+            "Anniversaries",
+            "Festivals",
+            "Romantic occasions",
+            "Personal milestones"
+        ]
+    },
     { type: 'p', text: "A carefully chosen bracelet is not just a piece of jewellery—it becomes a cherished keepsake that holds emotional value and can be treasured for years, keeping special moments alive forever." },
 
     { type: 'h', text: "Why Buy Bracelets Online?" },
     { type: 'p', text: "Shopping for bracelets online offers a seamless blend of convenience, variety, and informed decision-making, making it easier than ever to find the perfect piece that matches your style and preference. Instead of visiting multiple stores, you can explore a wide range of designs in one place and choose with confidence." },
     { type: 'p', text: "Online jewellery shopping gives you the freedom to browse collections at your own pace, compare different styles, and stay updated with the latest fashion trends—all from the comfort of your home. This makes the entire experience more flexible, time-saving, and enjoyable." },
     { type: 'p', text: "<strong>Benefits include:</strong>" },
-    { type: 'ul', items: [
-        "Wide collection of modern and traditional bracelet designs in one place",
-        "Easy comparison of styles, materials, and prices before purchase",
-        "Access to the latest jewellery trends and new arrivals",
-        "Convenient shopping experience from home or mobile",
-        "Secure checkout and reliable payment options for safe purchasing"
-    ]},
+    {
+        type: 'ul', items: [
+            "Wide collection of modern and traditional bracelet designs in one place",
+            "Easy comparison of styles, materials, and prices before purchase",
+            "Access to the latest jewellery trends and new arrivals",
+            "Convenient shopping experience from home or mobile",
+            "Secure checkout and reliable payment options for safe purchasing"
+        ]
+    },
     { type: 'p', text: "With these advantages, buying bracelets online becomes not only practical but also a smarter way to discover jewellery that truly fits your personality and lifestyle." },
 
     { type: 'h', text: "Materials & Craftsmanship in Bracelets" },
@@ -244,121 +253,143 @@ const bracelets_content = [
     { type: 'h', text: "Bracelet Size Guide – Find the Perfect Fit" },
     { type: 'p', text: "Choosing the right bracelet size is essential for both comfort and style. A well-fitted bracelet should sit naturally on your wrist without feeling too tight or too loose." },
     { type: 'p', text: "<b>To find your ideal size:</b>" },
-    { type: 'ul', items: [
-        "Measure your wrist using a flexible measuring tape",
-        "Add a small allowance for comfort and movement",
-        "Choose snug fit for minimal styles and slightly loose fit for statement designs"
-    ]},
+    {
+        type: 'ul', items: [
+            "Measure your wrist using a flexible measuring tape",
+            "Add a small allowance for comfort and movement",
+            "Choose snug fit for minimal styles and slightly loose fit for statement designs"
+        ]
+    },
     { type: 'p', text: "A perfect fit ensures your bracelet looks elegant while remaining comfortable throughout the day." },
 
     { type: 'h', text: "Bracelet Care & Maintenance Tips" },
     { type: 'p', text: "Proper care helps maintain the shine and durability of your bracelets over time. Simple habits can keep your jewellery looking new for years." },
     { type: 'p', text: "<strong>Care guidelines:</strong>" },
-    { type: 'ul', items: [
-        "Avoid direct contact with perfumes, water, and chemicals",
-        "Store bracelets in a soft pouch or jewellery box",
-        "Clean gently using a soft cloth after use",
-        "Remove before heavy physical activities or sleeping"
-    ]},
+    {
+        type: 'ul', items: [
+            "Avoid direct contact with perfumes, water, and chemicals",
+            "Store bracelets in a soft pouch or jewellery box",
+            "Clean gently using a soft cloth after use",
+            "Remove before heavy physical activities or sleeping"
+        ]
+    },
     { type: 'p', text: "With proper care, your bracelets will retain their beauty and finish for a long time." },
 
     { type: 'h', text: "Seasonal Bracelet Trends You Should Know" },
     { type: 'p', text: "Bracelet fashion evolves with seasons and trends, allowing you to refresh your style throughout the year." },
-    { type: 'ul', items: [
-        "<strong>Summer Styles:</strong> Lightweight, minimal, and breathable designs",
-        "<strong>Winter Looks:</strong> Bold chains, layered styles, and textured finishes",
-        "<strong>Festive Trends:</strong> Gemstone and statement bracelets with rich detailing",
-        "<strong>Everyday Fashion:</strong> Minimal luxe and unisex designs for daily wear"
-    ]},
+    {
+        type: 'ul', items: [
+            "<strong>Summer Styles:</strong> Lightweight, minimal, and breathable designs",
+            "<strong>Winter Looks:</strong> Bold chains, layered styles, and textured finishes",
+            "<strong>Festive Trends:</strong> Gemstone and statement bracelets with rich detailing",
+            "<strong>Everyday Fashion:</strong> Minimal luxe and unisex designs for daily wear"
+        ]
+    },
     { type: 'p', text: "Staying updated with seasonal trends helps you keep your jewellery style fresh and modern." },
 
     { type: 'h', text: "Layering & Stacking Bracelets Guide" },
     { type: 'p', text: "Stacking bracelets is one of the most popular modern styling trends. It allows you to mix different designs to create a personalized fashion statement." },
     { type: 'p', text: "<b>Styling tips:</b>" },
-    { type: 'ul', items: [
-        "Combine thin minimal bracelets with bold pieces for balance",
-        "Mix textures like chain, beaded, and metal finishes",
-        "Keep one focal piece and build around it",
-        "Stick to 2–4 bracelets for a clean, stylish stack"
-    ]},
+    {
+        type: 'ul', items: [
+            "Combine thin minimal bracelets with bold pieces for balance",
+            "Mix textures like chain, beaded, and metal finishes",
+            "Keep one focal piece and build around it",
+            "Stick to 2–4 bracelets for a clean, stylish stack"
+        ]
+    },
     { type: 'p', text: "Layering adds depth and personality to your overall look." },
 
     { type: 'h', text: "Bracelets for Men – Strong & Modern Styling" },
     { type: 'p', text: "Men's bracelets are designed to reflect confidence, simplicity, and masculinity. These styles focus on bold chains, minimal bands, and structured designs that enhance everyday fashion." },
     { type: 'p', text: "<b>Popular choices include:</b>" },
-    { type: 'ul', items: [
-        "Leather-inspired designs",
-        "Bold chain bracelets",
-        "Minimal metallic bands",
-        "Geometric and textured styles"
-    ]},
+    {
+        type: 'ul', items: [
+            "Leather-inspired designs",
+            "Bold chain bracelets",
+            "Minimal metallic bands",
+            "Geometric and textured styles"
+        ]
+    },
     { type: 'p', text: "They pair effortlessly with casual, office, and party outfits, adding a refined masculine edge." },
 
     { type: 'h', text: "Bracelets for Women – Elegant & Fashion-Forward Designs" },
     { type: 'p', text: "Women's bracelets are crafted to highlight elegance, femininity, and grace. From delicate gold chains to modern gemstone accents, each piece enhances everyday and festive styling." },
     { type: 'p', text: "<b>Popular styles include:</b>" },
-    { type: 'ul', items: [
-        "Minimal chain bracelets",
-        "Gold and gemstone designs",
-        "Stackable fashion bracelets",
-        "Statement occasion pieces"
-    ]},
+    {
+        type: 'ul', items: [
+            "Minimal chain bracelets",
+            "Gold and gemstone designs",
+            "Stackable fashion bracelets",
+            "Statement occasion pieces"
+        ]
+    },
     { type: 'p', text: "These designs blend beautifully with both traditional and western outfits." },
 
     { type: 'h', text: "Occasion-Based Bracelet Styling" },
     { type: 'p', text: "Bracelets can be styled differently depending on the occasion, helping you create the perfect look every time." },
-    { type: 'ul', items: [
-        "<strong>Office Wear:</strong> Minimal and lightweight designs",
-        "<strong>Casual Outings:</strong> Simple chain or stackable styles",
-        "<strong>Festive Events:</strong> Gold and gemstone statement bracelets",
-        "<strong>Parties:</strong> Bold and artistic designs for standout looks",
-        "<strong>Gifting:</strong> Elegant minimal or symbolic bracelets"
-    ]},
+    {
+        type: 'ul', items: [
+            "<strong>Office Wear:</strong> Minimal and lightweight designs",
+            "<strong>Casual Outings:</strong> Simple chain or stackable styles",
+            "<strong>Festive Events:</strong> Gold and gemstone statement bracelets",
+            "<strong>Parties:</strong> Bold and artistic designs for standout looks",
+            "<strong>Gifting:</strong> Elegant minimal or symbolic bracelets"
+        ]
+    },
     { type: 'p', text: "Choosing the right style ensures a balanced and appropriate appearance." },
     { type: 'h', text: "The Symbolism of Bracelets" },
     { type: 'p', text: "Bracelets often carry deeper meaning beyond fashion. They are seen as symbols of connection, strength, love, and memory." },
     { type: 'p', text: "<b>Many people choose bracelets to represent the following:</b>" },
-    { type: 'ul', items: [
-        "Personal milestones",
-        "Emotional bonds",
-        "Relationships and friendships",
-        "Cultural or spiritual beliefs"
-    ]},
+    {
+        type: 'ul', items: [
+            "Personal milestones",
+            "Emotional bonds",
+            "Relationships and friendships",
+            "Cultural or spiritual beliefs"
+        ]
+    },
     { type: 'p', text: "This emotional value makes bracelets more than accessories—they become meaningful keepsakes." },
 
     { type: 'h', text: "Bracelets as Wardrobe Essentials" },
     { type: 'p', text: "A well-rounded jewellery collection is incomplete without bracelets. Their versatility makes them suitable for nearly every outfit and occasion." },
     { type: 'p', text: "<b>They are essential because:</b>" },
-    { type: 'ul', items: [
-        "They complement both casual and formal looks",
-        "They can be worn alone or stacked",
-        "They suit both men and women",
-        "They adapt easily to changing fashion trends"
-    ]},
+    {
+        type: 'ul', items: [
+            "They complement both casual and formal looks",
+            "They can be worn alone or stacked",
+            "They suit both men and women",
+            "They adapt easily to changing fashion trends"
+        ]
+    },
     { type: 'p', text: "This makes bracelets a timeless and practical fashion essential." },
 
     { type: 'h', text: "Why This Bracelet Collection Stands Out" },
     { type: 'p', text: "This collection is designed with a focus on modern fashion needs while maintaining timeless elegance. Each piece is created to offer a perfect balance of style, comfort, and durability." },
     { type: 'p', text: "<b>Key strengths:</b>" },
-    { type: 'ul', items: [
-        "Wide variety of modern and classic designs",
-        "Lightweight and comfortable wear",
-        "Trend-driven yet timeless aesthetics",
-        "Suitable for everyday wear and gifting",
-        "High-quality craftsmanship and finishing"
-    ]},
+    {
+        type: 'ul', items: [
+            "Wide variety of modern and classic designs",
+            "Lightweight and comfortable wear",
+            "Trend-driven yet timeless aesthetics",
+            "Suitable for everyday wear and gifting",
+            "High-quality craftsmanship and finishing"
+        ]
+    },
     { type: 'p', text: "It ensures every customer finds a bracelet that matches their personality and lifestyle." },
 
     { type: 'h', text: "Why Choose Our Bracelets Collection" },
     { type: 'p', text: "Whether you prefer minimal everyday jewellery or bold statement styles, this collection offers versatile options that suit every personality, outfit, and occasion. The designs are made to seamlessly blend with both casual and formal looks, giving you effortless styling flexibility in <a href='/product-category/jewellery/' style='color: #007bff; text-decoration: underline;'>semi-handmade jewellery</a>." },
     { type: 'p', text: "<b>Highlights:</b>" },
-    { type: 'ul', items: [
-        "Stylish designs for both men and women",
-        "Lightweight and comfortable for all-day wear",
-        "Trend-focused yet timeless designs that never go out of style",
-        "Durable craftsmanship with premium finishing for long-lasting use",
-        "Perfect for daily wear as well as meaningful gifting"
-    ]},
+    {
+        type: 'ul', items: [
+            "Stylish designs for both men and women",
+            "Lightweight and comfortable for all-day wear",
+            "Trend-focused yet timeless designs that never go out of style",
+            "Durable craftsmanship with premium finishing for long-lasting use",
+            "Perfect for daily wear as well as meaningful gifting"
+        ]
+    },
     { type: 'p', text: "Each bracelet is created to enhance your personal style while delivering lasting quality, making it a valuable addition to any modern jewellery collection." },
 ];
 
@@ -413,7 +444,13 @@ function getFirstVariant(product) {
         newPrice: product.newPrice,
         isSale: product.isSale || false,
         inStock: product.inStock ?? true,
+        quantity: product.quantity,
     };
+}
+
+// Ek hi jagah stock-check logic — admin dashboard jaisa hi
+function isVariantOutOfStock(v) {
+    return (Number(v?.quantity) || 0) <= 0 || v?.inStock === false;
 }
 
 // ─────────────────────────────────────────────────────────
@@ -453,6 +490,7 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
     const variant = getFirstVariant(product);
     const images = variant.images || [];
     const categoryUrl = categorySlugMap[product.category] || 'bracelets';
+    const outOfStock = isVariantOutOfStock(variant);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -538,7 +576,7 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
                 </div>
 
                 <div style={{ flex: '1 1 280px', padding: '32px 24px 24px 16px', minWidth: '240px' }}>
-                    {variant.isSale && (
+                    {variant.isSale && !outOfStock && (
                         <span style={{
                             background: '#1a1a1a', color: '#fff',
                             fontSize: '11px', letterSpacing: '1px',
@@ -546,6 +584,16 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
                             display: 'inline-block', marginBottom: '10px',
                         }}>
                             {ui.sale}
+                        </span>
+                    )}
+                    {outOfStock && (
+                        <span style={{
+                            background: '#999', color: '#fff',
+                            fontSize: '11px', letterSpacing: '1px',
+                            padding: '3px 8px', borderRadius: '2px',
+                            display: 'inline-block', marginBottom: '10px',
+                        }}>
+                            {ui.outOfStock}
                         </span>
                     )}
                     <p style={{ fontSize: '12px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>
@@ -591,16 +639,17 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <button
-                            onClick={() => onAddToCart(product, qty)}
+                            onClick={() => { if (!outOfStock) onAddToCart(product, qty); }}
+                            disabled={outOfStock}
                             style={{
-                                background: '#1a1a1a', color: '#fff',
+                                background: outOfStock ? '#bbb' : '#1a1a1a', color: '#fff',
                                 border: 'none', padding: '13px 20px',
                                 fontSize: '13px', letterSpacing: '0.5px',
-                                cursor: 'pointer', borderRadius: '4px',
+                                cursor: outOfStock ? 'not-allowed' : 'pointer', borderRadius: '4px',
                                 textTransform: 'uppercase',
                             }}
                         >
-                            {ui.addToCart}
+                            {outOfStock ? ui.outOfStock : ui.addToCart}
                         </button>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button
@@ -697,6 +746,8 @@ function ProductCard({ p, wishlist, toggleWishlist, ui, currency, onQuickView, o
     const [currentImg, setCurrentImg] = useState(0);
     const intervalRef = useRef(null);
 
+    const outOfStock = isVariantOutOfStock(variant);
+
     const startHover = () => {
         if (images.length <= 1) return;
         let idx = 1;
@@ -729,7 +780,12 @@ function ProductCard({ p, wishlist, toggleWishlist, ui, currency, onQuickView, o
             onMouseLeave={stopHover}
         >
             <div className="jw-card-img-wrap">
-                {isSale && <span className="jw-sale-badge">{ui.sale}</span>}
+                {isSale && !outOfStock && <span className="jw-sale-badge">{ui.sale}</span>}
+                {outOfStock && (
+                    <span className="jw-sale-badge" style={{ background: '#999' }}>
+                        {ui.outOfStock}
+                    </span>
+                )}
 
                 <img
                     src={imgSrc}
@@ -803,11 +859,14 @@ function ProductCard({ p, wishlist, toggleWishlist, ui, currency, onQuickView, o
                     {/* ── ADD TO CART BUTTON ── */}
                     <button
                         className="jw-action-btn jw-add-cart"
-                        title={ui.addToCart}
-                        aria-label={ui.addToCart}
+                        title={outOfStock ? ui.outOfStock : ui.addToCart}
+                        aria-label={outOfStock ? ui.outOfStock : ui.addToCart}
+                        disabled={outOfStock}
+                        style={outOfStock ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            if (outOfStock) return;
                             onAddToCart(p, 1);
                         }}
                     >
@@ -1020,6 +1079,8 @@ export default function Bracelets({ initialProducts = [] }) {
     // ── Add to Cart — custom event pattern (CartContext picks this up) ──
     const handleAddToCart = useCallback((product, qty = 1) => {
         const variant = getFirstVariant(product);
+        if (isVariantOutOfStock(variant)) return; // safety net — should already be blocked in UI
+
         const cartItem = {
             _id: product._id,
             slug: product.slug,

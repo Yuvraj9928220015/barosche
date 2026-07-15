@@ -28,8 +28,8 @@ const popularSearches = [
   "Women Pendants", "Men Pendants", "Earrings", "Rings", "Bracelets",
 ];
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 const DEFAULT_STRINGS = {
   searchPlaceholder:      "Search",
@@ -134,6 +134,18 @@ function useTranslation() {
   return { strings, status };
 }
 
+// ── HELPER: safe initial letter, kabhi crash nahi karega chahe firstName/lastName/email kuch bhi missing ho
+function getUserInitial(user) {
+  const source = user?.firstName || user?.lastName || user?.email || "U";
+  return String(source).charAt(0).toUpperCase();
+}
+
+// ── HELPER: display name, missing fields ko gracefully handle karta hai
+function getUserDisplayName(user) {
+  const parts = [user?.title, user?.firstName, user?.lastName].filter(Boolean);
+  return parts.length > 0 ? parts.join(" ") : (user?.email || "");
+}
+
 const Navbar = () => {
   const { strings: T, status: tStatus } = useTranslation();
   const { currency, formatPrice } = useCurrency();
@@ -147,11 +159,8 @@ const Navbar = () => {
   const searchInputRef = useRef(null);
 
   // useAuth() must expose: user, loading, setSession(token, user), logout
-  // setSession should store the token + user (e.g. in localStorage/cookie + context state),
-  // the same way login()/register() used to.
   const { user, loading: authLoading, setSession, logout } = useAuth();
 
-  // Ab sirf email chahiye — naam ki zarurat nahi, account email se hi auto-create hota h
   const [emailInput,       setEmailInput]       = useState("");
   const [otpValue,         setOtpValue]         = useState("");
   const [authError,        setAuthError]        = useState("");
@@ -257,8 +266,7 @@ const Navbar = () => {
     return `/product-category/${categorySlug}/${productSlug}`;
   };
 
-  // STEP 1: request OTP — sirf email se, naya ho ya purana, account
-  // khud-ba-khud handle ho jata h backend pr. Naam maangne ki zarurat nahi.
+  // STEP 1: request OTP — sirf email se
   const handleRequestOTP = async () => {
     setAuthError("");
     setResetMsg("");
@@ -298,27 +306,40 @@ const Navbar = () => {
     }
 
     setAuthLoaderActive(true);
+
+    // NOTE: API call ko apne try/catch me isolate kiya hai. Isse ye guarantee
+    // milta hai ki agar verify-otp API call successful hai, to hum kabhi
+    // "Server error" nahi dikhayenge — chahe uske baad state-update/render
+    // side pe kuch bhi ho jaaye.
+    let data;
     try {
       const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: emailInput, otp: otpValue }),
       });
-      const data = await res.json();
-      setAuthLoaderActive(false);
-
-      if (data.success) {
-        setSession(data.token, data.user);
-        setLoginOpen(false);
-        resetAuthPanel();
-        setMode("email");
-      } else {
-        setAuthError(data.message || "Invalid OTP.");
-      }
+      data = await res.json();
     } catch (err) {
       setAuthLoaderActive(false);
       setAuthError("Server error. Please try again.");
+      return;
     }
+
+    setAuthLoaderActive(false);
+
+    if (!data.success) {
+      setAuthError(data.message || "Invalid OTP.");
+      return;
+    }
+
+    // Ye ab try/catch ke bahar hai — agar setSession/state-update ke andar
+    // koi render-time issue (jaise missing firstName) ho bhi, to woh galat
+    // taur pe "Server error" nahi dikhayega, jabki login/verify actually
+    // successful ho chuka tha.
+    setSession(data.token, data.user);
+    setLoginOpen(false);
+    resetAuthPanel();
+    setMode("email");
   };
 
   const handleResendOTP = async () => {
@@ -396,11 +417,11 @@ const Navbar = () => {
               className="nb-icon-btn"
               aria-label="Login"
               onClick={handleOpenLoginPanel}
-              title={user ? `${user.firstName} ${user.lastName}` : T.quickLogin}
+              title={user ? getUserDisplayName(user) : T.quickLogin}
             >
               {user ? (
                 <span className="nb-user-avatar">
-                  {user.firstName.charAt(0).toUpperCase()}
+                  {getUserInitial(user)}
                 </span>
               ) : (
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -536,11 +557,11 @@ const Navbar = () => {
             <>
               <div className="nb-profile-welcome">
                 <div className="nb-profile-avatar-lg">
-                  {user.firstName.charAt(0).toUpperCase()}
+                  {getUserInitial(user)}
                 </div>
                 <div>
                   <p className="nb-profile-name">
-                    {user.title} {user.firstName} {user.lastName}
+                    {getUserDisplayName(user)}
                   </p>
                   <p className="nb-profile-email">{user.email}</p>
                 </div>

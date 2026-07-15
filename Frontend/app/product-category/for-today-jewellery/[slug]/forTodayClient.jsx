@@ -5,8 +5,8 @@ import Link from 'next/link';
 import './forTodayClient.css';
 import Reviews from '../../../../components/Home/Reviews/Reviews';
 
-const API_BASE = "http://localhost:5000";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 // ───────────────────
 //  CURRENCY CONFIG
@@ -672,7 +672,10 @@ export default function ForTodayClient({ slug }) {
     const oldPrice           = activeVariant.oldPrice ?? product.oldPrice ?? null;
     const newPrice           = activeVariant.newPrice ?? product.newPrice ?? product.price ?? 0;
     const isSale             = activeVariant.isSale   ?? product.isSale   ?? false;
-    const inStock            = activeVariant.inStock  ?? product.inStock  ?? true;
+    const variantQtyRaw = activeVariant.quantity;
+    const variantQty    = variantQtyRaw !== undefined ? Number(variantQtyRaw) : null;
+    const inStock = (variantQty !== null ? variantQty > 0 : true)
+    && (activeVariant.inStock ?? product.inStock ?? true) !== false;
     const displayTitle       = activeVariant.title    || product.title || product.name;
     const displayDescription = activeVariant.description || product.description || '';
     const displayMaterials   = activeVariant.materials?.length > 0 ? activeVariant.materials : (product.materials || []);

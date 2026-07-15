@@ -1,12 +1,18 @@
 import Earrings from './Earrings';
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://api.barosche.com";
 const FETCH_TIMEOUT_MS = 15000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
- 
+
+const PAGE_URL = "https://barosche.com/product-category/earrings/";
+const OG_IMAGE = "https://api.barosche.com/uploads/product-1782468017738-598067497.jpg";
+const TITLE = "Shop Elegant Daily Wear Earrings for Women Online";
+const DESCRIPTION =
+  "Buy elegant daily wear earrings for women online. Explore minimal, stylish, and statement designs perfect for everyday wear, office looks, and special occasions.";
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
- 
+
 async function fetchWithTimeout(url, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -36,32 +42,56 @@ async function getInitialProducts(category) {
   return [];
 }
 
-
 export const metadata = {
-  title: "Shop Elegant Daily Wear Earrings for Women Online",
-  description:
-    "Buy elegant daily wear earrings for women online. Explore minimal, stylish, and statement designs perfect for everyday wear, office looks, and special occasions.",
-  keywords: [
-    "Barosche Jewellery",
-    "About Barosche",
-    "Luxury Jewellery",
-    "Diamond Jewellery",
-    "Gold Jewellery",
-    "Custom Jewellery",
-    "Fine Jewellery"
-  ],
-  openGraph: {
-    title: "Shop Elegant Daily Wear Earrings for Women Online",
-    description:
-      "Buy elegant daily wear earrings for women online. Explore minimal, stylish, and statement designs perfect for everyday wear, office looks, and special occasions.",
-    type: "website",
+  title: TITLE,
+  description: DESCRIPTION,
+
+  alternates: {
+    canonical: PAGE_URL,
   },
-  icons: {
-    icon: "/BaroscheSymbol.png",
+
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    siteName: "Barosche",
+    type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 480,
+        height: 600,
+        alt: "Barosche Earrings Collection",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    site: "@barosche",
+    creator: "@barosche",
+    images: [
+      {
+        url: OG_IMAGE,
+        alt: "Barosche Earrings Collection",
+      },
+    ],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 
 export default async function Page() {
-    const initialProducts = await getInitialProducts("Earrings");
-    return <Earrings initialProducts={initialProducts} />;
+  const initialProducts = await getInitialProducts("Earrings");
+  return <Earrings initialProducts={initialProducts} />;
 }

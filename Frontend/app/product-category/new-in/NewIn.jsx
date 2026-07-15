@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Reviews from '../../../components/Home/Reviews/Reviews';
 import { useWishlist } from '../../context/WishlistContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 // ─────────────────────────────────────────────────────────
@@ -156,6 +156,99 @@ const newInJewelleryContent = [
 ];
 
 const TOP_OFFSET = 40;
+function stripHtml(html) {
+    return (html || '').replace(/<[^>]*>/g, '').trim();
+}
+
+function buildJsonLdSchemas({ filtered, faqData, categorySlugMap }) {
+    const collectionPageSchema = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "@id": "https://barosche.com/product-category/new-in/#webpage",
+        "url": "https://barosche.com/product-category/new-in/",
+        "name": "Shop Latest & Trending Jewellery for Women Online | Barosche",
+        "headline": "New In Jewellery – Latest & Trending Fashion Jewellery Designs",
+        "description": "Shop latest & trending jewellery for women at Barosche. Discover new fashion jewellery, elegant designs & modern accessories crafted for everyday style.",
+        "inLanguage": "en",
+        "isPartOf": { "@id": "https://barosche.com/#website" },
+        "about": { "@id": "https://barosche.com/#organization" },
+        "primaryImageOfPage": {
+            "@type": "ImageObject",
+            "@id": "https://barosche.com/product-category/new-in/#primaryimage",
+            "url": "https://barosche.com/logo.png",
+            "contentUrl": "https://barosche.com/logo.png",
+            "caption": "Barosche New Jewellery Collection"
+        },
+        "breadcrumb": { "@id": "https://barosche.com/product-category/new-in/#breadcrumb" },
+        "mainEntity": { "@id": "https://barosche.com/product-category/new-in/#product-list" },
+        "hasPart": { "@id": "https://barosche.com/product-category/new-in/#faq" }
+    };
+
+    const breadcrumbSchema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "@id": "https://barosche.com/product-category/new-in/#breadcrumb",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://barosche.com/" },
+            { "@type": "ListItem", "position": 2, "name": "New In", "item": "https://barosche.com/product-category/new-in/" }
+        ]
+    };
+
+    const itemListSchema = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "@id": "https://barosche.com/product-category/new-in/#product-list",
+        "name": "New Jewellery Collection",
+        "description": `Explore ${filtered.length} latest jewellery designs from the Barosche New In collection.`,
+        "url": "https://barosche.com/product-category/new-in/",
+        "numberOfItems": filtered.length,
+        "itemListOrder": "https://schema.org/ItemListOrderAscending",
+        "itemListElement": filtered.map((p, i) => {
+            const variant = getFirstVariant(p);
+            const categoryUrl = categorySlugMap[p.category] || 'new-in';
+            const productUrl = `https://barosche.com/product-category/${categoryUrl}/${p.slug}/`;
+            const price = variant.newPrice ?? variant.price ?? 0;
+            return {
+                "@type": "ListItem",
+                "position": i + 1,
+                "item": {
+                    "@type": "Product",
+                    "@id": `${productUrl}#product`,
+                    "name": p.title,
+                    "url": productUrl,
+                    "image": variant.images && variant.images[0] ? getImgSrc(variant.images[0]) : "https://barosche.com/logo.png",
+                    "brand": { "@type": "Brand", "name": "Barosche" },
+                    "offers": {
+                        "@type": "Offer",
+                        "url": productUrl,
+                        "price": Number(price).toFixed(2),
+                        "priceCurrency": "EUR",
+                        "availability": variant.inStock === false
+                            ? "https://schema.org/OutOfStock"
+                            : "https://schema.org/InStock"
+                    }
+                }
+            };
+        })
+    };
+
+    const faqSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "@id": "https://barosche.com/product-category/new-in/#faq",
+        "url": "https://barosche.com/product-category/new-in/#faq",
+        "name": "Frequently Asked Questions About New In Jewellery",
+        "isPartOf": { "@id": "https://barosche.com/product-category/new-in/#webpage" },
+        "inLanguage": "en",
+        "mainEntity": faqData.map((item) => ({
+            "@type": "Question",
+            "name": stripHtml(item.q),
+            "acceptedAnswer": { "@type": "Answer", "text": stripHtml(item.a) }
+        }))
+    };
+
+    return { collectionPageSchema, breadcrumbSchema, itemListSchema, faqSchema };
+}
 
 function getImgSrc(path) {
     if (!path) return '/placeholder.jpg';
@@ -479,6 +572,8 @@ export default function NewIn() {
     });
 
     const displayed = filtered.slice(0, perPage);
+    const { collectionPageSchema, breadcrumbSchema, itemListSchema, faqSchema } =
+        buildJsonLdSchemas({ filtered, faqData, categorySlugMap });
 
     useEffect(() => {
         const isMobile = () => window.innerWidth <= 768;
@@ -502,6 +597,11 @@ export default function NewIn() {
 
     return (
         <div className="jw-page">
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+
             <Toast message={toast.message} visible={toast.visible} />
 
             {quickViewProduct && (
@@ -581,7 +681,7 @@ export default function NewIn() {
                         ) : (
                             <div className="jw-empty">
                                 <p>No products found{activeCategory ? ` in "${activeCategory}"` : ''}.</p>
-                                <p style={{ fontSize: '13px', marginTop: '8px', color: '#aaa' }}>Check browser console (F12) for API response.</p>
+                                <p style={{ fontSize: '13px', marginTop: '8px', color: '#aaa' }}>Check browser console for API response.</p>
                             </div>
                         )}
                     </div>
@@ -603,7 +703,7 @@ export default function NewIn() {
                             <div className="jw-faq-list">
                                 {faqData.map((item, i) => (
                                     <div key={i} className="jw-faq-item">
-                                        {/* Added i+1 here manually to ensure numbering continues properly while maintaining innerHTML support */}
+                                        
                                         <p className="jw-faq-q" dangerouslySetInnerHTML={{ __html: `${i + 1}. ${item.q}` }} />
                                         <p className="jw-faq-a" dangerouslySetInnerHTML={{ __html: item.a }} />
                                     </div>

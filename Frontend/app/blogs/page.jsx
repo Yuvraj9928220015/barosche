@@ -1,9 +1,15 @@
 import BlogPage from './BlogPage';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 const FETCH_TIMEOUT_MS = 15000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
+
+const PAGE_URL = "https://barosche.com/blogs/";
+const OG_IMAGE = "https://barosche.com/logo.png";
+const TITLE = "Latest Insights on Fashion, Jewellery & Lifestyle Trends | Blog";
+const DESCRIPTION =
+  "Explore our blogs for the latest updates, fashion inspiration, jewellery trends, styling tips & lifestyle insights. Stay ahead with expert ideas & timeless elegance from Barosche.";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -35,23 +41,51 @@ async function getInitialBlogs() {
 }
 
 export const metadata = {
-  title: "Latest Insights on Fashion, Jewellery & Lifestyle Trends | Blog",
-  description:
-    "Explore our blogs for the latest updates, fashion inspiration, jewellery trends, styling tips & lifestyle insights. Stay ahead with expert ideas & timeless elegance from Barosche.",
-  keywords: [
-    "Barosche Jewellery",
-    "About Barosche",
-    "Luxury Jewellery",
-    "Diamond Jewellery",
-    "Gold Jewellery",
-    "Custom Jewellery",
-    "Fine Jewellery"
-  ],
+  title: TITLE,
+  description: DESCRIPTION,
+
+  alternates: {
+    canonical: PAGE_URL,
+  },
+
   openGraph: {
-    title: "Latest Insights on Fashion, Jewellery & Lifestyle Trends | Blog",
-    description:
-      "Explore our blogs for the latest updates, fashion inspiration, jewellery trends, styling tips & lifestyle insights. Stay ahead with expert ideas & timeless elegance from Barosche.",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    siteName: "Barosche",
     type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 2048,
+        height: 997,
+        alt: "Barosche Blog - Jewellery & Lifestyle Insights",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    site: "@barosche",
+    creator: "@barosche",
+    images: [
+      {
+        url: OG_IMAGE,
+        alt: "Barosche Blog - Jewellery & Lifestyle Insights",
+      },
+    ],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

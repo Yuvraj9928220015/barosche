@@ -2,7 +2,7 @@
 export const dynamic = "force-static";
 
 const SITE_URL = "https://www.barosche.com";
-const API_URL = "http://localhost:5000";
+const API_URL = "https://api.barosche.com";
 
 const getRoute = (category = "") => {
   const cat = category.toLowerCase().trim();

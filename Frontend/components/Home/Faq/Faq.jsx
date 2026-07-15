@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import "./Faq.css";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
 const INITIAL_ACCORDION_DATA = [
   {
@@ -212,13 +212,13 @@ const Reviews = () => {
                 return null;
               })}
 
-            {/* Render Tab 2 FAQ content */}
+            {/* Render Tab 2 FAQ content — FIX: use dangerouslySetInnerHTML so <strong> tags render as HTML instead of literal text */}
             {item.faqs && (
               <div className="faq-wrapper">
                 {item.faqs.map((faq, idx) => (
                   <div key={idx} className="faq-item">
-                    <h4 className="faq-question">{faq.q}</h4>
-                    <p className="faq-answer">{faq.a}</p>
+                    <h4 className="faq-question" dangerouslySetInnerHTML={{ __html: faq.q }}></h4>
+                    <p className="faq-answer" dangerouslySetInnerHTML={{ __html: faq.a }}></p>
                   </div>
                 ))}
               </div>
