@@ -1,7 +1,7 @@
 import ServicesPage from "./OurServices";
 
 const PAGE_URL = "https://barosche.com/our-services/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Custom Jewellery Design & Personalised Jewellery Services";
 const DESCRIPTION =
   "Explore custom jewellery design and personalised services, including remaking, resizing, and birthstone jewellery crafted with precision and care.";

@@ -6,7 +6,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
 const PAGE_URL = "https://barosche.com/blogs/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Latest Insights on Fashion, Jewellery & Lifestyle Trends | Blog";
 const DESCRIPTION =
   "Explore our blogs for the latest updates, fashion inspiration, jewellery trends, styling tips & lifestyle insights. Stay ahead with expert ideas & timeless elegance from Barosche.";

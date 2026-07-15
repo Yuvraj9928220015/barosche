@@ -1,7 +1,7 @@
 import Chosen from './Chosen';
 
 const PAGE_URL = "https://barosche.com/product-category/chosen-jewellery/";
-const OG_IMAGE = "https://api.barosche.com/uploads/product-1780743945301-64086007.webp";
+const OG_IMAGE = "/barosche-1.webp";
 const TITLE = "Buy Fine & Designer Jewellery Gifts for Her Online";
 const DESCRIPTION =
   "Buy fine jewellery gifts for her online at Barosche. Explore gold & designer jewellery for special occasions, perfect for wife & girlfriend gifting.";

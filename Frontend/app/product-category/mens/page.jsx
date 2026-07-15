@@ -4,7 +4,7 @@ import Mens from './Mens';
 
 const SITE_URL = "https://barosche.com";
 const PAGE_URL = `${SITE_URL}/product-category/mens/`; 
-const OG_IMAGE = "https://api.barosche.com/uploads/product-1782452664621-445895308.jpg"; 
+const OG_IMAGE = "/barosche-1.webp";
 const TITLE = "Shop Luxury Men’s Jewellery & Accessories Online | Barosche"; 
 const DESCRIPTION =
   "Shop luxury men’s jewellery & accessories online at Barosche. Elevate your style with bold, modern jewellery designs made for confident, stylish men."; 

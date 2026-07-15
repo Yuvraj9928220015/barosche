@@ -1,7 +1,7 @@
 import Imprint from "./Imprint";
 
 const PAGE_URL = "https://barosche.com/imprint/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Imprint & Legal Information – Barosche";
 const DESCRIPTION =
   "View Barosche's imprint to access legal details, company information, and important disclosures about our jewelry brand.";

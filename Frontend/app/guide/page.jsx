@@ -1,11 +1,9 @@
 import GuidePage from './GuidePage';
 
 const PAGE_URL = "https://barosche.com/guide/";
-const OG_IMAGE =
-  "https://api.barosche.com/uploads/1783403505929-How-to-Choose-High-Quality-Gold-Plated-Jewellery-(Complete-Buyer%C3%A2%C2%80%C2%99s-Guide).webp";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Jewellery Buying Guide | Expert Tips & Style Advice – Barosché";
-const DESCRIPTION =
-  "Learn how to choose the perfect jewellery with our complete guide. Discover styling tips, care advice, and expert insights from Barosché.";
+const DESCRIPTION = "Learn how to choose the perfect jewellery with our complete guide. Discover styling tips, care advice, and expert insights from Barosché.";
 
 export const metadata = {
   title: TITLE,

@@ -3,7 +3,7 @@ import Womens from './Womens';
 
 const SITE_URL = "https://barosche.com";
 const PAGE_URL = "https://barosche.com/product-category/womens/";
-const OG_IMAGE = "https://api.barosche.com/uploads/product-1782730319023-201434062.jpg";
+const OG_IMAGE = "/Meta-image-2.jpg";
 const TITLE = "Buy Fashion & Gold Jewellery for Women Online | Barosche";
 const DESCRIPTION =
   "Shop fashion & gold jewellery for women online at Barosche. Discover earrings, rings, necklaces & bracelets crafted for elegant everyday style.";

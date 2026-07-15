@@ -1,7 +1,7 @@
 import Terms from "./Terms";
 
 const PAGE_URL = "https://barosche.com/terms-of-service/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Terms of Service | Website Policy";
 const DESCRIPTION =
   "Read Barosche's terms of service for complete details about shopping, payments, policies, and customer responsibilities.";

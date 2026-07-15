@@ -1,7 +1,7 @@
 import ContactPage from './ContactPage';
 
 const PAGE_URL = "https://barosche.com/contact-us/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Contact Barosche | Customer Support & Jewellery Enquiries";
 const DESCRIPTION =
   "Get in touch with Barosche for product enquiries, order support, or personalised jewellery services. We're here to help you.";

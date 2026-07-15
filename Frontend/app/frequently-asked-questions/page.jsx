@@ -1,7 +1,7 @@
 import Faqs from "./Faqs";
 
 const PAGE_URL = "https://barosche.com/frequently-asked-questions/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "FAQ – Frequently Asked Questions | Help & Support";
 const DESCRIPTION =
   "Find answers to common questions about Barosche jewelry, orders, shipping, and returns in our helpful and detailed FAQ section.";

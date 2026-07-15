@@ -1,7 +1,7 @@
 import Shop from './Shop';
 
 const PAGE_URL = "https://barosche.com/shop/";
-const OG_IMAGE = "https://api.barosche.com/uploads/product-1782730319023-201434062.jpg";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Buy Fine Lab-Grown Diamond & Gemstone Jewellery Online";
 const DESCRIPTION =
   "Shop jewellery online with lab-grown diamond & gemstone designs. Find stylish, elegant pieces for women, perfect for daily wear & gifting.";

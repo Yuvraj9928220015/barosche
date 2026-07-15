@@ -1,7 +1,7 @@
 import Jewellery from './Jewellery';
 
 const PAGE_URL = "https://barosche.com/product-category/jewellery/";
-const OG_IMAGE = "https://api.barosche.com/uploads/product-1782730319023-201434062.jpg";
+const OG_IMAGE = "/Meta-image-1.jpg";
 const TITLE = "Buy Semi-Precious Gemstone & Gold Fashion Jewellery Online";
 const DESCRIPTION =
   "Shop semi-precious gemstone & gold fashion jewellery online at Barosche. Discover elegant designs in fine silver, gold jewellery & modern accessories.";

@@ -6,7 +6,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
 const PAGE_URL = "https://barosche.com/product-category/earrings/";
-const OG_IMAGE = "https://api.barosche.com/uploads/product-1782468017738-598067497.jpg";
+const OG_IMAGE = "/Meta-image-1.jpg";
 const TITLE = "Shop Elegant Daily Wear Earrings for Women Online";
 const DESCRIPTION =
   "Buy elegant daily wear earrings for women online. Explore minimal, stylish, and statement designs perfect for everyday wear, office looks, and special occasions.";

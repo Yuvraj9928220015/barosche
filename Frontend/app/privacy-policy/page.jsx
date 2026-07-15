@@ -1,7 +1,7 @@
 import Privacy from "./Privacy";
 
 const PAGE_URL = "https://barosche.com/privacy-policy/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Privacy Policy – Barosche Jewellery";
 const DESCRIPTION =
   "Read Barosche's privacy policy to understand how we collect, use, and protect your personal information with complete transparency.";

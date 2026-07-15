@@ -6,7 +6,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
 const PAGE_URL = "https://barosche.com/product-category/rings/";
-const OG_IMAGE = "https://api.barosche.com/uploads/product-1780895710494-301031940.webp";
+const OG_IMAGE = "/barosche-1.webp";
 const TITLE = "Buy Daily Wear Rings for Men & Women Online";
 const DESCRIPTION =
   "Buy rings for men and women online with elegant daily wear and statement designs. Explore minimal, stylish, and gemstone rings for every occasion.";

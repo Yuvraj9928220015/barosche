@@ -1,7 +1,7 @@
 import Sourcing from "./Sourcing";
 
 const PAGE_URL = "https://barosche.com/sourcing-manufacturing/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Sourcing & Manufacturing | Quality Craftsmanship";
 const DESCRIPTION =
   "Discover Barosche sourcing and manufacturing process, ensuring high-quality craftsmanship.";

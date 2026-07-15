@@ -6,7 +6,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
 const PAGE_URL = "https://barosche.com/product-category/pendants/";
-const OG_IMAGE = "https://api.barosche.com/uploads/product-1782453326085-355591573.jpg";
+const OG_IMAGE = "/Meta-image-2.jpg";
 const TITLE = "Shop Stylish Minimal & Gemstone Daily-Wear Pendants for Women";
 const DESCRIPTION =
   "Shop pendants jewellery online with elegant, minimal, and gemstone designs. Perfect for daily wear, gifting, and adding effortless style to any outfit.";

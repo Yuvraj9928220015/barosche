@@ -1,7 +1,7 @@
 import ReturnPolicy from "./ReturnPolicy";
 
 const PAGE_URL = "https://barosche.com/return-cancellation-policy/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Return & Cancellation Policy | Barosche Jewellery India";
 const DESCRIPTION =
   "Check Barosche's return and cancellation policy for a simple, secure, and hassle-free process on all your jewelry purchases.";

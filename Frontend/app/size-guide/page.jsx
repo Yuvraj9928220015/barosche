@@ -1,7 +1,7 @@
 import SizePage from "./SizePage";
 
 const PAGE_URL = "https://barosche.com/size-guide/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Jewellery Size Guide – Rings & Necklaces | Barosche";
 const DESCRIPTION =
   "Find your perfect fit with Barosche's detailed jewellery size guide for rings, necklaces, and other accessories for accurate sizing.";

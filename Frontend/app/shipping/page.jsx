@@ -1,7 +1,7 @@
 import Shipping from './Shipping';
 
 const PAGE_URL = "https://barosche.com/shipping/";
-const OG_IMAGE = "https://barosche.com/logo.png";
+const OG_IMAGE = "/logo.png";
 const TITLE = "Shipping Policy & Delivery Information | Barosche";
 const DESCRIPTION =
   "Learn about Barosche shipping policies, delivery options, and estimated timelines to receive your jewellery orders safely and on time.";

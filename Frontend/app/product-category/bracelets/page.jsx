@@ -6,7 +6,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
 const PAGE_URL = "https://barosche.com/product-category/bracelets/";
-const OG_IMAGE = "https://api.barosche.com/uploads/product-1782451784924-120020543.jpg";
+const OG_IMAGE = "/Meta-image-2.jpg";
 const TITLE = "Gold Bracelets for Women & Men | 18K Gold & Minimal Designs";
 const DESCRIPTION =
   "Shop modern bracelet designs at Barosche. Find gold bracelets for women, refined men’s styles, and timeless 18K pieces crafted for everyday luxury.";
