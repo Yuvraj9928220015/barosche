@@ -43,6 +43,13 @@ function formatDate(dateStr) {
   }
 }
 
+// ✅ Single source of truth for building a blog's URL.
+// Always prefer urlHandle (same field the main Blog listing page uses),
+// fall back to slug only if urlHandle isn't present.
+function getBlogUrlKey(blog) {
+  return blog?.urlHandle || blog?.slug || "";
+}
+
 export default function LatestBlog() {
   const router = useRouter();
 
@@ -145,9 +152,9 @@ export default function LatestBlog() {
   }, [blogs.length]);
 
   const handleBlogClick = useCallback(
-    (slug) => {
-      if (!slug) return;
-      router.push(`/blogs/${slug}`);
+    (urlKey) => {
+      if (!urlKey) return;
+      router.push(`/blogs/${urlKey}`);
     },
     [router]
   );
@@ -177,34 +184,37 @@ export default function LatestBlog() {
         )}
 
         {!loading &&
-          blogs.map((blog) => (
-            <div
-              className="blog-card"
-              key={blog._id}
-              role="button"
-              tabIndex={0}
-              onClick={() => handleBlogClick(blog.slug)}
-              onKeyDown={(e) => e.key === "Enter" && handleBlogClick(blog.slug)}
-              style={{ cursor: "pointer" }}
-            >
-              <div className="blog-image-wrapper">
-                <img
-                  src={`${BACKEND_URL}${blog.image}`}
-                  alt={blog.altTag || blog.title}
-                  className="blog-image"
-                  loading="lazy"
-                />
+          blogs.map((blog) => {
+            const urlKey = getBlogUrlKey(blog);
+            return (
+              <div
+                className="blog-card"
+                key={blog._id}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleBlogClick(urlKey)}
+                onKeyDown={(e) => e.key === "Enter" && handleBlogClick(urlKey)}
+                style={{ cursor: "pointer" }}
+              >
+                <div className="blog-image-wrapper">
+                  <img
+                    src={`${BACKEND_URL}${blog.image}`}
+                    alt={blog.altTag || blog.title}
+                    className="blog-image"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="blog-card-body">
+                  <span className="blog-date">{formatDate(blog.createdAt)}</span>
+                  <h3 className="blog-title">
+                    {blog.translatedTitle || blog.title}
+                  </h3>
+                  <p className="blog-excerpt">{getExcerpt(blog.content)}</p>
+                  <span className="blog-readmore">{uiText.readMore} →</span>
+                </div>
               </div>
-              <div className="blog-card-body">
-                <span className="blog-date">{formatDate(blog.createdAt)}</span>
-                <h3 className="blog-title">
-                  {blog.translatedTitle || blog.title}
-                </h3>
-                <p className="blog-excerpt">{getExcerpt(blog.content)}</p>
-                <span className="blog-readmore">{uiText.readMore} →</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
     </section>
   );

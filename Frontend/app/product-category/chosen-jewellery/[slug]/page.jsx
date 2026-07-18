@@ -1,5 +1,3 @@
-// app/product-category/chosen-jewellery/[slug]/page.jsx
-
 import ChosenDetailClient from './chosenDetailClient.jsx';
 import { generateCategoryStaticParams } from '../../staticParamsHelper.js';
 

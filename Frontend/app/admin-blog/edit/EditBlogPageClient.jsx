@@ -179,7 +179,7 @@ export default function EditBlogClient() {
           <div className="admin-input-group">
             <label>Category</label>
             <select
-              className="admin-input-field"
+              className="admin-input-field" 
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
