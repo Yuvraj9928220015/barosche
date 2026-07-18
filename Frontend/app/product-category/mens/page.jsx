@@ -60,7 +60,9 @@ export const metadata = {
 
 // ---- Dynamic Schema (JSON-LD) data ----
 const schemaData = [
+
   
+
   {
     "@context": "https://schema.org",
     "@type": "ItemList",

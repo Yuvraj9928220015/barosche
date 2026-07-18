@@ -1,12 +1,10 @@
-import Script from "next/script";
-import NewIn from './NewIn';
+import SitemapList from "./SitemapList";
 
-const SITE_URL = "https://barosche.com";
-const PAGE_URL = "https://barosche.com/product-category/new-in/";
-const OG_IMAGE = "https://barosche.com/logo.png";
-const TITLE = "Shop Latest & Trending Jewellery for Women Online | Barosche";
+const PAGE_URL = "https://barosche.com/sitemap/";
+const OG_IMAGE = "/logo.png";
+const TITLE = "HTML Sitemap | Explore All Pages Easily";
 const DESCRIPTION =
-  "Shop latest & trending jewellery for women at Barosche. Discover new fashion jewellery, elegant designs & modern accessories crafted for everyday style.";
+  "Explore our complete HTML sitemap to easily navigate and find all pages on our website in one place for a better user experience.";
 
 export const metadata = {
   title: TITLE,
@@ -28,7 +26,7 @@ export const metadata = {
         url: OG_IMAGE,
         width: 2048,
         height: 997,
-        alt: "Shop Minimalist Luxury, Fine and Diamond Jewellery",
+        alt: "Barosche Sitemap",
       },
     ],
   },
@@ -42,7 +40,7 @@ export const metadata = {
     images: [
       {
         url: OG_IMAGE,
-        alt: "Shop Minimalist Luxury, Fine and Diamond Jewellery",
+        alt: "Barosche Sitemap",
       },
     ],
   },
@@ -57,13 +55,6 @@ export const metadata = {
   },
 };
 
-
-
 export default function Page() {
-  return (
-    <>
-     
-      <NewIn />
-    </>
-  );
+  return <SitemapList />;
 }

@@ -58,6 +58,8 @@ export const metadata = {
 };
 
 const schemaData = [
+  
+
   // 1. ItemList schema
   {
     "@context": "https://schema.org",

@@ -49,21 +49,21 @@ export default function EditBlogClient() {
   const searchParams = useSearchParams();
   const currentSlug = searchParams.get("slug");
 
-  const [title, setTitle]                     = useState("");
-  const [author, setAuthor]                   = useState("");
-  const [image, setImage]                     = useState(null);
-  const [existingImage, setExistingImage]     = useState("");
-  const [altTag, setAltTag]                   = useState("");
-  const [content, setContent]                 = useState("");
-  const [category, setCategory]               = useState("Blog");
-  const [loading, setLoading]                 = useState(true);
-  const [editorKey, setEditorKey]             = useState(0);
-  const [seoOpen, setSeoOpen]                 = useState(false);
-  const [pageTitle, setPageTitle]             = useState("");
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [image, setImage] = useState(null);
+  const [existingImage, setExistingImage] = useState("");
+  const [altTag, setAltTag] = useState("");
+  const [content, setContent] = useState("");
+  const [category, setCategory] = useState("Blog");
+  const [loading, setLoading] = useState(true);
+  const [editorKey, setEditorKey] = useState(0);
+  const [seoOpen, setSeoOpen] = useState(false);
+  const [pageTitle, setPageTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
-  const [urlHandle, setUrlHandle]             = useState("");
-  const [script, setScript]                   = useState("");
-// I w
+  const [urlHandle, setUrlHandle] = useState("");
+  const [script, setScript] = useState("");
+
   useEffect(() => {
     if (!currentSlug) {
       setLoading(false);

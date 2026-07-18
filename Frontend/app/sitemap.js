@@ -1,6 +1,6 @@
 
 export const dynamic = "force-static";
-
+export const revalidate = 3600;
 const SITE_URL = "https://www.barosche.com";
 const API_URL = "https://api.barosche.com";
 

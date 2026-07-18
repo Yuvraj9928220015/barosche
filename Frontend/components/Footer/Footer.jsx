@@ -293,7 +293,7 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="footer-copyright">{content.copyright}</div>
+          <div className="footer-copyright"><a href="/sitemap">Sitemap</a> | {content.copyright}</div>
         </div>
       </div>
     </footer>

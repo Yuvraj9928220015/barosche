@@ -636,7 +636,6 @@ const ServicesPage = () => {
             </div>
           </div>
         </section>
-        {/* ================= END NEW SECTION ================= */}
 
       </div>
     </>

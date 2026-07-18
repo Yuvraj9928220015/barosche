@@ -54,6 +54,48 @@ export const metadata: Metadata = {
   },
 };
 
+// Organization Schema (site-wide)
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://barosche.com/#organization",
+  name: "Barosche",
+  url: "https://barosche.com/",
+  logo: {
+    "@type": "ImageObject",
+    url: "https://barosche.com/logo.png",
+  },
+  sameAs: [
+    "https://www.instagram.com/baroscheofficial/",
+    "https://in.pinterest.com/barosche/",
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: "+49 1628806158",
+    contactType: "customer service",
+    email: "info@barosche.com",
+    areaServed: "Worldwide",
+    availableLanguage: ["English"],
+  },
+};
+
+// Website Schema (site-wide)
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://barosche.com/#website",
+  url: "https://barosche.com/",
+  name: "Barosche",
+  publisher: {
+    "@id": "https://barosche.com/#organization",
+  },
+  potentialAction: {
+    "@type": "SearchAction",
+    target: "https://barosche.com/?s={search_term_string}",
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -65,6 +107,22 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${rokkitt.variable} h-full antialiased`}
     >
+      <head>
+        {/* Organization Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
+        {/* Website Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteSchema),
+          }}
+        />
+      </head>
       <body
         suppressHydrationWarning
         className={`${rokkitt.className} min-h-full flex flex-col`}
