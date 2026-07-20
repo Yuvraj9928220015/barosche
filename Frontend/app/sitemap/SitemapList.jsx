@@ -28,6 +28,15 @@ const sitemapData = [
       { label: "Chosen", href: "/product-category/chosen-jewellery/" },
       { label: "New In", href: "/product-category/new-in/" },
       { label: "Shop", href: "/shop/" },
+      { label: "Jewellery Gifts For Her", href: "/product-category/jewellery-gifts-for-her/" },
+      { label: "Christmas Jewellery Gifts", href: "/product-category/christmas-jewellery-gifts/" },
+      { label: "Valentine Jewellery Gifts", href: "/product-category/valentine-jewellery-gifts/" },
+      { label: "Gold Jewellery Gifts", href: "/product-category/gold-jewellery-gifts/" },
+      { label: "Luxury Jewellery Gifts", href: "/product-category/luxury-jewellery-gifts/" },
+      { label: "Jewellery Gifts For Girlfriend", href: "/product-category/jewellery-gifts-for-girlfriend/" },
+      { label: "Gifts For Her", href: "/product-category/gifts-for-her/" },
+      { label: "Minimalist Dainty Jewellery Gifts", href: "/product-category/minimalist-dainty-jewellery-gifts/" },
+      
     ],
   },
   {
