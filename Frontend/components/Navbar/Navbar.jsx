@@ -4,6 +4,7 @@ import "./Navbar.css";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "../../app/context/CartContext";
 import { useAuth } from "../../app/context/AuthContext";
 import { useWishlist } from "../../app/context/WishlistContext";
@@ -24,8 +25,12 @@ const slugOverrides = {
   "JOURNAL": "blogs",
 };
 
-const popularSearches = [
-  "Women Pendants", "Men Pendants", "Earrings", "Rings", "Bracelets",
+const searchCategories = [
+  { name: "Jewellery", href: "/product-category/jewellery" },
+  { name: "Rings",     href: "/product-category/rings" },
+  { name: "Earrings",  href: "/product-category/earrings" },
+  { name: "Pendants",  href: "/product-category/pendants" },
+  { name: "Bracelets", href: "/product-category/bracelets" },
 ];
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
@@ -41,7 +46,6 @@ const DEFAULT_STRINGS = {
   emailPlaceholder:        "your@email.com",
   sending:                 "SENDING...",
   sendOtp:                 "SEND OTP",
-  // OTP
   otpSub1:                 "We've sent a 6-digit OTP to",
   otpSub2:                 "Please enter it below to continue.",
   otpLabel:                "OTP CODE*",
@@ -50,13 +54,11 @@ const DEFAULT_STRINGS = {
   verifyOtpBtn:            "VERIFY OTP",
   resendOtp:               "Resend OTP",
   back:                    "BACK",
-  // Profile
   myOrders:                "My Orders",
   myWishlist:               "My Wishlist",
   accountSettings:          "Account Settings",
   viewAccount:              "VIEW ACCOUNT",
   logout:                   "LOGOUT",
-  // Cart
   shoppingBag:              "Shopping Bag",
   product:                  "Product",
   products:                 "Products",
@@ -134,13 +136,11 @@ function useTranslation() {
   return { strings, status };
 }
 
-// ── HELPER: safe initial letter, kabhi crash nahi karega chahe firstName/lastName/email kuch bhi missing ho
 function getUserInitial(user) {
   const source = user?.firstName || user?.lastName || user?.email || "U";
   return String(source).charAt(0).toUpperCase();
 }
 
-// ── HELPER: display name, missing fields ko gracefully handle karta hai
 function getUserDisplayName(user) {
   const parts = [user?.title, user?.firstName, user?.lastName].filter(Boolean);
   return parts.length > 0 ? parts.join(" ") : (user?.email || "");
@@ -149,16 +149,15 @@ function getUserDisplayName(user) {
 const Navbar = () => {
   const { strings: T, status: tStatus } = useTranslation();
   const { currency, formatPrice } = useCurrency();
+  const router = useRouter();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen,     setSearchOpen]     = useState(false);
   const [loginOpen,      setLoginOpen]      = useState(false);
-  // mode: "email" (enter email only) | "otp" (enter 6-digit code) | "profile" (logged in)
   const [mode,           setMode]           = useState("email");
   const [searchQuery,    setSearchQuery]    = useState("");
   const searchInputRef = useRef(null);
 
-  // useAuth() must expose: user, loading, setSession(token, user), logout
   const { user, loading: authLoading, setSession, logout } = useAuth();
 
   const [emailInput,       setEmailInput]       = useState("");
@@ -266,7 +265,52 @@ const Navbar = () => {
     return `/product-category/${categorySlug}/${productSlug}`;
   };
 
-  // STEP 1: request OTP — sirf email se
+  const navigateFromSearch = () => {
+    const query = searchQuery.trim().toLowerCase();
+
+    let target = null;
+    if (query) {
+      target = searchCategories.find((cat) => cat.name.toLowerCase() === query);
+
+      if (!target) {
+        target = searchCategories.find((cat) => cat.name.toLowerCase().startsWith(query));
+      }
+
+      if (!target) {
+        target = searchCategories.find((cat) => query.startsWith(cat.name.toLowerCase()));
+      }
+
+      if (!target) {
+        const substringMatches = searchCategories.filter((cat) =>
+          query.includes(cat.name.toLowerCase()) || cat.name.toLowerCase().includes(query)
+        );
+        if (substringMatches.length > 0) {
+          target = substringMatches.reduce((longest, cat) =>
+            cat.name.length > longest.name.length ? cat : longest
+          );
+        }
+      }
+    }
+
+    const href = target ? target.href : searchCategories[0].href;
+
+    setSearchOpen(false);
+    setSearchQuery("");
+    scrollToTop();
+    router.push(href);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === "Escape") {
+      setSearchOpen(false);
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      navigateFromSearch();
+    }
+  };
+
   const handleRequestOTP = async () => {
     setAuthError("");
     setResetMsg("");
@@ -297,7 +341,6 @@ const Navbar = () => {
     }
   };
 
-  // STEP 2: verify OTP -> account created/logged in
   const handleVerifyOTP = async () => {
     setAuthError("");
     if (!otpValue || otpValue.length !== 6) {
@@ -306,11 +349,6 @@ const Navbar = () => {
     }
 
     setAuthLoaderActive(true);
-
-    // NOTE: API call ko apne try/catch me isolate kiya hai. Isse ye guarantee
-    // milta hai ki agar verify-otp API call successful hai, to hum kabhi
-    // "Server error" nahi dikhayenge — chahe uske baad state-update/render
-    // side pe kuch bhi ho jaaye.
     let data;
     try {
       const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
@@ -331,11 +369,6 @@ const Navbar = () => {
       setAuthError(data.message || "Invalid OTP.");
       return;
     }
-
-    // Ye ab try/catch ke bahar hai — agar setSession/state-update ke andar
-    // koi render-time issue (jaise missing firstName) ho bhi, to woh galat
-    // taur pe "Server error" nahi dikhayega, jabki login/verify actually
-    // successful ho chuka tha.
     setSession(data.token, data.user);
     setLoginOpen(false);
     resetAuthPanel();
@@ -369,7 +402,6 @@ const Navbar = () => {
     setLoginOpen(false);
   };
 
-  // Panel title helper
   const getPanelTitle = () => {
     if (user) return T.myAccount;
     switch (mode) {
@@ -501,27 +533,38 @@ const Navbar = () => {
         </button>
         <div className="nb-search-inner">
           <div className="nb-search-box">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <button
+              type="button"
+              aria-label="Search"
+              onClick={navigateFromSearch}
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex" }}
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
             <input
               ref={searchInputRef}
               type="text"
               placeholder={T.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Escape" && setSearchOpen(false)}
+              onKeyDown={handleSearchKeyDown}
             />
           </div>
           <div className="nb-popular">
             <h4>{T.popularSearches}</h4>
             <div className="nb-popular-tags">
-              {popularSearches.map((tag) => (
-                <button key={tag} className="nb-popular-tag"
-                  onClick={() => setSearchQuery(tag)}>
-                  {tag}
-                </button>
+              {searchCategories.map((cat) => (
+                <Link
+                  key={cat.name}
+                  href={cat.href}
+                  className="nb-popular-tag"
+                  onClick={() => { setSearchOpen(false); setSearchQuery(""); scrollToTop(); }}
+                >
+                  {cat.name}
+                </Link>
               ))}
             </div>
           </div>

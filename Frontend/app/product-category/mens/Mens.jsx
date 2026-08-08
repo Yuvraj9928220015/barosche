@@ -1,10 +1,37 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './Mens.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Reviews from '../../../components/Home/Reviews/Reviews';
+import { useWishlist } from '../../context/WishlistContext';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
+
+// ─────────────────────────────────────────────────────────
+//  CURRENCY CONFIG — country-based price display
+// ─────────────────────────────────────────────────────────
+const CURRENCY_MAP = {
+    US: { code: 'USD', symbol: '$', rate: 1.08 },
+    GB: { code: 'GBP', symbol: '£', rate: 0.85 },
+    IN: { code: 'INR', symbol: '₹', rate: 90.5 },
+    AE: { code: 'AED', symbol: 'AED', rate: 3.97 },
+    AU: { code: 'AUD', symbol: 'A$', rate: 1.65 },
+    CA: { code: 'CAD', symbol: 'C$', rate: 1.47 },
+    SG: { code: 'SGD', symbol: 'S$', rate: 1.45 },
+    JP: { code: 'JPY', symbol: '¥', rate: 162 },
+    CH: { code: 'CHF', symbol: 'CHF', rate: 0.97 },
+    default: { code: 'EUR', symbol: '€', rate: 1 },
+};
+
+function formatPrice(eurPrice, currency) {
+    if (!eurPrice && eurPrice !== 0) return null;
+    const converted = Math.round(Number(eurPrice) * currency.rate);
+    if (currency.code === 'JPY') return `${currency.symbol}${converted.toLocaleString()}`;
+    if (currency.code === 'INR') return `${currency.symbol}${converted.toLocaleString('en-IN')}`;
+    return `${currency.symbol}${converted.toLocaleString()}`;
+}
 
 const categories = [
     { name: "Chosen" },
@@ -14,7 +41,7 @@ const categories = [
     { name: "Mens" },
     { name: "New" },
     { name: "Pendants" },
-     { name: "Bracelets" },
+    { name: "Bracelets" },
     { name: "Rings" },
     { name: "Womens" },
 ];
@@ -147,12 +174,14 @@ const mensJewelleryContent = [
 const TOP_OFFSET = 40;
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
+// ── Helper — ab videos bhi return karega (Rings.js jaisa pattern) ──
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) {
         return product.variants[0];
     }
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice,
         isSale: product.isSale || false,
@@ -160,6 +189,299 @@ function getFirstVariant(product) {
     };
 }
 
+// ─────────────────────────────────────────────────────────
+//  TOAST NOTIFICATION
+// ─────────────────────────────────────────────────────────
+function Toast({ message, visible }) {
+    if (!visible) return null;
+    return (
+        <div style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#1a1a1a',
+            color: '#fff',
+            padding: '12px 24px',
+            borderRadius: '4px',
+            fontSize: '14px',
+            zIndex: 9999,
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            transition: 'opacity 0.3s ease',
+            opacity: visible ? 1 : 0,
+        }}>
+            {message}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────
+//  QUICK VIEW MODAL — image + video support (Rings.js pattern)
+// ─────────────────────────────────────────────────────────
+function QuickViewModal({ product, currency, onClose, onAddToCart, wishlist, onToggleWishlist }) {
+    const [qty, setQty] = useState(1);
+    const variant = getFirstVariant(product);
+    const images = variant.images || [];
+    const videos = variant.videos || [];
+    const categoryUrl = categorySlugMap[product.category] || 'mens';
+
+    // ── mediaList: pehli image, phir video (agar hai), phir baaki images ──
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [activeIdx, setActiveIdx] = useState(0);
+    const videoRef = useRef(null);
+    const activeItem = mediaList[activeIdx] || null;
+
+    // Jab active slide video ho, use play karo (aur reset se)
+    useEffect(() => {
+        if (activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [activeIdx, activeItem]);
+
+    // Modal band hote hi video pause ho jaye
+    useEffect(() => {
+        return () => {
+            if (videoRef.current) {
+                videoRef.current.pause();
+            }
+        };
+    }, [activeIdx]);
+
+    useEffect(() => {
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handler);
+        document.body.style.overflow = 'hidden';
+        return () => {
+            window.removeEventListener('keydown', handler);
+            document.body.style.overflow = '';
+        };
+    }, [onClose]);
+
+    return (
+        <div
+            style={{
+                position: 'fixed', inset: 0, zIndex: 9000,
+                background: 'rgba(0,0,0,0.55)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '16px',
+            }}
+            onClick={onClose}
+        >
+            <div
+                style={{
+                    background: '#fff', borderRadius: '8px',
+                    maxWidth: '860px', width: '100%',
+                    maxHeight: '90vh', overflow: 'auto',
+                    display: 'flex', flexDirection: 'row',
+                    position: 'relative',
+                    flexWrap: 'wrap',
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute', top: '12px', right: '16px',
+                        background: 'none', border: 'none', fontSize: '22px',
+                        cursor: 'pointer', color: '#555', zIndex: 1, lineHeight: 1,
+                    }}
+                    aria-label="Close"
+                >✕</button>
+
+                {/* Images / Video */}
+                <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
+                    <div style={{
+                        background: '#f7f6f4', borderRadius: '6px',
+                        aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px',
+                    }}>
+                        {activeItem ? (
+                            activeItem.type === 'video' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={`${API_BASE}${activeItem.src}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    muted
+                                    playsInline
+                                    loop
+                                    controls
+                                />
+                            ) : (
+                                <img
+                                    src={`${API_BASE}${activeItem.src}`}
+                                    alt={product.title || product.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                />
+                            )
+                        ) : (
+                            <img src="/placeholder.jpg" alt="placeholder"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                    </div>
+                    {mediaList.length > 1 && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {mediaList.map((item, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setActiveIdx(i)}
+                                    style={{
+                                        width: '54px', height: '54px', padding: 0,
+                                        border: i === activeIdx ? '2px solid #1a1a1a' : '2px solid transparent',
+                                        borderRadius: '4px', overflow: 'hidden', cursor: 'pointer',
+                                        background: '#f7f6f4', position: 'relative',
+                                    }}
+                                >
+                                    {item.type === 'video' ? (
+                                        <>
+                                            <video
+                                                src={`${API_BASE}${item.src}`}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                muted
+                                                playsInline
+                                            />
+                                            <span style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'rgba(0,0,0,0.25)', pointerEvents: 'none',
+                                            }}>
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                                                    <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                                                </svg>
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <img
+                                            src={`${API_BASE}${item.src}`}
+                                            alt={`view ${i + 1}`}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                        />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Details */}
+                <div style={{ flex: '1 1 280px', padding: '32px 24px 24px 16px', minWidth: '240px' }}>
+                    {variant.isSale && (
+                        <span style={{
+                            background: '#1a1a1a', color: '#fff',
+                            fontSize: '11px', letterSpacing: '1px',
+                            padding: '3px 8px', borderRadius: '2px',
+                            display: 'inline-block', marginBottom: '10px',
+                        }}>SALE</span>
+                    )}
+                    <p style={{ fontSize: '12px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>
+                        {product.category}
+                    </p>
+                    <h2 style={{ fontSize: '20px', fontWeight: '500', margin: '0 0 14px', lineHeight: 1.3 }}>
+                        {product.title || product.name}
+                    </h2>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '20px' }}>
+                        {variant.oldPrice && (
+                            <span style={{ fontSize: '15px', color: '#aaa', textDecoration: 'line-through' }}>
+                                {formatPrice(variant.oldPrice, currency)}
+                            </span>
+                        )}
+                        <span style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a1a' }}>
+                            {variant.newPrice !== null && variant.newPrice !== undefined
+                                ? formatPrice(variant.newPrice, currency)
+                                : 'Price on request'}
+                        </span>
+                    </div>
+                    {product.description && (
+                        <p style={{ fontSize: '14px', color: '#666', lineHeight: 1.6, marginBottom: '20px' }}>
+                            {product.description}
+                        </p>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                        <span style={{ fontSize: '13px', color: '#555' }}>Qty:</span>
+                        <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #ddd', borderRadius: '4px' }}>
+                            <button
+                                onClick={() => setQty(q => Math.max(1, q - 1))}
+                                style={{ width: '32px', height: '32px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px' }}
+                            >−</button>
+                            <span style={{ minWidth: '28px', textAlign: 'center', fontSize: '14px' }}>{qty}</span>
+                            <button
+                                onClick={() => setQty(q => q + 1)}
+                                style={{ width: '32px', height: '32px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px' }}
+                            >+</button>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <button
+                            onClick={() => onAddToCart(product, qty)}
+                            style={{
+                                background: '#1a1a1a', color: '#fff',
+                                border: 'none', padding: '13px 20px',
+                                fontSize: '13px', letterSpacing: '0.5px',
+                                cursor: 'pointer', borderRadius: '4px',
+                                textTransform: 'uppercase',
+                            }}
+                        >Add to Cart</button>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button
+                                onClick={() => onToggleWishlist(product._id, {
+                                    _id: product._id,
+                                    slug: product.slug,
+                                    title: product.title || product.name,
+                                    category: product.category,
+                                    images: variant.images || [],
+                                    oldPrice: variant.oldPrice,
+                                    newPrice: variant.newPrice,
+                                    isSale: variant.isSale,
+                                })}
+                                style={{
+                                    flex: 1,
+                                    border: '1px solid #ddd', background: '#fff',
+                                    padding: '11px 12px', borderRadius: '4px',
+                                    fontSize: '13px', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                                    color: wishlist.includes(product._id) ? '#c0392b' : '#555',
+                                }}
+                            >
+                                <svg width="15" height="14" viewBox="0 0 16 15" fill="none">
+                                    <path d="M8 13.5C8 13.5 1 9 1 4.5C1 2.567 2.567 1 4.5 1C5.892 1 7.1 1.8 8 3C8.9 1.8 10.108 1 11.5 1C13.433 1 15 2.567 15 4.5C15 9 8 13.5 8 13.5Z"
+                                        stroke="currentColor" strokeWidth="1.3"
+                                        fill={wishlist.includes(product._id) ? 'currentColor' : 'none'} />
+                                </svg>
+                                Add to Wishlist
+                            </button>
+                            <Link
+                                href={`/product-category/${categoryUrl}/${product.slug}`}
+                                onClick={onClose}
+                                style={{
+                                    flex: 1, textAlign: 'center',
+                                    border: '1px solid #ddd', background: '#fff',
+                                    padding: '11px 12px', borderRadius: '4px',
+                                    fontSize: '13px', cursor: 'pointer',
+                                    textDecoration: 'none', color: '#555',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}
+                            >View Details</Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────
+//  ACCORDION ITEM
+// ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children }) {
     const [open, setOpen] = useState(false);
     const bodyRef = useRef(null);
@@ -193,38 +515,91 @@ function AccordionItem({ title, children }) {
     );
 }
 
-function ProductCard({ p, wishlist, toggleWishlist }) {
+// ─────────────────────────────────────────────────────────
+//  PRODUCT CARD — image + video hover cycling (Rings.js pattern)
+// ─────────────────────────────────────────────────────────
+function ProductCard({ p, wishlist, toggleWishlist, currency, onQuickView }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
+    const videos = variant.videos || [];
 
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
 
     const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => {
-            setCurrentImg(idx);
-            idx = (idx + 1) % images.length;
-        }, 800);
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
     };
 
     const stopHover = () => {
-        clearInterval(intervalRef.current);
-        setCurrentImg(0);
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
     };
 
-    useEffect(() => () => clearInterval(intervalRef.current), []);
+    // Jab bhi current slide video ho, use (re)play karo
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
 
-    const imgSrc =
-        images.length > 0
-            ? `${API_BASE}${images[currentImg]}`
-            : '/placeholder.jpg';
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
 
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice;
-    const isSale   = variant.isSale;
-
+    const isSale = variant.isSale;
     const categoryUrl = categorySlugMap[p.category] || 'mens';
 
     return (
@@ -237,20 +612,32 @@ function ProductCard({ p, wishlist, toggleWishlist }) {
             <div className="jw-card-img-wrap">
                 {isSale && <span className="jw-sale-badge">SALE</span>}
 
-                <img
-                    src={imgSrc}
-                    alt={p.title}
-                    className="jw-card-img"
-                    loading="lazy"
-                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                />
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={`${API_BASE}${currentItem.src}`}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? `${API_BASE}${currentItem.src}` : '/placeholder.jpg'}
+                        alt={p.title}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                    />
+                )}
 
-                {images.length > 1 && (
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => (
+                        {mediaList.map((_, i) => (
                             <span
                                 key={i}
-                                className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`}
+                                className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`}
                             />
                         ))}
                     </div>
@@ -259,7 +646,20 @@ function ProductCard({ p, wishlist, toggleWishlist }) {
                 <div className="jw-card-actions">
                     <button
                         className={`jw-action-btn ${wishlist.includes(p._id) ? 'jw-action-btn--active' : ''}`}
-                        onClick={(e) => { e.preventDefault(); toggleWishlist(p._id); }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleWishlist(p._id, {
+                                _id: p._id,
+                                slug: p.slug,
+                                title: p.title,
+                                category: p.category,
+                                images: variant.images || [],
+                                oldPrice: variant.oldPrice,
+                                newPrice: variant.newPrice,
+                                isSale: variant.isSale,
+                            });
+                        }}
                         title="Add to Wishlist"
                     >
                         <svg width="16" height="15" viewBox="0 0 16 15" fill="none">
@@ -273,7 +673,11 @@ function ProductCard({ p, wishlist, toggleWishlist }) {
                     <button
                         className="jw-action-btn"
                         title="Quick View"
-                        onClick={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onQuickView(p);
+                        }}
                     >
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.3" />
@@ -291,13 +695,13 @@ function ProductCard({ p, wishlist, toggleWishlist }) {
                 <h3 className="jw-card-name">{p.title}</h3>
                 <div className="jw-card-price">
                     {oldPrice && (
-                        <span className="jw-old-price">
-                            €{Number(oldPrice).toLocaleString('en-IN')}
-                        </span>
+                        <span className="jw-old-price">{formatPrice(oldPrice, currency)}</span>
                     )}
-                    <span className="jw-new-price">
-                        €{Number(newPrice).toLocaleString('en-IN')}
-                    </span>
+                    {newPrice !== null && newPrice !== undefined ? (
+                        <span className="jw-new-price">{formatPrice(newPrice, currency)}</span>
+                    ) : (
+                        <span className="jw-new-price jw-price-na">Price on request</span>
+                    )}
                 </div>
             </div>
         </Link>
@@ -320,6 +724,24 @@ function SkeletonCard() {
 export default function Mens() {
     const router = useRouter();
 
+    // ── Currency — detect from IP ──
+    const [currency, setCurrency] = useState(CURRENCY_MAP.default);
+
+    useEffect(() => {
+        const detectCurrency = async () => {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/translate/detect-language`);
+                const data = await res.json();
+                if (data.success && data.countryCode && CURRENCY_MAP[data.countryCode]) {
+                    setCurrency(CURRENCY_MAP[data.countryCode]);
+                }
+            } catch (err) {
+                // silent fail, default EUR stays
+            }
+        };
+        detectCurrency();
+    }, []);
+
     const [catOpen, setCatOpen] = useState(true);
     const [priceOpen, setPriceOpen] = useState(true);
     const [activePrice, setActivePrice] = useState(null);
@@ -327,15 +749,35 @@ export default function Mens() {
 
     const [perPage, setPerPage] = useState(30);
     const [sort, setSort] = useState("default");
-    const [wishlist, setWishlist] = useState([]);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // ── Wishlist — WishlistContext ──
+    const { wishlistItems, addToWishlist, removeFromWishlist: removeFromWishlistCtx } = useWishlist();
+    const wishlist = (wishlistItems || []).map(item => item._id || item);
 
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // ── Quick View ──
+    const [quickViewProduct, setQuickViewProduct] = useState(null);
+
+    // ── Toast ──
+    const [toast, setToast] = useState({ visible: false, message: '' });
+    const toastTimer = useRef(null);
+
     const layoutRef = useRef(null);
     const sidebarRef = useRef(null);
+
+    const showToast = useCallback((message) => {
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        setToast({ visible: true, message });
+        toastTimer.current = setTimeout(() => {
+            setToast({ visible: false, message: '' });
+        }, 2500);
+    }, []);
+
+    useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
     const handleCategoryClick = (categoryName) => {
         setActiveCategory(categoryName);
@@ -378,6 +820,37 @@ export default function Mens() {
 
         fetchProducts();
     }, [activeCategory]);
+
+    // ── Wishlist toggle ──
+    const toggleWishlist = useCallback((id, productData) => {
+        if (wishlist.includes(id)) {
+            removeFromWishlistCtx(id);
+        } else {
+            addToWishlist(productData || { _id: id });
+        }
+    }, [wishlist, addToWishlist, removeFromWishlistCtx]);
+
+    // ── Add to Cart ──
+    const handleAddToCart = useCallback((product, qty = 1) => {
+        const variant = getFirstVariant(product);
+        const cartItem = {
+            _id: product._id,
+            slug: product.slug,
+            title: product.title,
+            category: product.category,
+            images: variant.images || [],
+            oldPrice: variant.oldPrice,
+            newPrice: variant.newPrice,
+            isSale: variant.isSale,
+            qty,
+        };
+        window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { item: cartItem } }));
+        setTimeout(() => window.dispatchEvent(new CustomEvent('open-cart-drawer')), 400);
+        showToast(`"${product.title}" added to cart`);
+    }, [showToast]);
+
+    const openQuickView = useCallback((product) => setQuickViewProduct(product), []);
+    const closeQuickView = useCallback(() => setQuickViewProduct(null), []);
 
     const sortedProducts = [...products].sort((a, b) => {
         const aPrice = getFirstVariant(a).newPrice || 0;
@@ -444,13 +917,26 @@ export default function Mens() {
         };
     }, []);
 
-    const toggleWishlist = (id) =>
-        setWishlist((prev) =>
-            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-        );
-
     return (
         <div className="jw-page">
+
+            {/* Toast */}
+            <Toast message={toast.message} visible={toast.visible} />
+
+            {/* Quick View Modal */}
+            {quickViewProduct && (
+                <QuickViewModal
+                    product={quickViewProduct}
+                    currency={currency}
+                    onClose={closeQuickView}
+                    onAddToCart={(product, qty) => {
+                        handleAddToCart(product, qty);
+                        closeQuickView();
+                    }}
+                    wishlist={wishlist}
+                    onToggleWishlist={toggleWishlist}
+                />
+            )}
 
             <button className="jw-filter-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <span className="jw-filter-icon">
@@ -590,6 +1076,8 @@ export default function Mens() {
                                     p={p}
                                     wishlist={wishlist}
                                     toggleWishlist={toggleWishlist}
+                                    currency={currency}
+                                    onQuickView={openQuickView}
                                 />
                             ))
                         ) : (

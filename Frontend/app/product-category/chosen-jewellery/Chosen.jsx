@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './Chosen.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -353,12 +353,23 @@ const rebuildFaq = (translatedArr) => {
 
 const TOP_OFFSET = 40;
 
+// ─────────────────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────────────────
+function getImgSrc(path) {
+    if (!path) return '/placeholder.jpg';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return `${API_BASE}${path.startsWith('/') ? path : '/' + path}`;
+}
+
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) {
         return product.variants[0];
     }
     return {
         images: product.images || [],
+        // 🆕 VIDEO SUPPORT — fallback product-level videos (same pattern as Pendants)
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice,
         isSale: product.isSale || false,
@@ -392,11 +403,38 @@ function Toast({ message, visible }) {
 //  QUICK VIEW MODAL
 // ─────────────────────────────────────────────────────────
 function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist, onToggleWishlist }) {
-    const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
     const variant = getFirstVariant(product);
     const images = variant.images || [];
+    const videos = variant.videos || [];
     const categoryUrl = categorySlugMap[product.category] || 'chosen-jewellery';
+
+    // ── mediaList: ProductCard jaisa hi order — image[0] → video[0] → baaki images ──
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [activeIdx, setActiveIdx] = useState(0);
+    const videoRef = useRef(null);
+    const activeItem = mediaList[activeIdx] || null;
+
+    // Active slide video ho to play karo (reset se)
+    useEffect(() => {
+        if (activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [activeIdx, activeItem]);
+
+    useEffect(() => {
+        return () => {
+            if (videoRef.current) videoRef.current.pause();
+        };
+    }, [activeIdx]);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -438,43 +476,77 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
                     aria-label="Close"
                 >✕</button>
 
-                {/* Images */}
+                {/* Images / Video Left Side */}
                 <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
                     <div style={{
                         background: '#f7f6f4', borderRadius: '6px',
                         aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px',
                     }}>
-                        {images.length > 0 ? (
-                            <img
-                                src={`${API_BASE}${images[activeImg]}`}
-                                alt={product.title}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                            />
+                        {activeItem ? (
+                            activeItem.type === 'video' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={getImgSrc(activeItem.src)}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    muted
+                                    playsInline
+                                    loop
+                                    controls
+                                />
+                            ) : (
+                                <img
+                                    src={getImgSrc(activeItem.src)}
+                                    alt={product.title}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                />
+                            )
                         ) : (
                             <img src="/placeholder.jpg" alt="placeholder"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         )}
                     </div>
-                    {images.length > 1 && (
+
+                    {/* Thumbnail strip — image + video dono */}
+                    {mediaList.length > 1 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {images.map((img, i) => (
+                            {mediaList.map((item, i) => (
                                 <button
                                     key={i}
-                                    onClick={() => setActiveImg(i)}
+                                    onClick={() => setActiveIdx(i)}
                                     style={{
                                         width: '54px', height: '54px', padding: 0,
-                                        border: i === activeImg ? '2px solid #1a1a1a' : '2px solid transparent',
+                                        border: i === activeIdx ? '2px solid #1a1a1a' : '2px solid transparent',
                                         borderRadius: '4px', overflow: 'hidden', cursor: 'pointer',
-                                        background: '#f7f6f4',
+                                        background: '#f7f6f4', position: 'relative',
                                     }}
                                 >
-                                    <img
-                                        src={`${API_BASE}${img}`}
-                                        alt={`view ${i + 1}`}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                                    />
+                                    {item.type === 'video' ? (
+                                        <>
+                                            <video
+                                                src={getImgSrc(item.src)}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                muted
+                                                playsInline
+                                            />
+                                            <span style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'rgba(0,0,0,0.25)', pointerEvents: 'none',
+                                            }}>
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                                                    <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                                                </svg>
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <img
+                                            src={getImgSrc(item.src)}
+                                            alt={`view ${i + 1}`}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                        />
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -614,31 +686,90 @@ function AccordionItem({ title, children }) {
 }
 
 // ─────────────────────────────────────────────────────────
-//  PRODUCT CARD
+//  PRODUCT CARD — 🆕 media-aware hover slider (image + video), same pattern as Pendants
 // ─────────────────────────────────────────────────────────
 function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const videos = variant.videos || [];
+
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    // Image slides advance after a fixed delay; video slides advance only
+    // on their own 'ended' event (handled separately), so no timer here.
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+        // video: no timer — handleVideoEnded() below drives the advance
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
 
     const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => {
-            setCurrentImg(idx);
-            idx = (idx + 1) % images.length;
-        }, 800);
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
     };
 
     const stopHover = () => {
-        clearInterval(intervalRef.current);
-        setCurrentImg(0);
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
     };
 
-    useEffect(() => () => clearInterval(intervalRef.current), []);
+    // Jab bhi current slide video ho, use (re)play karo
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
 
-    const imgSrc = images.length > 0 ? `${API_BASE}${images[currentImg]}` : "/placeholder.jpg";
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
+
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice;
     const isSale = variant.isSale;
@@ -653,17 +784,31 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView })
         >
             <div className="jw-card-img-wrap">
                 {isSale && <span className="jw-sale-badge">{ui.sale}</span>}
-                <img
-                    src={imgSrc}
-                    alt={p.title}
-                    className="jw-card-img"
-                    loading="lazy"
-                    onError={(e) => { e.target.src = "/placeholder.jpg"; }}
-                />
-                {images.length > 1 && (
+
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={getImgSrc(currentItem.src)}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? getImgSrc(currentItem.src) : "/placeholder.jpg"}
+                        alt={p.title}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+                    />
+                )}
+
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => (
-                            <span key={i} className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`} />
+                        {mediaList.map((_, i) => (
+                            <span key={i} className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`} />
                         ))}
                     </div>
                 )}

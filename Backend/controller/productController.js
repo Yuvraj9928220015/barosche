@@ -13,12 +13,16 @@ const cleanupFiles = (files = []) =>
   files.forEach((f) => fs.unlink(f.path, () => { }));
 
 const groupFilesByVariant = (files = []) => {
-  const map = {};
+  const map = { images: {}, videos: {} };
   files.forEach((f) => {
-    const match = f.fieldname.match(/^variantImages_(\d+)$/);
-    if (match) {
-      const idx = parseInt(match[1], 10);
-      (map[idx] = map[idx] || []).push(`/uploads/${f.filename}`);
+    const imgMatch = f.fieldname.match(/^variantImages_(\d+)$/);
+    const vidMatch = f.fieldname.match(/^variantVideos_(\d+)$/);
+    if (imgMatch) {
+      const idx = parseInt(imgMatch[1], 10);
+      (map.images[idx] = map.images[idx] || []).push(`/uploads/${f.filename}`);
+    } else if (vidMatch) {
+      const idx = parseInt(vidMatch[1], 10);
+      (map.videos[idx] = map.videos[idx] || []).push(`/uploads/${f.filename}`);
     }
   });
   return map;
@@ -49,7 +53,8 @@ const buildVariants = (variantsData, filesByVariant, existingVariants = []) =>
     inStock: v.inStock === true || v.inStock === "true",
     quantity: Number.isFinite(Number(v.quantity)) ? Math.max(0, Number(v.quantity)) : 0,
     sizes: Array.isArray(v.sizes) ? v.sizes : [],
-    images: [...(v.existingImages || []), ...(filesByVariant[i] || [])],
+    images: [...(v.existingImages || []), ...(filesByVariant.images[i] || [])],
+    videos: [...(v.existingVideos || []), ...(filesByVariant.videos[i] || [])],
   }));
 
 
@@ -155,13 +160,23 @@ const updateProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: "At least one variant is required." });
     }
 
-    // Delete removed images from disk
+    // Delete removed images AND videos from disk
     const allKeptImages = new Set();
-    variantsData.forEach((v) => (v.existingImages || []).forEach((img) => allKeptImages.add(img)));
+    const allKeptVideos = new Set();
+    variantsData.forEach((v) => {
+      (v.existingImages || []).forEach((img) => allKeptImages.add(img));
+      (v.existingVideos || []).forEach((vid) => allKeptVideos.add(vid));
+    });
     product.variants.forEach((variant) => {
-      variant.images.forEach((imgPath) => {
+      (variant.images || []).forEach((imgPath) => {
         if (!allKeptImages.has(imgPath)) {
           const fullPath = path.join(__dirname, "..", imgPath);
+          fs.unlink(fullPath, (err) => { if (err) console.warn("Could not delete:", fullPath); });
+        }
+      });
+      (variant.videos || []).forEach((vidPath) => {
+        if (!allKeptVideos.has(vidPath)) {
+          const fullPath = path.join(__dirname, "..", vidPath);
           fs.unlink(fullPath, (err) => { if (err) console.warn("Could not delete:", fullPath); });
         }
       });
@@ -282,8 +297,12 @@ const deleteProduct = async (req, res) => {
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 
     product.variants.forEach((variant) => {
-      variant.images.forEach((imgPath) => {
+      (variant.images || []).forEach((imgPath) => {
         const fullPath = path.join(__dirname, "..", imgPath);
+        fs.unlink(fullPath, (err) => { if (err) console.warn(`Could not delete: ${fullPath}`); });
+      });
+      (variant.videos || []).forEach((vidPath) => {
+        const fullPath = path.join(__dirname, "..", vidPath);
         fs.unlink(fullPath, (err) => { if (err) console.warn(`Could not delete: ${fullPath}`); });
       });
     });

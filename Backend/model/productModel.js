@@ -20,6 +20,10 @@ const variantSchema = new mongoose.Schema(
         message: "At least one image is required per variant",
       },
     },
+    videos: {
+      type: [String],
+      default: [],
+    },
     isSale: { type: Boolean, default: false },
     inStock: { type: Boolean, default: true },
     quantity: { type: Number, default: 0, min: [0, "Quantity cannot be negative"] },

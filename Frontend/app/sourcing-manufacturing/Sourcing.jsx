@@ -50,7 +50,6 @@ export default function Sourcing() {
         try {
             setTranslationStatus("loading");
 
-            // 1. Detect language
             const detectRes = await fetch(`${BACKEND_URL}/api/translate/detect-language`);
             const detectData = await detectRes.json();
 
@@ -58,7 +57,6 @@ export default function Sourcing() {
 
             const { languageCode } = detectData;
 
-           
             if (languageCode === "en") {
                 setTranslationStatus("done");
                 return;

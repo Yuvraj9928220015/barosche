@@ -6,7 +6,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com
 
 
 const DEFAULT_CONTENT = {
-  title: "Imprint & Legal Information",
+  title: "Imprint",
   labels: {
     email: "Email:",
     mobile: "Mobile:",
@@ -99,24 +99,16 @@ export default function Imprint() {
               <div className="Imprint-title">{content.title}</div>
               <div className="Imprint-des">
                 <div className="Imprint-input">
-                  <span>{content.labels.email}</span> info@barosche.com
-                </div>
-                <div className="Imprint-input">
-                  <span>{content.labels.mobile}</span> +49 1628806158
-                </div>
-                <div className="Imprint-input">
                   <span>{content.labels.legalName}</span> Barosche GbR
                 </div>
                 <div className="Imprint-input">
                   <span>{content.labels.address}</span> Herrlichkeit 11, Syke, 28857 Germany
                 </div>
-              </div>
-
-              <div className="Imprint-des">
-                <div className="Imprint-input ">
-                  <span>{content.labels.representedBy}</span> Babar Khan & Roshan Kumar
+                 <div className="Imprint-input">
+                  <span>{content.labels.email}</span> info@barosche.com
                 </div>
               </div>
+
             </div>
           </div>
         </div>

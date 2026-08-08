@@ -70,6 +70,8 @@ const emptyVariant = (idx = 0) => ({
   sizes: [],
   existingImages: [],
   newImages: [],
+  existingVideos: [],
+  newVideos: [],
 });
 
 const PAYMENT_METHOD_LABELS = {
@@ -87,14 +89,12 @@ const PAYMENT_STATUS_COLORS = {
   refunded: { bg: "#e0f2fe", color: "#075985", border: "#7dd3fc" },
 };
 
-// ═══════════════════
-//  ORDER DETAIL MODAL
-// ═══════════════════
 function OrderDetailModal({ order, onClose }) {
   const ci = order.customerInfo || {};
   const statusStyle = PAYMENT_STATUS_COLORS[order.paymentStatus] || PAYMENT_STATUS_COLORS.pending;
 
   return (
+   <>
     <div className="modal-overlay">
       <div className="modal" style={{ maxWidth: 680 }}>
         <div className="modal-header">
@@ -213,6 +213,7 @@ function OrderDetailModal({ order, onClose }) {
         </div>
       </div>
     </div>
+   </>
   );
 }
 
@@ -420,10 +421,6 @@ function OrdersSection() {
   );
 }
 
-
-// ════════════════════════════════════════════════════════
-//  LOGIN FORM
-// ════════════════════════════════════════════════════════
 function LoginForm({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -503,10 +500,6 @@ function LoginForm({ onLogin }) {
   );
 }
 
-
-/* ═══════════════════════════════════════════════════════
-   TAG INPUT
-═══════════════════════════════════════════════════════ */
 function TagSelector({ label, icon, presets, selected, onChange, placeholder }) {
   const [customInput, setCustomInput] = useState("");
   const toggle = (val) => onChange(selected.includes(val) ? selected.filter((s) => s !== val) : [...selected, val]);
@@ -551,10 +544,6 @@ function TagSelector({ label, icon, presets, selected, onChange, placeholder }) 
   );
 }
 
-
-/* ═══════════════════════════════════════════════════════
-   PRODUCT FORM
-═══════════════════════════════════════════════════════ */
 function ProductForm({ initial, onClose, onSaved }) {
   const isEdit = !!initial;
   const [title, setTitle] = useState(initial?.title || "");
@@ -573,7 +562,9 @@ function ProductForm({ initial, onClose, onSaved }) {
         _id: v._id, name: v.name, title: v.title || "", description: v.description || "",
         materials: v.materials || [], gemstones: v.gemstones || [], metalType: v.metalType || [],
         oldPrice: v.oldPrice ?? "", newPrice: v.newPrice ?? "", isSale: v.isSale || false,
-        inStock: v.inStock ?? true, quantity: v.quantity ?? 0, sizes: v.sizes || [], existingImages: v.images || [], newImages: [],
+        inStock: v.inStock ?? true, quantity: v.quantity ?? 0, sizes: v.sizes || [],
+        existingImages: v.images || [], newImages: [],
+        existingVideos: v.videos || [], newVideos: [],
       }))
       : [emptyVariant(0)]
   );
@@ -613,9 +604,27 @@ function ProductForm({ initial, onClose, onSaved }) {
   const setVariantField = (idx, field, value) => setVariants((prev) => prev.map((v, i) => i === idx ? { ...v, [field]: value } : v));
   const addVariant = () => { const next = variants.length; setVariants((prev) => [...prev, emptyVariant(next)]); setActiveIdx(next); };
   const removeVariant = (idx) => { if (variants.length === 1) return; setVariants((prev) => prev.filter((_, i) => i !== idx)); setActiveIdx((prev) => Math.min(prev, variants.length - 2)); };
+
+  // ── Images ──
   const handleVariantImages = (idx, e) => { const files = Array.from(e.target.files); setVariants((prev) => prev.map((v, i) => i === idx ? { ...v, newImages: [...v.newImages, ...files] } : v)); };
   const removeExistingImg = (varIdx, imgIdx) => setVariants((prev) => prev.map((v, i) => i === varIdx ? { ...v, existingImages: v.existingImages.filter((_, j) => j !== imgIdx) } : v));
   const removeNewImg = (varIdx, imgIdx) => setVariants((prev) => prev.map((v, i) => i === varIdx ? { ...v, newImages: v.newImages.filter((_, j) => j !== imgIdx) } : v));
+
+  // ── Videos ──
+  const MAX_VIDEOS_PER_VARIANT = 5;
+  const handleVariantVideos = (idx, e) => {
+    const files = Array.from(e.target.files);
+    setVariants((prev) => prev.map((v, i) => {
+      if (i !== idx) return v;
+      const currentCount = (v.existingVideos?.length || 0) + (v.newVideos?.length || 0);
+      const room = Math.max(0, MAX_VIDEOS_PER_VARIANT - currentCount);
+      if (room <= 0) return v;
+      return { ...v, newVideos: [...(v.newVideos || []), ...files.slice(0, room)] };
+    }));
+    e.target.value = "";
+  };
+  const removeExistingVideo = (varIdx, vidIdx) => setVariants((prev) => prev.map((v, i) => i === varIdx ? { ...v, existingVideos: v.existingVideos.filter((_, j) => j !== vidIdx) } : v));
+  const removeNewVideo = (varIdx, vidIdx) => setVariants((prev) => prev.map((v, i) => i === varIdx ? { ...v, newVideos: v.newVideos.filter((_, j) => j !== vidIdx) } : v));
 
   // Auto-toggle inStock off when quantity hits 0, keeps admin from forgetting to flip it manually
   const setVariantQuantity = (idx, rawValue) => {
@@ -645,9 +654,15 @@ function ProductForm({ initial, onClose, onSaved }) {
     formData.append("title", title); formData.append("slug", slug); formData.append("description", description);
     formData.append("category", categories[0] || ""); formData.append("categories", JSON.stringify(categories));
     formData.append("materials", JSON.stringify(materials)); formData.append("gemstones", JSON.stringify(gemstones));
-    const variantsData = variants.map((v) => ({ _id: v._id, name: v.name, title: v.title, description: v.description, materials: v.materials, gemstones: v.gemstones, metalType: v.metalType, oldPrice: v.oldPrice, newPrice: v.newPrice, isSale: v.isSale, inStock: v.inStock, quantity: v.quantity, sizes: v.sizes, existingImages: v.existingImages }));
+    const variantsData = variants.map((v) => ({
+      _id: v._id, name: v.name, title: v.title, description: v.description, materials: v.materials,
+      gemstones: v.gemstones, metalType: v.metalType, oldPrice: v.oldPrice, newPrice: v.newPrice,
+      isSale: v.isSale, inStock: v.inStock, quantity: v.quantity, sizes: v.sizes,
+      existingImages: v.existingImages, existingVideos: v.existingVideos,
+    }));
     formData.append("variantsData", JSON.stringify(variantsData));
     variants.forEach((v, i) => v.newImages.forEach((img) => formData.append(`variantImages_${i}`, img)));
+    variants.forEach((v, i) => (v.newVideos || []).forEach((vid) => formData.append(`variantVideos_${i}`, vid)));
     try {
       const url = isEdit ? `${API_BASE}/${initial._id}` : `${API_BASE}/upload`;
       const method = isEdit ? "PUT" : "POST";
@@ -664,6 +679,8 @@ function ProductForm({ initial, onClose, onSaved }) {
   const slugHint = slugStatus === "checking" ? { color: "#9ca3af", text: "Checking availability…" }
     : slugStatus === "taken" ? { color: "#ef4444", text: `⚠ Slug "${slug}" is already taken.` }
       : slugStatus === "ok" && slug ? { color: "#10b981", text: "✓ Slug is available" } : null;
+
+  const videoCount = (av.existingVideos?.length || 0) + (av.newVideos?.length || 0);
 
   return (
     <div className="modal-overlay">
@@ -767,6 +784,8 @@ function ProductForm({ initial, onClose, onSaved }) {
                     </div>
                     <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 6 }}>Click to toggle sizes for this variant</p>
                   </div>
+
+                  {/* ── Images ── */}
                   <div className="form-group full">
                     <label className="form-label">Images * — max 10 per variant{(av.existingImages?.length + (av.newImages?.length || 0)) > 0 && <span style={{ color: "#8b5cf6", marginLeft: 8, fontWeight: 400 }}>({av.existingImages.length + (av.newImages?.length || 0)} selected)</span>}</label>
                     <label className="file-upload-label"><span>📁 Choose Images</span><input type="file" accept="image/*" multiple onChange={(e) => handleVariantImages(activeIdx, e)} style={{ display: "none" }} /></label>
@@ -777,6 +796,38 @@ function ProductForm({ initial, onClose, onSaved }) {
                       </div>
                     )}
                   </div>
+
+                  {/* ── Videos (NEW) ── */}
+                  <div className="form-group full">
+                    <label className="form-label">
+                      🎥 Videos <span style={{ color: "#9ca3af", fontWeight: 400, fontSize: 12 }}>(optional — max {MAX_VIDEOS_PER_VARIANT} per variant)</span>
+                      {videoCount > 0 && <span style={{ color: "#8b5cf6", marginLeft: 8, fontWeight: 400 }}>({videoCount} selected)</span>}
+                    </label>
+                    <label className="file-upload-label" style={videoCount >= MAX_VIDEOS_PER_VARIANT ? { opacity: 0.5, pointerEvents: "none" } : undefined}>
+                      <span>🎬 Choose Videos</span>
+                      <input type="file" accept="video/mp4,video/quicktime,video/webm,video/x-msvideo,video/x-matroska" multiple onChange={(e) => handleVariantVideos(activeIdx, e)} style={{ display: "none" }} disabled={videoCount >= MAX_VIDEOS_PER_VARIANT} />
+                    </label>
+                    <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+                      Supported: mp4, mov, webm, avi, mkv. Max size 100MB per video.
+                    </p>
+                    {(av.existingVideos?.length > 0 || av.newVideos?.length > 0) && (
+                      <div className="img-preview-grid">
+                        {(av.existingVideos || []).map((src, i) => (
+                          <div key={`exv-${i}`} className="img-preview-item">
+                            <video src={`https://api.barosche.com${src}`} className="img-preview-thumb" muted playsInline preload="metadata" />
+                            <button type="button" className="btn-remove-img" onClick={() => removeExistingVideo(activeIdx, i)}>✕</button>
+                          </div>
+                        ))}
+                        {(av.newVideos || []).map((f, i) => (
+                          <div key={`nwv-${i}`} className="img-preview-item">
+                            <video src={URL.createObjectURL(f)} className="img-preview-thumb" muted playsInline preload="metadata" />
+                            <button type="button" className="btn-remove-img" onClick={() => removeNewVideo(activeIdx, i)}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="toggle-row">
                     <label className="toggle-label">
                       <div className={`toggle-track ${av.isSale ? "on-sale" : "off"}`} onClick={() => setVariantField(activeIdx, "isSale", !av.isSale)}><div className={`toggle-thumb ${av.isSale ? "on" : "off"}`} /></div>
@@ -843,6 +894,16 @@ function ProductDetail({ product, onClose, onEdit, onDelete }) {
                   {variant.images.map((img, i) => (<img key={i} src={`https://api.barosche.com${img}`} alt="" className={`thumb-img ${imgIdx === i ? "active" : ""}`} onClick={() => setImgIdx(i)} />))}
                 </div>
               )}
+              {variant.videos?.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af", marginBottom: 8 }}>🎥 Videos</p>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {variant.videos.map((v, i) => (
+                      <video key={i} src={`https://api.barosche.com${v}`} controls style={{ width: 150, height: 110, borderRadius: 8, border: "1px solid #e5e7eb", background: "#000" }} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="detail-info">
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
@@ -873,6 +934,7 @@ function ProductDetail({ product, onClose, onEdit, onDelete }) {
                 <div className="meta-item"><span className="meta-label">Slug</span><span className="meta-value"><code>{product.slug}</code></span></div>
                 <div className="meta-item"><span className="meta-label">Variants</span><span className="meta-value">{product.variants?.length || 1}</span></div>
                 <div className="meta-item"><span className="meta-label">Images</span><span className="meta-value">{variant.images?.length || 0} photos</span></div>
+                <div className="meta-item"><span className="meta-label">Videos</span><span className="meta-value">{variant.videos?.length || 0} clips</span></div>
                 <div className="meta-item"><span className="meta-label">Created</span><span className="meta-value">{new Date(product.createdAt).toLocaleDateString("en-IN")}</span></div>
                 <div className="meta-item"><span className="meta-label">Stock</span><span className={`meta-value ${!outOfStockVariant ? "in-stock" : "out-stock"}`}>{!outOfStockVariant ? "✓ Available" : "✗ Out of Stock"}</span></div>
                 <div className="meta-item"><span className="meta-label">Quantity</span><span className={`meta-value ${qty === 0 ? "out-stock" : qty <= 3 ? "" : "in-stock"}`} style={qty > 0 && qty <= 3 ? { color: "#b45309" } : undefined}>{qty} unit{qty !== 1 ? "s" : ""}{qty > 0 && qty <= 3 ? " (low)" : ""}</span></div>
@@ -930,6 +992,7 @@ function ProductCard({ product, onClick, onEdit, onDelete }) {
   const cardMetalType = firstVariant.metalType || [];
   const cardQty = Number(firstVariant.quantity ?? 0);
   const cardOutOfStock = isVariantOutOfStock(firstVariant);
+  const cardHasVideo = (firstVariant.videos?.length || 0) > 0;
 
   return (
     <div className="product-card" onClick={onClick}>
@@ -943,6 +1006,9 @@ function ProductCard({ product, onClick, onEdit, onDelete }) {
           </span>
         )}
         {variantCount > 1 && <span className="badge-img-count">{variantCount} variants</span>}
+        {cardHasVideo && (
+          <span className="badge-img-count" style={{ right: "auto", left: 8 }} title="Has video">🎥</span>
+        )}
       </div>
       <div className="card-body">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 4 }}>

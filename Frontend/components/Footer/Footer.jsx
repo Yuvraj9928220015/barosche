@@ -21,9 +21,9 @@ const DEFAULT_CONTENT = {
 
   col1Heading: "About",
   col1Links: [
-    "About US",
     "Jewellery",
     "Our Services",
+    "About US",
     "Size Guide",
     "Guides",
     "Blogs",
@@ -56,9 +56,9 @@ const DEFAULT_CONTENT = {
 };
 
 const col1Hrefs = [
-  "/about",
   "/product-category/jewellery",
   "/our-services",
+  "/about",
   "/size-guide",
   "/guide",
   "/blogs",
@@ -90,7 +90,6 @@ const Footer = () => {
   const [status, setStatus] = useState({ loading: false, message: "", success: null });
   const [content, setContent] = useState(DEFAULT_CONTENT);
 
-  // ── Translation ─────────────────────────────────────────────────────────
   useEffect(() => {
     const translateContent = async () => {
       try {
@@ -218,7 +217,7 @@ const Footer = () => {
           <div className="footer-links-grid">
             {/* Column 1 */}
             <div className="footer-column">
-              <h3>{content.col1Heading}</h3>
+              <p className="footer-column-heading">{content.col1Heading}</p>
               <ul>
                 {content.col1Links.map((label, i) => (
                   <li key={i}>
@@ -230,7 +229,7 @@ const Footer = () => {
 
             {/* Column 2 */}
             <div className="footer-column">
-              <h3>{content.col2Heading}</h3>
+              <p className="footer-column-heading">{content.col2Heading}</p>
               <ul>
                 {content.col2Links.map((label, i) => (
                   <li key={i}>
@@ -242,7 +241,7 @@ const Footer = () => {
 
             {/* Column 3 */}
             <div className="footer-column">
-              <h3>{content.col3Heading}</h3>
+              <p className="footer-column-heading">{content.col3Heading}</p>
               <ul>
                 {content.col3Links.map((label, i) => (
                   <li key={i}>

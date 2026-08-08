@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './shop.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,16 +14,16 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 //  CURRENCY CONFIG — country-based price display
 // ─────────────────────────────────────────────────────────
 const CURRENCY_MAP = {
-    US: { code: 'USD', symbol: '$', rate: 1.08 },
-    GB: { code: 'GBP', symbol: '£', rate: 0.85 },
-    IN: { code: 'INR', symbol: '₹', rate: 90.5 },
-    AE: { code: 'AED', symbol: 'AED', rate: 3.97 },
-    AU: { code: 'AUD', symbol: 'A$', rate: 1.65 },
-    CA: { code: 'CAD', symbol: 'C$', rate: 1.47 },
-    SG: { code: 'SGD', symbol: 'S$', rate: 1.45 },
-    JP: { code: 'JPY', symbol: '¥', rate: 162 },
-    CH: { code: 'CHF', symbol: 'CHF', rate: 0.97 },
-    default: { code: 'EUR', symbol: '€', rate: 1 },
+    US: { code: "USD", symbol: "$", rate: 1.14 },
+    GB: { code: "GBP", symbol: "£", rate: 0.86 },
+    IN: { code: "INR", symbol: "₹", rate: 108.9 },
+    AE: { code: "AED", symbol: "AED", rate: 4.20 },
+    AU: { code: "AUD", symbol: "A$", rate: 1.66 },
+    CA: { code: "CAD", symbol: "C$", rate: 1.62 },
+    SG: { code: "SGD", symbol: "S$", rate: 1.48 },
+    JP: { code: "JPY", symbol: "¥", rate: 184.6 },
+    CH: { code: "CHF", symbol: "CHF", rate: 0.93 },
+    default: { code: "EUR", symbol: "€", rate: 1 },
 };
 
 function formatPrice(eurPrice, currency) {
@@ -34,9 +34,6 @@ function formatPrice(eurPrice, currency) {
     return `${currency.symbol}${converted.toLocaleString()}`;
 }
 
-// ─────────────────────────────────────────────────────────
-//  DEFAULT (English) UI STRINGS
-// ─────────────────────────────────────────────────────────
 const DEFAULT_UI = {
     productCategories: "Product Categories",
     price: "Price",
@@ -47,7 +44,7 @@ const DEFAULT_UI = {
     priceHighLow: "Price: High to Low",
     newest: "Newest",
     filtersText: "Filters",
-    fashionJewellery: "shop contant",
+    fashionJewellery: "Fashion Jewellery",
     faq: "Frequently Asked Questions",
     retry: "Retry",
     gridView: "Grid view",
@@ -119,9 +116,6 @@ const rebuildUI = (translations) => {
     };
 };
 
-// ─────────────────────────────────────────────────────────
-//  CATEGORY / PRICE DATA
-// ─────────────────────────────────────────────────────────
 const DEFAULT_CATEGORIES = [
     { name: "Chosen" },
     { name: "Earrings" },
@@ -133,16 +127,6 @@ const DEFAULT_CATEGORIES = [
     { name: "Bracelets" },
     { name: "Rings" },
     { name: "Womens" },
-];
-
-// NOTE: This was missing before and caused a runtime "DEFAULT_PRICES is not defined"
-// ReferenceError inside the price-filter logic. Added a sane default price-range list
-// so the filter never crashes, even though no sidebar UI currently sets activePrice.
-const DEFAULT_PRICES = [
-    { label: "Under ₹5,000", min: 0, max: 5000 },
-    { label: "₹5,000 - ₹15,000", min: 5000, max: 15000 },
-    { label: "₹15,000 - ₹30,000", min: 15000, max: 30000 },
-    { label: "Above ₹30,000", min: 30000, max: Infinity },
 ];
 
 const categorySlugMap = {
@@ -160,16 +144,22 @@ const categorySlugMap = {
     "Women": "jewellery",
 };
 
+const DEFAULT_PRICES = [
+    { label: "€1–€500", min: 1, max: 500 },
+    { label: "€500–€1000", min: 500, max: 1000 },
+    { label: "€1000–€2000", min: 1000, max: 2000 },
+    { label: "€2000–€5000", min: 2000, max: 5000 },
+    { label: "€5000–€10000", min: 5000, max: 10000 },
+    { label: "€10000+", min: 10000, max: 999999 },
+];
+
 const flattenCategories = (cats) => cats.map((c) => c.name);
 
 const rebuildCategories = (originalCats, translatedNames) =>
     originalCats.map((c, i) => ({ ...c, translatedName: translatedNames[i] }));
 
-// ─────────────────────────────────────────────────────────
-//  FAQ DATA
-// ─────────────────────────────────────────────────────────
 const faqData = [
-    { q: "What types of jewellery are available online?", a: "You can explore gemstone jewellery, lab grown diamond jewellery, minimal jewellery, and statement designs." },
+      { q: "What types of jewellery are available online?", a: "You can explore gemstone jewellery, lab grown diamond jewellery, minimal jewellery, and statement designs." },
     { q: "What is gemstone jewellery?", a: "Gemstone jewellery features natural or semi-precious stones set in rings, pendants, earrings, or bracelets." },
     { q: "Is gemstone jewellery suitable for daily wear?", a: "Yes, lightweight and minimal gemstone jewellery is perfect for everyday styling." },
     { q: "What is lab grown diamond jewellery?", a: "It is jewellery made using diamonds created in laboratories with the same physical properties as natural diamonds." },
@@ -191,11 +181,8 @@ const faqData = [
     { q: "Why should I buy jewellery online instead of offline?", a: "Online shopping offers convenience, wider selection, and access to the latest designs." },
 ];
 
-// ─────────────────────────────────────────────────────────
-//  FASHION JEWELLERY CONTENT DATA
-// ─────────────────────────────────────────────────────────
-const shopcontant = [
-    { type: 'h', text: "Jewellery Online – Discover Timeless Elegance & Modern Luxury" },
+const fashionJewelleryContent = [
+   { type: 'h', text: "Jewellery Online – Discover Timeless Elegance & Modern Luxury" },
     { type: 'p', text: "Explore a beautifully curated collection of <strong>jewellery online</strong> designed to bring together elegance, craftsmanship, and modern fashion trends. At Barosche, we offer a wide range of jewellery pieces that reflect individuality, sophistication, and timeless beauty." },
     { type: 'p', text: "From minimalist everyday designs to bold statement pieces and sparkling gemstone jewellery, our collection is designed to suit every personality, occasion, and style preference." },
     { type: 'p', text: "Whether you are shopping for yourself or searching for a meaningful gift, our online jewellery store makes it easy to find the perfect piece with comfort and confidence." },
@@ -257,13 +244,11 @@ const rebuildFaq = (translatedArr) => {
 
 const TOP_OFFSET = 40;
 
-// ─────────────────────────────────────────────────────────
-//  HELPER
-// ─────────────────────────────────────────────────────────
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice,
         isSale: product.isSale || false,
@@ -271,9 +256,9 @@ function getFirstVariant(product) {
     };
 }
 
-// ─────────────────────────────────────────────────────────
+// ───────
 //  TOAST
-// ─────────────────────────────────────────────────────────
+// ───────
 function Toast({ message, visible }) {
     if (!visible) return null;
     return (
@@ -284,7 +269,7 @@ function Toast({ message, visible }) {
             padding: '12px 24px', borderRadius: '4px',
             fontSize: '14px', zIndex: 9999,
             pointerEvents: 'none', whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            boxShadow: '0 4px 12px #00000033',
             opacity: visible ? 1 : 0,
             transition: 'opacity 0.3s ease',
         }}>
@@ -297,11 +282,41 @@ function Toast({ message, visible }) {
 //  QUICK VIEW MODAL
 // ─────────────────────────────────────────────────────────
 function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist, onToggleWishlist }) {
-    const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
     const variant = getFirstVariant(product);
     const images = variant.images || [];
+    const videos = variant.videos || [];
     const categoryUrl = categorySlugMap[product.category] || 'jewellery';
+
+    // ── mediaList: pehli image, phir video (agar hai), phir baaki images ──
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [activeIdx, setActiveIdx] = useState(0);
+    const videoRef = useRef(null);
+    const activeItem = mediaList[activeIdx] || null;
+
+    // Jab active slide video ho, use play karo (aur reset se)
+    useEffect(() => {
+        if (activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [activeIdx, activeItem]);
+
+    // Video par doosre slide pe jaate hi pause ho jaye
+    useEffect(() => {
+        return () => {
+            if (videoRef.current) {
+                videoRef.current.pause();
+            }
+        };
+    }, [activeIdx]);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -315,18 +330,52 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
             <div style={{ background: '#fff', borderRadius: '8px', maxWidth: '860px', width: '100%', maxHeight: '90vh', overflow: 'auto', display: 'flex', flexDirection: 'row', position: 'relative', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
                 <button onClick={onClose} style={{ position: 'absolute', top: '12px', right: '16px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#555', zIndex: 1, lineHeight: 1 }} aria-label="Close">✕</button>
 
-                {/* Images */}
+                {/* Images / Video */}
                 <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
                     <div style={{ background: '#f7f6f4', borderRadius: '6px', aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px' }}>
-                        {images.length > 0
-                            ? <img src={`${API_BASE}${images[activeImg]}`} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
-                            : <img src="/placeholder.jpg" alt="placeholder" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                        {activeItem ? (
+                            activeItem.type === 'video' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={`${API_BASE}${activeItem.src}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    muted
+                                    playsInline
+                                    loop
+                                    controls
+                                />
+                            ) : (
+                                <img src={`${API_BASE}${activeItem.src}`} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                            )
+                        ) : (
+                            <img src="/placeholder.jpg" alt="placeholder" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
                     </div>
-                    {images.length > 1 && (
+                    {mediaList.length > 1 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {images.map((img, i) => (
-                                <button key={i} onClick={() => setActiveImg(i)} style={{ width: '54px', height: '54px', padding: 0, border: i === activeImg ? '2px solid #1a1a1a' : '2px solid transparent', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', background: '#f7f6f4' }}>
-                                    <img src={`${API_BASE}${img}`} alt={`view ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                            {mediaList.map((item, i) => (
+                                <button key={i} onClick={() => setActiveIdx(i)} style={{ width: '54px', height: '54px', padding: 0, border: i === activeIdx ? '2px solid #1a1a1a' : '2px solid transparent', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', background: '#f7f6f4', position: 'relative' }}>
+                                    {item.type === 'video' ? (
+                                        <>
+                                            <video
+                                                src={`${API_BASE}${item.src}`}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                muted
+                                                playsInline
+                                            />
+                                            <span style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'rgba(0,0,0,0.25)', pointerEvents: 'none',
+                                            }}>
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                                                    <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                                                </svg>
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <img src={`${API_BASE}${item.src}`} alt={`view ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -393,24 +442,87 @@ function AccordionItem({ title, children }) {
 
 // ─────────────────────────────────────────────────────────
 //  PRODUCT CARD
-//  NOTE: "Add to Cart" hover icon has been removed as requested.
-//  Only Wishlist (heart) and Quick View (eye) icons show on hover now.
 // ─────────────────────────────────────────────────────────
-function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, onAddToCart }) {
+function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const videos = variant.videos || [];
+
+    // ── mediaList: pehli image, phir video (agar hai), phir baaki images ──
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
 
     const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => { setCurrentImg(idx); idx = (idx + 1) % images.length; }, 800);
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
     };
-    const stopHover = () => { clearInterval(intervalRef.current); setCurrentImg(0); };
-    useEffect(() => () => clearInterval(intervalRef.current), []);
 
-    const imgSrc = images.length > 0 ? `${API_BASE}${images[currentImg]}` : "/placeholder.jpg";
+    const stopHover = () => {
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    };
+
+    // Jab bhi current slide video ho, use (re)play karo
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
+
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
+
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice;
     const isSale = variant.isSale;
@@ -420,10 +532,30 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
         <Link href={`/product-category/${categoryUrl}/${p.slug}`} className="jw-card" onMouseEnter={startHover} onMouseLeave={stopHover}>
             <div className="jw-card-img-wrap">
                 {isSale && <span className="jw-sale-badge">{ui.sale}</span>}
-                <img src={imgSrc} alt={p.title} className="jw-card-img" loading="lazy" onError={(e) => { e.target.src = "/placeholder.jpg"; }} />
-                {images.length > 1 && (
+
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={`${API_BASE}${currentItem.src}`}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? `${API_BASE}${currentItem.src}` : "/placeholder.jpg"}
+                        alt={p.title}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+                    />
+                )}
+
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => <span key={i} className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`} />)}
+                        {mediaList.map((_, i) => <span key={i} className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`} />)}
                     </div>
                 )}
                 <div className="jw-card-actions">
@@ -476,7 +608,7 @@ export default function Shop() {
     const router = useRouter();
 
     const [ui, setUi] = useState(DEFAULT_UI);
-    const [translatedFashionContent, setTranslatedFashionContent] = useState(shopcontant);
+    const [translatedFashionContent, setTranslatedFashionContent] = useState(fashionJewelleryContent);
     const [translatedFaq, setTranslatedFaq] = useState(faqData);
     const [translatedCategories, setTranslatedCategories] = useState(DEFAULT_CATEGORIES.map((c) => ({ ...c, translatedName: c.name })));
     const [detectedLanguage, setDetectedLanguage] = useState(null);
@@ -529,7 +661,7 @@ export default function Shop() {
 
             const allStrings = [
                 ...flattenUI(DEFAULT_UI),
-                ...flattenFashionContent(shopcontant),
+                ...flattenFashionContent(fashionJewelleryContent),
                 ...flattenFaq(faqData),
                 ...flattenCategories(DEFAULT_CATEGORIES),
             ];
@@ -542,12 +674,12 @@ export default function Shop() {
 
             const all = translateData.translations;
             const uiCount = flattenUI(DEFAULT_UI).length;
-            const fashionCount = shopcontant.length;
+            const fashionCount = fashionJewelleryContent.length;
             const faqCount = faqData.length * 2;
             const catCount = DEFAULT_CATEGORIES.length;
 
             setUi(rebuildUI(all.slice(0, uiCount)));
-            setTranslatedFashionContent(rebuildFashionContent(shopcontant, all.slice(uiCount, uiCount + fashionCount)));
+            setTranslatedFashionContent(rebuildFashionContent(fashionJewelleryContent, all.slice(uiCount, uiCount + fashionCount)));
             setTranslatedFaq(rebuildFaq(all.slice(uiCount + fashionCount, uiCount + fashionCount + faqCount)));
             setTranslatedCategories(rebuildCategories(DEFAULT_CATEGORIES, all.slice(uiCount + fashionCount + faqCount, uiCount + fashionCount + faqCount + catCount)));
             setTranslationStatus("done");
@@ -590,8 +722,6 @@ export default function Shop() {
     }, [wishlist, addToWishlist, removeFromWishlistCtx]);
 
     // ── Add to Cart ──
-    // Kept in state/logic (used by Quick View modal's own Add to Cart button),
-    // only the hover icon on the product card grid was removed.
     const handleAddToCart = useCallback((product, qty = 1) => {
         const variant = getFirstVariant(product);
         const cartItem = { _id: product._id, slug: product.slug, title: product.title, category: product.category, images: variant.images || [], oldPrice: variant.oldPrice, newPrice: variant.newPrice, isSale: variant.isSale, qty };
@@ -720,7 +850,7 @@ export default function Shop() {
                     <div className="jw-grid">
                         {loading ? Array(6).fill(0).map((_, i) => <SkeletonCard key={i} />) : displayed.length > 0 ? (
                             displayed.map((p) => (
-                                <ProductCard key={p._id} p={p} wishlist={wishlist} toggleWishlist={toggleWishlist} currency={currency} ui={ui} onQuickView={openQuickView} onAddToCart={handleAddToCart} />
+                                <ProductCard key={p._id} p={p} wishlist={wishlist} toggleWishlist={toggleWishlist} currency={currency} ui={ui} onQuickView={openQuickView} />
                             ))
                         ) : (
                             <div className="jw-empty">
@@ -733,27 +863,27 @@ export default function Shop() {
             </div>
             <Reviews />
 
-            <div className="jw-bottom-accordions">
-                <AccordionItem title={ui.fashionJewellery}>
-                    <div className="jw-accordion-text">
-                        {translatedFashionContent.map((item, i) =>
-                            item.type === 'h'
-                                ? <h3 key={i} className="jw-accordion-heading" dangerouslySetInnerHTML={{ __html: item.text }} />
-                                : <p key={i} dangerouslySetInnerHTML={{ __html: item.text }} />
-                        )}
-                    </div>
-                </AccordionItem>
-                <AccordionItem title={ui.faq}>
-                    <div className="jw-faq-list">
-                        {translatedFaq.map((item, i) => (
-                            <div key={i} className="jw-faq-item">
-                                <p className="jw-faq-q" dangerouslySetInnerHTML={{ __html: `${i + 1}. ${item.q}` }} />
-                                <p className="jw-faq-a" dangerouslySetInnerHTML={{ __html: item.a }} />
+              <div className="jw-bottom-accordions">
+                        <AccordionItem title={ui.fashionJewellery}>
+                            <div className="jw-accordion-text">
+                                {translatedFashionContent.map((item, i) =>
+                                    item.type === 'h'
+                                        ? <h3 key={i} className="jw-accordion-heading" dangerouslySetInnerHTML={{ __html: item.text }} />
+                                        : <p key={i} dangerouslySetInnerHTML={{ __html: item.text }} />
+                                )}
                             </div>
-                        ))}
+                        </AccordionItem>
+                        <AccordionItem title={ui.faq}>
+                            <div className="jw-faq-list">
+                                {translatedFaq.map((item, i) => (
+                                    <div key={i} className="jw-faq-item">
+                                        <p className="jw-faq-q" dangerouslySetInnerHTML={{ __html: `${i + 1}. ${item.q}` }} />
+                                        <p className="jw-faq-a" dangerouslySetInnerHTML={{ __html: item.a }} />
+                                    </div>
+                                ))}
+                            </div>
+                        </AccordionItem>
                     </div>
-                </AccordionItem>
-            </div>
         </div>
     );
 }

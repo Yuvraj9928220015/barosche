@@ -9,7 +9,6 @@ import { useWishlist } from '../../../context/WishlistContext';
 const API_BASE = "https://api.barosche.com";
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
-// ─── CURRENCY CONFIG — Rings.js pattern ───
 const CURRENCY_MAP = {
     US: { code: 'USD', symbol: '$',   rate: 1.08 },
     GB: { code: 'GBP', symbol: '£',   rate: 0.85 },
@@ -31,8 +30,6 @@ function formatPrice(eurPrice, currency) {
     if (currency.code === 'INR') return `${currency.symbol}${converted.toLocaleString('en-IN')}`;
     return `${currency.symbol}${converted.toLocaleString()}`;
 }
-
-// ─── TRANSLATOR SETUP ────────────────────────────────────────────────────────
 
 const DEFAULT_UI = {
   breadcrumb: {
@@ -165,12 +162,11 @@ const rebuildUI = (translations) => {
   };
 };
 
-// ─── HELPERS ───
-
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice ?? product.price,
         isSale: product.isSale || false,
@@ -340,14 +336,14 @@ function MetalTypeSelector({ metalTypes, selectedMetal, onSelect, metalTypeLabel
                     background: 'linear-gradient(135deg, #c9a96e 0%, #e8c97a 50%, #b8873a 100%)',
                     color: '#fff',
                     border: '1.5px solid #b8873a',
-                    boxShadow: '0 2px 8px rgba(201,169,110,0.45)',
+                    boxShadow: '0 2px 8px #c9a96e73',
                 };
             default:
                 return {
                     background: 'linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%)',
                     color: '#fff',
                     border: '1.5px solid #1a1a1a',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                    boxShadow: '0 2px 8px #00000040',
                 };
         }
     };
@@ -382,32 +378,86 @@ function MetalTypeSelector({ metalTypes, selectedMetal, onSelect, metalTypeLabel
     );
 }
 
-function MobileSlider({ images, getImgSrc, productName, isSale, selectedImageIndex, setSelectedImageIndex, onImageClick }) {
-    const sliderRef   = useRef(null);
-    const touchStartX = useRef(null);
-    const touchStartY = useRef(null);
-    const autoPlayRef = useRef(null);
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE SLIDER — auto-advance logic:
+   - Image slides advance after a fixed 3.5s timer (as before).
+   - Video slides ONLY advance once the video has finished playing
+     (the 'ended' event), not on a timer. A safety fallback timer
+     is kept in case a video fails to load/play so the slider never
+     gets stuck.
+═══════════════════════════════════════════════════════════════ */
+function MobileSlider({ media, getImgSrc, productName, isSale, selectedImageIndex, setSelectedImageIndex, onImageClick }) {
+    const sliderRef      = useRef(null);
+    const touchStartX    = useRef(null);
+    const touchStartY    = useRef(null);
+    const imageTimerRef  = useRef(null);
+    const videoFallbackRef = useRef(null);
+    const videoRefs       = useRef([]);
 
     const goToSlide = useCallback((idx) => {
-        const clamped = Math.max(0, Math.min(idx, images.length - 1));
+        const clamped = Math.max(0, Math.min(idx, media.length - 1));
         setSelectedImageIndex(clamped);
-    }, [images.length, setSelectedImageIndex]);
+    }, [media.length, setSelectedImageIndex]);
 
+    const advanceSlide = useCallback(() => {
+        setSelectedImageIndex(prev => (prev + 1) % media.length);
+    }, [media.length, setSelectedImageIndex]);
+
+    // Play/pause the correct video whenever the active slide changes,
+    // and set up the appropriate auto-advance trigger for that slide.
     useEffect(() => {
-        if (images.length <= 1) return;
-        autoPlayRef.current = setInterval(() => {
-            setSelectedImageIndex(prev => (prev + 1) % images.length);
-        }, 3500);
-        return () => clearInterval(autoPlayRef.current);
-    }, [images.length, setSelectedImageIndex]);
+        clearTimeout(imageTimerRef.current);
+        clearTimeout(videoFallbackRef.current);
 
-    const resetAutoPlay = useCallback(() => {
-        clearInterval(autoPlayRef.current);
-        if (images.length <= 1) return;
-        autoPlayRef.current = setInterval(() => {
-            setSelectedImageIndex(prev => (prev + 1) % images.length);
-        }, 3500);
-    }, [images.length, setSelectedImageIndex]);
+        if (media.length === 0) return;
+
+        // Pause every video that isn't the current slide, and rewind them
+        // so they start fresh next time they become active.
+        videoRefs.current.forEach((v, idx) => {
+            if (!v) return;
+            if (idx !== selectedImageIndex) {
+                v.pause();
+                v.currentTime = 0;
+            }
+        });
+
+        if (media.length <= 1) return;
+
+        const currentItem = media[selectedImageIndex];
+
+        if (currentItem.type === 'video') {
+            const videoEl = videoRefs.current[selectedImageIndex];
+
+            if (!videoEl) {
+                // Video element not ready yet — fall back to a timer so we
+                // don't get stuck.
+                imageTimerRef.current = setTimeout(advanceSlide, 3500);
+                return;
+            }
+
+            const handleEnded = () => advanceSlide();
+            videoEl.addEventListener('ended', handleEnded);
+
+            // Try to play from the start.
+            videoEl.currentTime = 0;
+            videoEl.play().catch(() => {
+                // Autoplay blocked or load failed — don't get stuck forever.
+                videoFallbackRef.current = setTimeout(advanceSlide, 8000);
+            });
+
+            // Safety net: if 'ended' never fires (e.g. very long video, or
+            // playback stalls), still move on after a generous timeout.
+            videoFallbackRef.current = setTimeout(advanceSlide, 20000);
+
+            return () => {
+                videoEl.removeEventListener('ended', handleEnded);
+                clearTimeout(videoFallbackRef.current);
+            };
+        } else {
+            imageTimerRef.current = setTimeout(advanceSlide, 3500);
+            return () => clearTimeout(imageTimerRef.current);
+        }
+    }, [selectedImageIndex, media, advanceSlide]);
 
     const handleTouchStart = (e) => {
         touchStartX.current = e.touches[0].clientX;
@@ -421,13 +471,12 @@ function MobileSlider({ images, getImgSrc, productName, isSale, selectedImageInd
         if (Math.abs(dx) > 40 && Math.abs(dx) > dy) {
             if (dx > 0) goToSlide(selectedImageIndex + 1);
             else goToSlide(selectedImageIndex - 1);
-            resetAutoPlay();
         }
         touchStartX.current = null;
         touchStartY.current = null;
     };
 
-    if (!images || images.length === 0) return null;
+    if (!media || media.length === 0) return null;
 
     return (
         <div className="jd-mobile-slider" ref={sliderRef}>
@@ -437,39 +486,50 @@ function MobileSlider({ images, getImgSrc, productName, isSale, selectedImageInd
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
             >
-                {images.map((img, idx) => (
+                {media.map((item, idx) => (
                     <div className="jd-mobile-slide" key={idx}>
-                        <img
-                            src={getImgSrc(img)}
-                            alt={`${productName} view ${idx + 1}`}
-                            loading={idx === 0 ? 'eager' : 'lazy'}
-                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                            onClick={() => onImageClick && onImageClick(idx)}
-                            style={{ cursor: 'zoom-in' }}
-                        />
+                        {item.type === 'video' ? (
+                            <video
+                                ref={(el) => { videoRefs.current[idx] = el; }}
+                                src={getImgSrc(item.src)}
+                                muted
+                                playsInline
+                                onClick={() => onImageClick && onImageClick(idx)}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in', display: 'block' }}
+                                className="jd-gallery-video"
+                            />
+                        ) : (
+                            <img
+                                src={getImgSrc(item.src)}
+                                alt={`${productName} view ${idx + 1}`}
+                                loading={idx === 0 ? 'eager' : 'lazy'}
+                                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                onClick={() => onImageClick && onImageClick(idx)}
+                                style={{ cursor: 'zoom-in' }}
+                            />
+                        )}
                     </div>
                 ))}
             </div>
 
-            {images.length > 1 && (
+            {media.length > 1 && (
                 <div className="jd-slider-dots">
-                    {images.map((_, idx) => (
+                    {media.map((_, idx) => (
                         <button
                             key={idx}
                             className={`jd-slider-dot${selectedImageIndex === idx ? ' active' : ''}`}
-                            onClick={() => { goToSlide(idx); resetAutoPlay(); }}
-                            aria-label={`Go to image ${idx + 1}`}
+                            onClick={() => goToSlide(idx)}
+                            aria-label={`Go to slide ${idx + 1}`}
                         />
                     ))}
                 </div>
             )}
 
-            <div className="jd-slider-counter">{selectedImageIndex + 1} / {images.length}</div>
         </div>
     );
 }
 
-function Lightbox({ images, getImgSrc, productName, startIndex, onClose }) {
+function Lightbox({ media, getImgSrc, productName, startIndex, onClose }) {
     const [index, setIndex] = useState(startIndex || 0);
 
     useEffect(() => {
@@ -479,8 +539,8 @@ function Lightbox({ images, getImgSrc, productName, startIndex, onClose }) {
     useEffect(() => {
         const handleKey = (e) => {
             if (e.key === 'Escape') onClose();
-            if (e.key === 'ArrowRight') setIndex((i) => (i + 1) % images.length);
-            if (e.key === 'ArrowLeft') setIndex((i) => (i - 1 + images.length) % images.length);
+            if (e.key === 'ArrowRight') setIndex((i) => (i + 1) % media.length);
+            if (e.key === 'ArrowLeft') setIndex((i) => (i - 1 + media.length) % media.length);
         };
         window.addEventListener('keydown', handleKey);
         document.body.style.overflow = 'hidden';
@@ -488,12 +548,14 @@ function Lightbox({ images, getImgSrc, productName, startIndex, onClose }) {
             window.removeEventListener('keydown', handleKey);
             document.body.style.overflow = '';
         };
-    }, [images.length, onClose]);
+    }, [media.length, onClose]);
 
-    if (!images || images.length === 0) return null;
+    if (!media || media.length === 0) return null;
 
-    const goPrev = (e) => { e.stopPropagation(); setIndex((i) => (i - 1 + images.length) % images.length); };
-    const goNext = (e) => { e.stopPropagation(); setIndex((i) => (i + 1) % images.length); };
+    const goPrev = (e) => { e.stopPropagation(); setIndex((i) => (i - 1 + media.length) % media.length); };
+    const goNext = (e) => { e.stopPropagation(); setIndex((i) => (i + 1) % media.length); };
+
+    const currentItem = media[index];
 
     return (
         <div
@@ -529,11 +591,11 @@ function Lightbox({ images, getImgSrc, productName, startIndex, onClose }) {
                     justifyContent: 'center', maxWidth: '90vw', maxHeight: '88vh',
                 }}
             >
-                {images.length > 1 && (
+                {media.length > 1 && (
                     <button
                         className="jd-lightbox-nav jd-lightbox-prev"
                         onClick={goPrev}
-                        aria-label="Previous image"
+                        aria-label="Previous item"
                         style={{
                             position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
                             background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.3)',
@@ -547,19 +609,32 @@ function Lightbox({ images, getImgSrc, productName, startIndex, onClose }) {
                     </button>
                 )}
 
-                <img
-                    src={getImgSrc(images[index])}
-                    alt={`${productName} view ${index + 1}`}
-                    className="jd-lightbox-img"
-                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                    style={{ maxWidth: '100%', maxHeight: '88vh', objectFit: 'contain', borderRadius: 4 }}
-                />
+                {currentItem.type === 'video' ? (
+                    <video
+                        src={getImgSrc(currentItem.src)}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        controls
+                        className="jd-lightbox-img"
+                        style={{ maxWidth: '100%', maxHeight: '88vh', objectFit: 'contain', borderRadius: 4 }}
+                    />
+                ) : (
+                    <img
+                        src={getImgSrc(currentItem.src)}
+                        alt={`${productName} view ${index + 1}`}
+                        className="jd-lightbox-img"
+                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                        style={{ maxWidth: '100%', maxHeight: '88vh', objectFit: 'contain', borderRadius: 4 }}
+                    />
+                )}
 
-                {images.length > 1 && (
+                {media.length > 1 && (
                     <button
                         className="jd-lightbox-nav jd-lightbox-next"
                         onClick={goNext}
-                        aria-label="Next image"
+                        aria-label="Next item"
                         style={{
                             position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                             background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.3)',
@@ -574,7 +649,7 @@ function Lightbox({ images, getImgSrc, productName, startIndex, onClose }) {
                 )}
             </div>
 
-            {images.length > 1 && (
+            {media.length > 1 && (
                 <div
                     className="jd-lightbox-counter"
                     style={{
@@ -582,7 +657,7 @@ function Lightbox({ images, getImgSrc, productName, startIndex, onClose }) {
                         color: '#fff', fontSize: 14, letterSpacing: 1, opacity: 0.85,
                     }}
                 >
-                    {index + 1} / {images.length}
+                    {index + 1} / {media.length}
                 </div>
             )}
         </div>
@@ -630,7 +705,7 @@ function DeliverySection({ t, currency }) {
     );
 }
 
-// ── InstallmentSection: currency prop add kiya, amounts converted ──
+
 function InstallmentSection({ price, t, currency }) {
     const klarnaInstallment = formatPrice(price / 3, currency) || `€${(price / 3).toFixed(2)}`;
     const paypalInstallment = formatPrice(price / 4, currency) || `€${(price / 4).toFixed(2)}`;
@@ -674,8 +749,6 @@ function InstallmentSection({ price, t, currency }) {
     );
 }
 
-// ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
-
 export default function pendantDetailClient({ slug }) {
     const [product,              setProduct]              = useState(null);
     const [relatedProducts,      setRelatedProducts]      = useState([]);
@@ -712,7 +785,6 @@ export default function pendantDetailClient({ slug }) {
     ];
     const [selectedColor, setSelectedColor] = useState(0);
 
-    // ── Auto-translate + currency on mount ──
     useEffect(() => {
         let cancelled = false;
 
@@ -726,7 +798,6 @@ export default function pendantDetailClient({ slug }) {
 
                 const { languageCode, countryCode } = detectData;
 
-                // ── Currency set karo country ke hisaab se ──
                 if (!cancelled && countryCode && CURRENCY_MAP[countryCode]) {
                     setCurrency(CURRENCY_MAP[countryCode]);
                 }
@@ -981,6 +1052,18 @@ export default function pendantDetailClient({ slug }) {
             ? product.images
             : [product.img].filter(Boolean);
 
+    const variantVideos = activeVariant.videos && activeVariant.videos.length > 0 ? activeVariant.videos : [];
+    const videos = variantVideos.length > 0
+        ? variantVideos
+        : Array.isArray(product.videos) && product.videos.length > 0
+            ? product.videos
+            : [];
+
+    const galleryMedia = [];
+    if (images.length > 0) galleryMedia.push({ type: 'image', src: images[0] });
+    if (videos.length > 0) galleryMedia.push({ type: 'video', src: videos[0] });
+    images.slice(1).forEach((img) => galleryMedia.push({ type: 'image', src: img }));
+
     const oldPrice           = activeVariant.oldPrice ?? product.oldPrice ?? null;
     const newPrice           = activeVariant.newPrice ?? product.newPrice ?? product.price ?? 0;
     const isSale             = activeVariant.isSale   ?? product.isSale   ?? false;
@@ -1015,9 +1098,9 @@ export default function pendantDetailClient({ slug }) {
         return rv.newPrice ?? rp.newPrice ?? rp.price ?? 0;
     };
 
-    const imageRows = [];
-    for (let i = 0; i < images.length; i += 2) {
-        imageRows.push(images.slice(i, i + 2));
+    const mediaRows = [];
+    for (let i = 0; i < galleryMedia.length; i += 2) {
+        mediaRows.push(galleryMedia.slice(i, i + 2));
     }
 
     const isUnlocked = scrollState === 'unlocked';
@@ -1092,7 +1175,7 @@ export default function pendantDetailClient({ slug }) {
                         <div className="jd-mobile-layout">
 
                             <MobileSlider
-                                images={images}
+                                media={galleryMedia}
                                 getImgSrc={getImgSrc}
                                 productName={displayTitle}
                                 isSale={isSale}
@@ -1228,23 +1311,33 @@ export default function pendantDetailClient({ slug }) {
                             {/* LEFT: Gallery */}
                             <div className="jd-gallery-scroll" ref={galleryRef}>
                                 <div className="jd-gallery-inner">
-                                    {imageRows.map((row, rowIdx) => (
+                                    {mediaRows.map((row, rowIdx) => (
                                         <div key={`${selectedVariantIndex}-row-${rowIdx}`} className="jd-img-row">
-                                            {row.map((img, colIdx) => {
+                                            {row.map((item, colIdx) => {
                                                 const globalIdx = rowIdx * 2 + colIdx;
                                                 return (
                                                     <div
-                                                        key={`${selectedVariantIndex}-img-${globalIdx}`}
+                                                        key={`${selectedVariantIndex}-media-${globalIdx}`}
                                                         className={`jd-img-cell${selectedImageIndex === globalIdx ? ' selected' : ''}`}
                                                         onClick={() => { setSelectedImageIndex(globalIdx); setLightboxIndex(globalIdx); setLightboxOpen(true); }}
                                                         style={{ cursor: 'zoom-in' }}
                                                     >
-                                                        <img
-                                                            src={getImgSrc(img)}
-                                                            alt={`${displayTitle} view ${globalIdx + 1}`}
-                                                            loading={globalIdx < 2 ? 'eager' : 'lazy'}
-                                                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                                                        />
+                                                        {item.type === 'video' ? (
+                                                            <video
+                                                                src={getImgSrc(item.src)}
+                                                                autoPlay
+                                                                loop
+                                                                muted
+                                                                playsInline
+                                                            />
+                                                        ) : (
+                                                            <img
+                                                                src={getImgSrc(item.src)}
+                                                                alt={`${displayTitle} view ${globalIdx + 1}`}
+                                                                loading={globalIdx < 2 ? 'eager' : 'lazy'}
+                                                                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                                            />
+                                                        )}
                                                     </div>
                                                 );
                                             })}
@@ -1419,7 +1512,7 @@ export default function pendantDetailClient({ slug }) {
 
             {lightboxOpen && (
                 <Lightbox
-                    images={images}
+                    media={galleryMedia}
                     getImgSrc={getImgSrc}
                     productName={displayTitle}
                     startIndex={lightboxIndex}

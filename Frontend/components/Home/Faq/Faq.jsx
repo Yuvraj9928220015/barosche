@@ -106,7 +106,7 @@ const AccordionItem = ({ title, children }) => {
   return (
     <div className="accordion-item">
       <button className="accordion-header" onClick={() => setIsOpen(!isOpen)}>
-        <span className="accordion-icon">{isOpen ? "▼" : "▶"}</span>
+        <h2 className="accordion-icon">{isOpen ? "▼" : "▶"}</h2>
         {title}
       </button>
       {isOpen && <div className="accordion-content">{children}</div>}
@@ -217,7 +217,7 @@ const Reviews = () => {
               <div className="faq-wrapper">
                 {item.faqs.map((faq, idx) => (
                   <div key={idx} className="faq-item">
-                    <h4 className="faq-question" dangerouslySetInnerHTML={{ __html: faq.q }}></h4>
+                    <h3 className="faq-question" dangerouslySetInnerHTML={{ __html: faq.q }}></h3>
                     <p className="faq-answer" dangerouslySetInnerHTML={{ __html: faq.a }}></p>
                   </div>
                 ))}

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './Girlfriend.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -47,7 +47,7 @@ const DEFAULT_UI = {
     priceHighLow: "Price: High to Low",
     newest: "Newest",
     filtersText: "Filters",
-    fashionJewellery: "Fashion Jewellery",
+    fashionJewellery: "Luxury Jewellery Gifts",
     faq: "Frequently Asked Questions",
     retry: "Retry",
     gridView: "Grid view",
@@ -59,7 +59,7 @@ const DEFAULT_UI = {
 
     showingOf: "Showing",
     showingResults: "results",
-    pageTitle: "Elegant Semi-Precious & Gold Fashion Jewellery Collection",
+    pageTitle: "Jewellery Gifts for Girlfriend – Romantic & Timeless Style",
     priceOnRequest: "Price on request",
 };
 
@@ -165,170 +165,244 @@ const rebuildCategories = (originalCats, translatedNames) =>
     originalCats.map((c, i) => ({ ...c, translatedName: translatedNames[i] }));
 
 // ─────────────────────────────────────────────────────────
-//  FAQ DATA
+//  FAQ DATA — Luxury Jewellery Gifts
 // ─────────────────────────────────────────────────────────
 const faqData = [
-    {
-        q: " What is fine silver jewellery?",
-        a: " Fine silver jewellery is made using high-quality silver known for its bright shine, smooth finish, and elegant appearance, making it suitable for both daily and occasion wear."
-    },
-    {
-        q: "Is fine silver jewellery suitable for everyday use?",
-        a: " Yes, fine silver jewellery is lightweight and comfortable, making it ideal for everyday wear when handled with proper care."
-    },
-    {
-        q: " What is jewellery with gold?",
-        a: " Jewellery with gold includes pieces that feature gold elements or gold-inspired finishes, offering a luxurious and timeless look."
-    },
-    {
-        q: " What is gold fashion jewellery?",
-        a: "Gold fashion jewellery refers to lightweight, modern designs inspired by traditional gold jewellery, created for everyday styling and comfort."
-    },
-    {
-        q: " Is gold fashion jewellery durable?",
-        a: " Yes, gold fashion jewellery is designed for regular use and can maintain its appearance with proper care and storage."
-    },
-    {
-        q: "What is semi precious gemstone jewellery?",
-        a: " It is jewellery made using natural stones like amethyst, quartz, or turquoise, known for their unique colors and patterns."
-    },
-    {
-        q: "Are semi precious stones real?",
-        a: " Yes, semi precious stones are natural gemstones, each with its own unique characteristics and appearance."
-    },
-    {
-        q: "Can I wear semi precious jewellery daily?",
-        a: " Yes, many semi precious jewellery pieces are designed for daily wear, especially lightweight and minimal designs."
-    },
-    {
-        q: "How do I style semi precious stones jewellery?",
-        a: " You can style them with casual outfits for a subtle look or use bold pieces as statement accessories for special occasions."
-    },
-    {
-        q: " Can I mix silver and gold jewellery together?",
-        a: " Yes, mixing metals like silver and gold is a popular trend that creates a modern and stylish layered look."
-    },
-
-
-     {
-        q: " How should I care for silver jewellery?",
-        a: "  Store it in a dry place, avoid moisture, and clean it gently to maintain its shine and prevent tarnishing."
-    },
-    {
-        q: " Does gold fashion jewellery fade over time?",
-        a: "  With proper care, gold fashion jewellery retains its finish for a long time, though exposure to chemicals should be avoided."
-    },
-    {
-        q: " What makes gemstone jewellery unique?",
-        a: "  Each gemstone has natural variations in color and texture, making every piece one-of-a-kind."
-    },
-    {
-        q: "  Is your jewellery suitable for sensitive skin?",
-        a: " Most modern jewellery is designed with skin-friendly materials, but it’s always best to check product details."
-    },
-    {
-        q: "Can jewellery be worn for both casual and formal occasions? ",
-        a: " Yes, the versatility of modern jewellery allows it to complement casual, office, and formal outfits. "
-    },
-    {
-        q: "Is your jewellery lightweight?",
-        a: " Yes, the collection focuses on lightweight designs for maximum comfort during long hours of wear. "
-    },
-    {
-        q: "What are the latest jewellery trends?",
-        a: "  Popular trends include minimalist designs, layered necklaces, stacked rings, and mixed metal styling."
-    },
-    {
-        q: " Is jewellery a good gift option?",
-        a: " Yes, jewellery is a timeless and meaningful gift suitable for birthdays, anniversaries, and special occasions. "
-    },
-    {
-        q: "Can I wear multiple jewellery pieces together?",
-        a: " Absolutely, layering and stacking jewellery pieces is a popular styling technique for a modern look. "
-    },
-    {
-        q: " Is it safe to shop jewellery online?",
-        a: " Yes, shopping online is safe when done through a trusted platform with secure payment options and clear product details. "
-    }
+   { q: "Why is jewellery a good gift for a girlfriend?", a: "Jewellery is a meaningful gift because it represents love, appreciation, and special memories. A carefully chosen piece becomes a lasting reminder of your relationship and the moments you share together." },
+    { q: "What is the best jewellery gift for a girlfriend?", a: "The best jewellery gift depends on her personal style. Popular choices include rings, bracelets, earrings, and pendants because they are elegant, versatile, and meaningful." },
+    { q: "Is a gold ring gift for girlfriend a good choice?", a: "Yes, a gold ring gift for girlfriend is a timeless and romantic choice. It symbolizes love, commitment, and connection while becoming a cherished piece she can wear for years." },
+    { q: "Which jewellery makes the best romantic gift for her?", a: "Rings, personalised pendants, elegant bracelets, and delicate earrings are popular romantic gifts for her because they combine beauty with emotional meaning." },
+    { q: "What jewellery should I gift my girlfriend on her birthday?", a: "For birthdays, you can choose a piece that matches her personality, such as a minimalist ring, elegant bracelet, or stylish pendant that reflects her everyday style." },
+    { q: "Are jewellery gifts suitable for anniversaries?", a: "Yes, jewellery is one of the most meaningful anniversary gifts. A thoughtfully selected piece can represent your journey together and celebrate your relationship milestones." },
+    { q: "How do I choose the right jewellery gift for my girlfriend?", a: "Consider her style, the jewellery she usually wears, her lifestyle, and the occasion. Choosing a piece that matches her personality makes the gift more personal and special." },
+    { q: "What type of jewellery is suitable for everyday wear?", a: "Minimalist rings, lightweight bracelets, simple earrings, and delicate pendants are ideal for everyday wear because they are comfortable and easy to style." },
+    { q: "Are earrings a good gift for a girlfriend?", a: "Yes, earrings are a versatile gifting option because they do not require sizing and can complement different outfits and personal styles." },
+    { q: "Why are rings considered meaningful gifts?", a: "Rings symbolize connection, love, and commitment. A carefully selected ring can represent special memories and important moments in a relationship." },
+    { q: "What makes luxury jewellery a special gift for her?", a: "Luxury jewellery combines premium craftsmanship, timeless design, and emotional value, making it a memorable gift that she can cherish for years." },
+    { q: "Can I gift jewellery without knowing her exact preferences?", a: "Yes, versatile pieces like classic earrings, minimalist bracelets, and simple pendants are safe choices because they suit a wide range of styles." },
+    { q: "Are minimalist jewellery designs good romantic gifts?", a: "Yes, minimalist jewellery is a popular choice because it offers timeless elegance, everyday comfort, and effortless styling." },
+    { q: "What occasions are perfect for gifting jewellery to a girlfriend?", a: "Jewellery is suitable for birthdays, anniversaries, Valentine's Day, festivals, relationship milestones, proposals, or simply as a surprise gesture." },
+    { q: "How can I make a jewellery gift more personal?", a: "Choose a design that reflects her personality, style, or a special memory you share. A meaningful choice makes the gift feel more thoughtful." },
+    { q: "Why choose a bracelet as a gift for a girlfriend?", a: "Bracelets are elegant, comfortable, and versatile. They can be worn daily and styled with different outfits, making them a practical yet meaningful gift." },
+    { q: "What makes Barosche jewellery a good gifting choice?", a: "Barosche offers elegant jewellery designs that combine minimalist luxury, premium craftsmanship, and everyday wearability, making each piece suitable for meaningful gifting." },
+    { q: "Is jewellery a long-lasting gift?", a: "Yes, quality jewellery is designed to last for years. Beyond its physical beauty, it holds sentimental value and becomes a cherished keepsake." },
+    { q: "What jewellery style is best for a girlfriend who prefers simple designs?", a: "Minimalist rings, delicate pendants, subtle earrings, and lightweight bracelets are ideal for someone who prefers simple and elegant jewellery." },
+    { q: "Why should I choose jewellery instead of traditional gifts?", a: "Unlike many temporary gifts, jewellery carries emotional significance and lasting value. It becomes a personal reminder of love, memories, and special moments shared together." },
 ];
 
 // ─────────────────────────────────────────────────────────
-//  FASHION JEWELLERY CONTENT DATA
+//  FASHION JEWELLERY CONTENT DATA — Luxury Jewellery Gifts
 // ─────────────────────────────────────────────────────────
 const fashionJewelleryContent = [
-    { type: 'h', text: "Fine Silver Jewellery, Gold & Semi Precious Jewellery – Elegant & Modern Designs" },
-    { type: 'p', text: "Explore a thoughtfully curated collection of <strong>fine silver jewellery</strong>, <strong>jewellery with gold</strong>, and <strong>semi precious gemstone jewellery</strong> that brings together elegance, craftsmanship, and contemporary style. Each piece in our collection is designed to reflect modern fashion sensibilities while preserving the timeless charm that jewellery is known for. Whether you are looking for everyday essentials or statement pieces for special occasions, our designs offer the perfect blend of versatility and sophistication." },
-    { type: 'p', text: "<strong>Fine silver jewellery</strong> stands out for its clean, polished finish and understated elegance, making it an ideal choice for minimal and refined styling. Jewellery with gold adds a touch of warmth and luxury, effortlessly elevating both casual and formal looks. Meanwhile, semi precious gemstone jewellery introduces color, character, and individuality, allowing you to express your unique sense of style through beautifully crafted pieces." },
-    { type: 'p', text: "Our collection is designed with attention to detail, ensuring comfort, durability, and long-lasting shine. Lightweight materials and smooth finishes make each piece suitable for all-day wear, while versatile designs allow easy styling across different outfits and occasions. From office wear and casual outings to festive celebrations and evening events, our jewellery adapts seamlessly to your lifestyle." },
-    { type: 'p', text: "With a focus on quality craftsmanship and trend-inspired aesthetics, we aim to offer jewellery that not only enhances your appearance but also reflects your confidence and personality. Whether you prefer subtle elegance or bold fashion statements, this collection provides endless possibilities to create looks that are both modern and timeless." },
-    { type: 'h', text: "Fine Silver Jewellery – Timeless Elegance with Modern Craftsmanship" },
-    { type: 'p', text: "<strong>Fine silver jewellery</strong> continues to be a symbol of understated luxury, admired for its refined appearance, durability, and effortless versatility. With its naturally bright finish and sophisticated tone, silver jewellery remains a staple in modern fashion, offering a perfect balance between simplicity and elegance. It seamlessly complements a wide range of styles, making it an essential addition to every jewellery collection." },
-    { type: 'p', text: "Designed to evolve with changing trends, fine silver jewellery ranges from delicate minimalist pieces to bold contemporary designs. Whether it's a sleek chain, an elegant ring, or a statement accessory, silver jewellery enhances your look without overwhelming it. Its neutral color makes it easy to pair with casual outfits, office wear, and even formal ensembles, allowing you to transition effortlessly from day to night." },
-    { type: 'p', text: "Beyond its aesthetic appeal, <strong>fine silver jewellery</strong> is also valued for its comfort and practicality. Lightweight construction ensures ease of wear throughout the day, while high-quality finishing techniques provide a smooth, polished surface that feels as good as it looks. With proper care, silver jewellery retains its shine and beauty over time, making it a reliable choice for long-term use." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Premium craftsmanship with precise detailing and smooth finishing<br/>• Lightweight design for all-day comfort<br/>• Versatile styling suitable for casual, office, and formal looks<br/>• Retains long-lasting shine with proper care and maintenance" },
-    { type: 'p', text: "Fine silver jewellery is more than just an accessory—it is a timeless expression of style that adapts to your lifestyle while maintaining its classic elegance." },
-    { type: 'h', text: "Latest Trends in Fashion Jewellery" },
-    { type: 'p', text: "The world of fashion jewellery is constantly evolving, with new trends redefining how jewellery is styled and worn. Today’s trends emphasize simplicity, layering, and versatility, allowing individuals to create personalized looks that suit their style." },
-    { type: 'p', text: "<strong>Minimalist jewellery</strong> continues to dominate everyday fashion, while layered necklaces and stacked rings offer a more expressive and modern approach. Mixed metals, including silver and gold combinations, are also gaining popularity for their contemporary appeal." },
-    { type: 'p', text: "<strong>Trending Styles Include:</strong><br/>• Minimalist and delicate jewellery pieces<br/>• Layered necklaces and stacked rings<br/>• Mixed metal styling (silver + gold)<br/>• Lightweight statement jewellery<br/>• Gemstone accents for color and uniqueness" },
-    { type: 'h', text: "Modern Jewellery for Women – Designed for Everyday Elegance" },
-    { type: 'p', text: "<strong>Modern jewellery for women </strong>is no longer limited to occasional wear—it is designed to be a part of your daily lifestyle. Today’s designs focus on combining style with comfort, ensuring that each piece feels as good as it looks. Lightweight construction, smooth edges, and skin-friendly finishes make it easy to wear jewellery throughout the day without discomfort." },
-    { type: 'p', text: "Whether you're heading to work, meeting friends, or attending an event, modern jewellery adapts effortlessly to your routine. From subtle elegance to bold fashion statements, these pieces allow you to express your personality while staying comfortable and confident." },
-    { type: 'p', text: "<strong>Why It Works for Daily Wear:</strong><br/>• Lightweight and easy to wear for long hours<br/>• Minimal designs for effortless styling<br/>• Comfortable finishes suitable for all skin types<br/>• Perfect balance of fashion and functionality" },
-    { type: 'h', text: "Jewellery with Gold – Classic Luxury Meets Modern Style" },
-    { type: 'p', text: "<strong>Jewellery with gold</strong> has always been a symbol of elegance, sophistication, and timeless beauty. Blending traditional charm with modern design sensibilities, today’s gold jewellery offers a refined yet contemporary appeal that suits a wide range of styles and occasions. Whether you prefer subtle detailing or eye-catching statement pieces, <strong>gold jewellery</strong> effortlessly enhances your overall look with a touch of luxury." },
-    { type: 'p', text: "Modern jewellery with gold is designed to be more versatile and wearable than ever before. From delicate chains and minimal accents to bold, fashion-forward designs, these pieces cater to both classic and contemporary preferences.<strong> Gold fashion jewellery,</strong> in particular, has gained popularity for its lightweight construction and stylish appearance, making it ideal for everyday wear without compromising on elegance." },
-    { type: 'p', text: "One of the key strengths of gold jewellery is its adaptability. It pairs beautifully with casual outfits, complements professional attire, and adds sophistication to festive and evening wear. This flexibility allows you to transition seamlessly between different looks while maintaining a polished and confident style." },
-    { type: 'p', text: "Beyond aesthetics, jewellery with gold is crafted with attention to comfort and durability. Modern techniques ensure smooth finishes and long-lasting shine, allowing each piece to retain its beauty over time. This makes gold jewellery not only a fashion choice but also a practical addition to your collection." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Elegant and luxurious gold-inspired designs<br/>• Perfect balance of style and everyday practicality<br/>• Suitable for both daily wear and special occasions<br/>• Trend-driven designs with timeless appeal" },
-    { type: 'p', text: "Jewellery with gold offers the perfect combination of heritage and modern fashion, allowing you to express your style with confidence, grace, and enduring elegance." },
-    { type: 'h', text: "Semi Precious Gemstone Jewellery – Natural Beauty & Unique Designs" },
-    { type: 'p', text: "<strong>Semi precious gemstone jewellery</strong> beautifully captures the essence of nature through vibrant colors, organic textures, and one-of-a-kind patterns. Each gemstone is naturally formed, giving every piece its own distinct identity and charm. This uniqueness makes gemstone jewellery an excellent choice for those who appreciate individuality and artistic expression in their accessories." },
-    { type: 'p', text: "Designed to showcase the natural brilliance of stones, these jewellery pieces strike a perfect balance between elegance and durability. Skilled craftsmanship ensures that each gemstone is carefully set and polished, enhancing its visual appeal while maintaining comfort for everyday wear. Whether you prefer soft, subtle tones or bold, eye-catching colors, gemstone jewellery allows you to create looks that truly reflect your personality." },
-    { type: 'p', text: "Versatility is another key advantage of <strong>semi precious gemstone jewellery</strong>. It can effortlessly complement casual outfits, add a refined touch to office wear, or become the highlight of your look for festive occasions and evening events. From minimal designs to statement pieces, these accessories offer endless styling possibilities for modern fashion enthusiasts." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Unique designs featuring natural, one-of-a-kind gemstones<br/>• Rich colors with strong artistic and visual appeal<br/>• Durable craftsmanship designed for comfort and long-term wear<br/>• Suitable for both everyday styling and special occasions" },
-    { type: 'p', text: "Semi precious gemstone jewellery is more than just an accessory—it is a reflection of natural beauty and personal style, allowing you to stand out with elegance and confidence." },
-    { type: 'h', text: "Semi Precious Stones Jewellery – Trendy, Versatile & Expressive" },
-    { type: 'p', text: "<strong>Semi precious stones jewellery</strong> brings together the beauty of nature and the creativity of modern design, offering a diverse range of styles, colors, and patterns. Known for its versatility and expressive appeal, this category has become a favorite among those who enjoy experimenting with fashion while maintaining a sense of elegance. Each piece is thoughtfully crafted to highlight the natural charm of the stones while aligning with contemporary trends." },
-    { type: 'p', text: "From soft, minimal designs to bold, statement-making accessories, semi precious stones jewellery caters to a wide spectrum of style preferences. The variety of stones available allows you to explore different looks—whether you prefer subtle tones for <strong>everyday wear</strong> or vibrant hues that stand out during special occasions. This flexibility makes it easy to build a jewellery collection that reflects your personality and evolves with your style." },
-    { type: 'p', text: "One of the key advantages of semi precious stones jewellery is its ability to mix and match effortlessly. These pieces can be layered, paired with other metals, or styled individually to create unique combinations. Whether you're dressing for a casual day out, a professional setting, or a festive event, they adapt seamlessly to different outfits and occasions." },
-    { type: 'p', text: "Crafted with a focus on comfort and durability, these jewellery pieces are suitable for regular wear while maintaining their visual appeal over time. Their combination of trend-driven design and practical usability ensures that you can enjoy both style and convenience in your everyday accessories." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Wide variety of stones, colors, and design options<br/>• Trendy, contemporary styles for modern fashion<br/>• Easy to mix, match, and layer with different outfits<br/>• Ideal for both daily wear and special occasions" },
-    { type: 'p', text: "Semi precious stones jewellery offers endless possibilities for self-expression, allowing you to create looks that are stylish, modern, and uniquely yours." },
-    { type: 'h', text: "Gold Fashion Jewellery – Modern Luxury for Everyday Styling" },
-    { type: 'p', text: "<strong>Gold fashion jewellery</strong> brings a fresh perspective to traditional luxury by combining the timeless appeal of gold with modern, wearable designs. Created for today’s fast-paced lifestyles, these pieces offer elegance without the heaviness of conventional jewellery, making them perfect for daily use. They allow you to enjoy the richness of gold-inspired styling while maintaining comfort and ease throughout the day." },
-    { type: 'p', text: "With a strong focus on contemporary aesthetics, gold fashion jewellery features sleek silhouettes, minimal detailing, and trend-driven designs that align with current fashion preferences. Whether you choose delicate chains, stylish earrings, or bold statement pieces, each design is crafted to enhance your look while remaining practical for regular wear. This makes it easy to incorporate a touch of luxury into your everyday outfits." },
-    { type: 'p', text: "Another key advantage of <strong>gold fashion jewellery</strong> is its versatility. These pieces transition effortlessly from casual settings to office environments and even evening occasions. You can wear them individually for a subtle look or layer them for a more expressive style, allowing you to adapt your jewellery to different moods and outfits." },
-    { type: 'p', text: "Designed with attention to quality and comfort, gold fashion jewellery uses lightweight materials and smooth finishes to ensure long-lasting wearability. It offers an accessible way to enjoy premium aesthetics without compromising on functionality, making it a smart and stylish addition to any jewellery collection." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Lightweight designs for all-day comfort<br/>• Modern, trend-driven styles<br/>• Perfect for everyday wear and versatile styling<br/>• Affordable luxury with a refined, premium look" },
-    { type: 'p', text: "Gold fashion jewellery is the ideal choice for those who want to embrace modern luxury in a practical and stylish way, enhancing everyday fashion with effortless elegance." },
-    { type: 'h', text: "How to Style Your Jewellery for Different Occasions" },
-    { type: 'p', text: "Styling jewellery correctly can enhance your entire look. The key is to match your jewellery with the occasion while maintaining balance and elegance." },
-    { type: 'p', text: "For everyday wear, opt for minimal and lightweight pieces that add subtle charm. In professional settings, choose refined and elegant jewellery that complements your outfit without being overpowering. For festive and evening events, you can experiment with bold designs, layered styles, or gemstone pieces to create a statement look." },
-    { type: 'p', text: "<strong>Quick Styling Tips:</strong><br/>• Keep it minimal for daily wear<br/>• Choose elegant designs for office outfits<br/>• Go bold with statement pieces for events<br/>• Mix and layer jewellery for a modern look" },
-    { type: 'h', text: "Jewellery Care Tips – Maintain Shine & Longevity" },
-    { type: 'p', text: "Proper care is essential to keep your jewellery looking new and maintaining its shine over time. Whether it’s silver, gold fashion jewellery, or gemstone pieces, simple maintenance can significantly extend their lifespan." },
-    { type: 'p', text: "Avoid exposure to moisture, perfumes, and harsh chemicals, as these can affect the finish and durability. Always store jewellery in a clean, dry place, preferably in separate pouches to prevent scratches." },
-    { type: 'p', text: "<strong>Care Tips:</strong><br/>• Store jewellery in a dry, airtight space<br/>• Avoid contact with water and chemicals<br/>• Clean gently with a soft cloth<br/>• Remove jewellery before workouts or sleep" },
-    { type: 'h', text: "Perfect Jewellery Gift Guide" },
-    { type: 'p', text: "Jewellery is one of the most meaningful and timeless gifts you can give. Whether you're celebrating a birthday, anniversary, or special milestone, the right piece of jewellery can create lasting memories." },
-    { type: 'p', text: "Fine silver jewellery makes a great choice for elegant gifting, while gold fashion jewellery offers a luxurious yet practical option. Semi precious gemstone jewellery is perfect for those who love unique and expressive designs." },
-    { type: 'p', text: "<strong>Best Gifting Ideas:</strong><br/>• Minimal silver jewellery for everyday elegance<br/>• Gold fashion jewellery for modern luxury<br/>• Gemstone jewellery for unique personality-based gifts<br/>• Versatile pieces suitable for all occasions" },
-    { type: 'h', text: "Why Our Jewellery Stands Out" },
-    { type: 'p', text: "Our jewellery collection is thoughtfully designed to deliver a premium experience that combines style, comfort, and durability. Every piece reflects attention to detail and a commitment to quality, ensuring that you receive jewellery that looks beautiful and lasts longer." },
-    { type: 'p', text: "We understand the needs of modern consumers, which is why our designs focus on versatility and practicality while staying aligned with current fashion trends." },
-    {
-        type: 'p', text: "<strong>What Makes Us Different:</strong><br/>• Carefully crafted, high-quality designs<br/>• Trend-focused yet timeless aesthetics<br/>• Comfortable for everyday wear<br/>• Wide variety for every style preference<br/>•Long-lasting shine and durability"
-    },
+    { type: 'h', text: "Jewellery Gifts for Girlfriend – Romantic & Meaningful Gifts for Her" },
+    { type: 'p', text: "Choosing the perfect <strong>jewellery gift for your girlfriend</strong> is a beautiful way to express love, appreciation, and the special bond you share. Jewellery has always been more than just an accessory—it carries emotions, memories, and personal meaning. A thoughtfully selected piece can become a lasting reminder of your relationship, the moments you have shared, and the feelings behind your gift." },
+    { type: 'p', text: "Unlike ordinary presents that may lose their charm over time, jewellery holds sentimental value and becomes a cherished keepsake. Every time she wears the piece, it reminds her of a special moment, a meaningful celebration, or the person who gifted it. This makes jewellery one of the most thoughtful and memorable choices when looking for something truly special." },
+    { type: 'p', text: "At Barosche, we offer a carefully curated collection of elegant jewellery designed to make your gifting moments truly special. Whether you are searching for a romantic surprise, a meaningful keepsake, or one of the best <strong>jewellery gifts</strong> for her, our collection combines modern elegance with timeless beauty. Each design is created with attention to detail, ensuring it feels sophisticated, comfortable, and perfect for everyday wear." },
+    { type: 'p', text: "From delicate rings and graceful bracelets to elegant earrings and refined pendants, each piece is designed to complement her personal style while adding a touch of sophistication. Whether she prefers minimalist designs or timeless classics, our jewellery collection offers thoughtful options that reflect her personality and make every occasion more memorable." },
+    { type: 'p', text: "A beautiful <strong>gold ring gift for girlfriend</strong> can symbolize love, commitment, and connection, while a stylish bracelet or pendant can reflect her individuality and everyday elegance. Jewellery is not just something she wears—it becomes a part of her journey, a treasured piece connected to your special moments and shared memories." },
+    { type: 'p', text: "Whether it's her birthday, anniversary, Valentine's Day, a relationship milestone, or simply a surprise to show your love and appreciation, Barosche offers timeless jewellery pieces that help you create unforgettable memories. Choose a gift that goes beyond the occasion and becomes a lasting expression of your love, care, and thoughtfulness." },
 
-    { type: 'h', text: "Why Choose Our Jewellery Collection" },
-    { type: 'p', text: "Our jewellery collection is designed to meet the needs of modern consumers who value style, quality, and versatility. Each piece is crafted with precision to ensure durability, elegance, and long-term value." },
-    { type: 'p', text: "We offer a wide range of options, including <strong>fine silver jewellery, jewellery with gold, </strong>and <strong> semi precious jewellery,</strong> ensuring there is something for every style preference." },
-    { type: 'p', text: "<strong>We Focus On:</strong><br/>• High-quality craftsmanship and finishing<br/>• Modern and trending designs<br/>• Comfortable everyday wear<br/>•Versatile styling for multiple occasions<br/>•Long-lasting durability and shine" },
-    { type: 'h', text: "Shop Jewellery Online – Easy, Secure & Convenient" },
-    { type: 'p', text: "Shopping for <a href='/product-category/jewellery/' style='color: #007bff; text-decoration: underline;'>find jewellery online </a>has never been easier. Explore a wide range of fine silver jewellery, gold fashion jewellery, and semi precious stones jewellery from the comfort of your home." },
-    { type: 'p', text: "<strong>Benefits:</strong><br/>• Smooth browsing and easy navigation<br/>• Secure checkout and payment options<br/>•Detailed product descriptions and images<br/>•Reliable delivery services<br/>" },
-    { type: 'p', text: "Whether you're updating your collection or searching for a meaningful gift, our platform ensures a seamless shopping experience." },
+    { type: 'h', text: "Why Jewellery Makes the Perfect Gift for Your Girlfriend" },
+    { type: 'p', text: "Finding the right gift for someone special is about understanding what makes them feel loved, appreciated, and valued. Jewellery stands out as one of the most meaningful <strong>romantic gifts for her</strong> because it combines beauty, emotion, and lasting value in a way few other gifts can. It is not just an accessory—it is a thoughtful expression of love, care, and the special connection you share." },
+    { type: 'p', text: "Unlike temporary gifts that may lose their significance over time, jewellery becomes something she can keep close and wear regularly. Every time she wears the piece, it reminds her of the moment it was gifted, the emotions behind it, and the effort taken to choose something meaningful. This emotional connection is what makes jewellery one of the most cherished gifts for a girlfriend." },
+    { type: 'p', text: "A carefully selected jewellery piece reflects your understanding of her personality, style, and preferences. Whether she loves minimal designs, classic elegance, or modern styles, choosing a piece that matches her taste shows thoughtfulness and attention to detail. It transforms a simple gift into a personal memory that she can treasure for years." },
+
+    { type: 'h', text: "What Makes Jewellery Special" },
+
+    { type: 'h', text: "Symbol of Love & Connection" },
+    { type: 'p', text: "Jewellery has always been associated with love, affection, and meaningful relationships. A carefully chosen piece represents the bond between two people and expresses emotions that words sometimes cannot capture. Whether it is a ring, bracelet, pendant, or earrings, each piece can carry a special meaning." },
+
+    { type: 'h', text: "Personal & Thoughtful" },
+    { type: 'p', text: "Selecting jewellery based on her style makes your gift feel more personal and intentional. Understanding whether she prefers delicate, minimalist pieces or elegant statement designs shows that you truly know her preferences and personality." },
+
+    { type: 'h', text: "Timeless & Long-Lasting" },
+    { type: 'p', text: "A beautiful jewellery piece is designed to be enjoyed for years. Unlike many gifts that are forgotten over time, jewellery becomes a lasting keepsake connected to memorable moments, celebrations, and milestones." },
+
+    { type: 'h', text: "Perfect for Every Occasion" },
+    { type: 'p', text: "Jewellery is a versatile gift choice that suits every special moment. Whether it is a birthday, anniversary, Valentine's Day, relationship milestone, or a simple surprise to show your appreciation, jewellery adds meaning to every occasion." },
+    { type: 'p', text: "Choosing a <strong>jewellery gift for girlfriend</strong> means giving more than just a beautiful piece—it means giving a symbol of your love, your memories, and the special journey you share together. A thoughtfully chosen jewellery gift becomes a timeless reminder of the emotions and moments that make your relationship unique." },
+
+    { type: 'h', text: "Explore Our Jewellery Gifts for Girlfriend Collection" },
+    { type: 'p', text: "At Barosche, our jewellery collection is thoughtfully designed to help you find the perfect <strong>jewellery gift for girlfriend</strong> that reflects her personality, style, and the emotions you want to express. Every relationship is unique, and the right jewellery piece can become a meaningful symbol of your love and appreciation." },
+    { type: 'p', text: "Our collection focuses on elegance, comfort, and timeless appeal, making each piece suitable for both special celebrations and everyday moments. Whether you are planning a romantic surprise or looking for a thoughtful keepsake, Barosche offers jewellery designs that combine modern sophistication with lasting beauty." },
+    { type: 'p', text: "From classic rings and elegant bracelets to refined earrings and meaningful pendants, each piece is created to complement her individual style while adding a touch of luxury to her jewellery collection." },
+
+    { type: 'h', text: "<a href='/product-category/rings/' style='color: #007bff; text-decoration: underline;'>1. Rings – Romantic & Meaningful Gifts</a>" },
+    { type: 'p', text: "A ring is one of the most symbolic <strong>jewellery gifts for girlfriend</strong>. It represents love, connection, and commitment, making it a beautiful choice for romantic occasions and memorable milestones. A carefully selected ring can express emotions in a way that feels personal and timeless." },
+    { type: 'p', text: "A <strong>gold ring gift for girlfriend</strong> adds elegance and significance to your gesture. Gold rings have always been associated with lasting beauty and meaningful relationships, making them a perfect choice for birthdays, anniversaries, Valentine's Day, or special surprises." },
+    { type: 'p', text: "Minimalist gold rings are ideal for everyday wear, offering a subtle and elegant look that complements different outfits. For more memorable occasions, refined designs create a sophisticated impression while becoming a cherished keepsake." },
+    { type: 'p', text: "Whether it marks a special milestone or is simply a thoughtful surprise, a beautifully chosen ring becomes a lasting reminder of your relationship and the moments you share together." },
+
+    { type: 'h', text: "<a href='/product-category/bracelets/' style='color: #007bff; text-decoration: underline;'>2. Bracelets – Elegant & Stylish</a>" },
+    { type: 'p', text: "Bracelets are versatile jewellery pieces that combine beauty, comfort, and effortless style. They make wonderful <strong>romantic gifts for her</strong> because they can be worn every day while carrying a meaningful connection to the person who gifted them." },
+    { type: 'p', text: "From delicate minimal designs to more refined styles, bracelets add a graceful touch to any outfit. They are perfect for girlfriends who appreciate elegant accessories that are easy to style and comfortable to wear." },
+    { type: 'p', text: "A thoughtfully chosen bracelet can become an everyday favourite, reminding her of your love and appreciation whenever she wears it. Whether paired with casual outfits or special occasion looks, bracelets offer timeless elegance and everyday versatility." },
+
+    { type: 'h', text: "<a href='/product-category/earrings/' style='color: #007bff; text-decoration: underline;'>3. Earrings – Timeless & Versatile</a>" },
+    { type: 'p', text: "Earrings are one of the most popular and appreciated jewellery gifts because they combine style, practicality, and elegance. Since they do not require sizing, they are an easy yet thoughtful choice when selecting a special gift for your girlfriend." },
+    { type: 'p', text: "Elegant earrings can enhance her everyday appearance while adding a refined touch to festive and special occasion outfits. From minimal studs to sophisticated designs, earrings offer options for every personality and style preference." },
+    { type: 'p', text: "Whether she prefers simple everyday jewellery or elegant statement pieces, a beautiful pair of earrings can make her feel special while becoming a valuable addition to her collection." },
+
+    { type: 'h', text: "<a href='/product-category/pendants/' style='color: #007bff; text-decoration: underline;'>4. Pendants – Personal & Special</a>" },
+    { type: 'p', text: "Pendants are meaningful jewellery gifts that allow you to express emotions in a personal and stylish way. They can represent love, memories, special moments, or the unique connection you share." },
+    { type: 'p', text: "A beautifully designed pendant can become her everyday favourite piece, adding elegance to her look while carrying sentimental value. Whether worn alone for a minimal appearance or layered with other jewellery, pendants offer timeless versatility." },
+    { type: 'p', text: "Choosing a pendant as a <strong>jewellery gift for girlfriend</strong> shows thoughtfulness and care. It is more than just a beautiful accessory—it becomes a lasting reminder of your relationship, your memories, and the special moments you create together." },
+    { type: 'p', text: "At Barosche, every jewellery piece is designed to make your gifting experience meaningful, helping you choose a timeless gift that she will love, wear, and cherish for years to come.." },
+
+    { type: 'h', text: "Romantic Jewellery Gifts for Every Special Occasion" },
+    { type: 'p', text: "Jewellery is a beautiful way to celebrate the important moments in your relationship and express emotions that words cannot always capture. Whether you want to surprise her with a thoughtful gesture or mark a special milestone, the right <strong>jewellery gift for girlfriend</strong> can make the occasion even more meaningful and unforgettable." },
+    { type: 'p', text: "Unlike ordinary presents, jewellery carries emotional value that lasts beyond the moment. A carefully selected piece becomes a reminder of your love, shared memories, and the special bond you both cherish. From elegant rings to stylish bracelets, every jewellery piece can represent a unique story and create a lasting connection." },
+    { type: 'p', text: "Whether it is a grand celebration or a simple expression of love, Barosche jewellery offers timeless designs that make every occasion more special. Our collection combines modern elegance with everyday wearability, helping you find the perfect gift that matches her style and personality." },
+
+    { type: 'h', text: "Perfect Occasions for Jewellery Gifts" },
+
+    { type: 'h', text: "1. Birthday Celebrations" },
+    { type: 'p', text: "Make her birthday extra special with a jewellery gift that reflects her personality, style, and individuality. A thoughtfully chosen ring, bracelet, pendant, or pair of earrings can become a memorable reminder of your love and appreciation." },
+    { type: 'p', text: "A beautiful jewellery piece adds a personal touch to birthday celebrations, making the moment feel more meaningful and showing her how much she means to you." },
+
+    { type: 'h', text: "2. Anniversary Gifts" },
+    { type: 'p', text: "Celebrate your journey together with jewellery that represents love, commitment, and shared memories. Anniversaries are a perfect opportunity to gift something timeless that symbolizes the special connection you have built together." },
+    { type: 'p', text: "An elegant jewellery piece becomes more than just a gift—it becomes a keepsake that reminds her of your relationship and the beautiful moments you have shared." },
+
+    { type: 'h', text: "3. Valentine's Day Surprises" },
+    { type: 'p', text: "A romantic jewellery gift is one of the most timeless ways to express love on Valentine's Day. Whether it is a delicate pendant, a meaningful ring, or an elegant bracelet, jewellery adds a special touch to this celebration of love." },
+    { type: 'p', text: "A carefully selected piece shows thoughtfulness and creates a memorable Valentine's Day moment that she can cherish for years." },
+
+    { type: 'h', text: "Relationship Milestones" },
+    { type: 'p', text: "Every relationship has special milestones worth celebrating. Whether it is your first anniversary, a personal achievement, or an important moment together, jewellery makes the occasion even more memorable." },
+    { type: 'p', text: "A meaningful piece represents your connection, growth, and the memories you continue to create together." },
+
+    { type: 'h', text: "4. Just Because Gifts" },
+    { type: 'p', text: "Sometimes the most meaningful gifts are the unexpected ones. You don't always need a special occasion to show your love and appreciation." },
+    { type: 'p', text: "A beautiful jewellery piece given as a surprise can create a memorable moment and remind her how much she is valued. These thoughtful gestures often become some of the most cherished memories." },
+    { type: 'p', text: "No matter the occasion, a carefully chosen <strong>jewellery gift for girlfriend</strong> is more than just an accessory—it is a symbol of love, appreciation, and the special moments you share together. Barosche helps you find elegant jewellery pieces that turn ordinary moments into unforgettable memories." },
+
+    { type: 'h', text: "How to Choose the Best Jewellery Gift for Your Girlfriend" },
+    { type: 'p', text: "Choosing the right <strong>jewellery gift for girlfriend</strong> is about more than selecting something beautiful—it is about finding a piece that reflects her personality, your relationship, and the emotions you want to express. The most meaningful gifts are not always the biggest or most expensive; they are the ones chosen with thought, care, and understanding." },
+    { type: 'p', text: "Before selecting a jewellery piece, consider her personal style, daily preferences, and the type of accessories she enjoys wearing. A well-chosen piece should feel natural to her lifestyle while also carrying a special meaning that reminds her of your bond." },
+
+    { type: 'h', text: "Simple Gifting Tips" },
+
+    { type: 'h', text: "Understand Her Style" },
+    { type: 'p', text: "Pay attention to the jewellery she already wears. Does she prefer delicate and minimal designs, classic elegance, or bold statement pieces? Choosing a style that matches her personality makes your gift feel more personal and shows that you understand her preferences." },
+
+    { type: 'h', text: "Choose Something Wearable" },
+    { type: 'p', text: "Select jewellery that she can enjoy regularly. Everyday pieces such as elegant rings, lightweight bracelets, simple earrings, and refined pendants are versatile choices that can complement different outfits and occasions." },
+
+    { type: 'h', text: "Consider Meaningful Designs" },
+    { type: 'p', text: "A thoughtful jewellery gift can represent special memories, shared experiences, or important moments in your relationship. Whether it's a symbolic ring, a meaningful pendant, or a timeless bracelet, choosing a design with emotional value makes the gift even more memorable." },
+
+    { type: 'h', text: "Focus on Quality & Comfort" },
+    { type: 'p', text: "Beautiful jewellery should also provide comfort and long-lasting wear. Choose pieces that are carefully crafted, lightweight, and suitable for everyday use so she can enjoy wearing your gift effortlessly." },
+
+    { type: 'h', text: "Match the Occasion" },
+    { type: 'p', text: "Consider the reason behind the gift. A romantic surprise, anniversary celebration, birthday, or Valentine's Day gift may call for different styles. Selecting a piece that fits the occasion adds an extra layer of thoughtfulness." },
+
+    { type: 'p', text: "By keeping these details in mind, you can confidently choose a <strong>jewellery gift for girlfriend</strong> that feels elegant, meaningful, and perfectly suited to her. A carefully selected piece from Barosche becomes more than just an accessory—it becomes a lasting symbol of love, appreciation, and unforgettable memories." },
+
+    { type: 'h', text: "Gold Ring Gift for Girlfriend – A Timeless Expression of Love" },
+    { type: 'p', text: "A <strong>gold ring gift for girlfriend</strong> is one of the most meaningful and romantic ways to celebrate the special bond you share. Gold has been valued for centuries as a symbol of beauty, purity, and lasting significance, making it a perfect choice when you want to express love, appreciation, and commitment through a thoughtful gift." },
+    { type: 'p', text: "Unlike ordinary presents, a gold ring carries emotional meaning. Every time she wears it, it becomes a reminder of your relationship, the memories you have created together, and the special moment when you gifted it to her. Whether it is a birthday surprise, anniversary celebration, Valentine's Day gesture, or simply a way to show your love, a gold ring creates a lasting impression." },
+    { type: 'p', text: "A gold ring can symbolize:<br/>• <strong>Love and Affection:</strong> A beautifully chosen gold ring reflects care, admiration, and the special feelings you share. It is a simple yet powerful way to express emotions that words cannot always describe.<br/>• <strong>Commitment and Trust:</strong> Rings have long been associated with connection and commitment. A meaningful design can represent the trust, understanding, and journey you share as a couple.<br/>• <strong>Special Memories:</strong> A gold ring becomes more than just jewellery—it becomes a keepsake connected to a memorable moment. Every time she wears it, it brings back the emotions and happiness associated with that occasion.<br/>• <strong>Personal Milestones:</strong> Whether celebrating a relationship milestone, achievement, or a new chapter in life, a gold ring is a timeless gift that marks important moments in life." },
+    { type: 'p', text: "At Barosche, our elegant gold ring designs combine modern sophistication with timeless beauty. Each piece is thoughtfully crafted to complement different styles, from minimal everyday designs to refined classic looks. Whether she prefers subtle jewellery or a more elegant statement piece, a carefully selected gold ring can become a cherished part of her collection." },
+    { type: 'p', text: "Choosing a <strong>gold ring gift for girlfriend</strong> means giving more than just an accessory—it means gifting a lasting expression of love, style, and the memories you create together." },
+
+    { type: 'h', text: "Luxury Jewellery Gifts for Her" },
+    { type: 'p', text: "When searching for premium and meaningful <strong>romantic gifts for her</strong>, luxury jewellery offers the perfect combination of elegance, emotion, and timeless beauty. A carefully selected jewellery piece is more than just an accessory—it is a thoughtful expression of love, appreciation, and the special connection you share." },
+    { type: 'p', text: "Luxury jewellery stands out because it carries a sense of exclusivity and personal meaning. Unlike temporary gifts, a beautifully crafted piece becomes something she can wear, cherish, and remember for years. Every detail, from the design to the finishing, adds to the experience of giving a gift that feels truly special." },
+    { type: 'p', text: "Modern luxury is not only about bold or extravagant designs. Today, true luxury is defined by:<br/>• <strong>Elegant Craftsmanship:</strong> High-quality craftsmanship ensures every jewellery piece reflects attention to detail, precision, and lasting beauty. A well-crafted design feels premium while maintaining comfort and practicality.<br/>• <strong>Timeless Designs:</strong> Classic and refined jewellery styles remain beautiful across changing trends. Choosing timeless designs ensures your gift continues to feel elegant and meaningful for years to come.<br/>• <strong>Comfortable Wearability:</strong> Luxury jewellery should not only look beautiful but also feel effortless to wear. Lightweight and versatile designs allow her to enjoy the piece every day, whether for casual outings or special occasions.<br/>• <strong>Personal Significance:</strong> The most memorable gifts are those that hold emotional value. A jewellery piece chosen according to her personality and style becomes a meaningful reminder of your love and the moments you share." },
+    { type: 'p', text: "From a refined bracelet that adds everyday elegance to a graceful ring that symbolizes your connection or a delicate pendant with personal meaning, luxury jewellery makes every gifting moment more special." },
+    { type: 'p', text: "At Barosche, our collection is designed to combine modern sophistication with timeless appeal. Each piece reflects simplicity, elegance, and thoughtful design—making it a perfect choice when you want to give her a gift that feels luxurious, personal, and unforgettable." },
+
+    { type: 'h', text: "Unique Jewellery Gift Ideas for Your Girlfriend" },
+    { type: 'p', text: "Finding a unique<strong>jewellery gift for girlfriend</strong> is about choosing something that reflects her personality and the special connection you share. A thoughtful piece of jewellery can turn an ordinary moment into a memorable celebration." },
+    { type: 'p', text: "Instead of choosing a gift based only on trends, consider jewellery that matches her lifestyle, preferences, and personal style. From elegant everyday pieces to meaningful designs for special occasions, the right jewellery can make her feel valued and appreciated." },
+
+    { type: 'h', text: "Thoughtful Jewellery Gift Ideas" },
+    { type: 'p', text: "1. <strong>Minimalist Rings:</strong> Simple and elegant rings are perfect for girlfriends who appreciate subtle beauty. Their timeless designs make them suitable for everyday wear while carrying emotional significance.<br/>2. <strong>Elegant Bracelets:</strong> A stylish bracelet is a versatile gift that adds sophistication to any outfit. Lightweight designs are perfect for daily styling and can become her favourite accessory.<br/>3. <strong>Meaningful Pendants:</strong> Pendants offer a personal touch and can represent memories, emotions, or special moments between couples. They are a beautiful way to gift something with sentimental value.<br/>4. <strong>Classic Earrings:</strong> Earrings are effortless, elegant, and suitable for every style. From everyday minimal designs to refined occasion pieces, they make a thoughtful jewellery gift choice." },
+
+    { type: 'p', text: "Choosing a unique jewellery gift shows that you have taken the time to understand her style and select something that truly represents your relationship." },
+
+    { type: 'h', text: "Jewellery Gift Ideas Based on Her Personality" },
+    { type: 'p', text: "Every woman has a different style preference, and choosing jewellery based on her personality makes the gift more meaningful. The perfect <strong>jewellery gift for girlfriend</strong> should feel like something made especially for her." },
+
+    { type: 'h', text: "For the Minimalist Girl" },
+    { type: 'p', text: "Choose delicate rings, simple earrings, and lightweight bracelets with clean designs. Minimal jewellery offers effortless elegance and suits everyday styling." },
+
+    { type: 'h', text: "For the Classic Style Lover" },
+    { type: 'p', text: "Timeless gold rings, elegant pendants, and traditional-inspired designs are perfect for someone who appreciates sophisticated and graceful jewellery." },
+
+    { type: 'h', text: "For the Trendsetter" },
+    { type: 'p', text: "Modern statement earrings, layered bracelets, and contemporary designs make excellent choices for someone who loves experimenting with fashion." },
+
+    { type: 'h', text: "For the Romantic Personality" },
+    { type: 'p', text: "Heart-inspired designs, meaningful pendants, and symbolic rings can create a deeply personal gifting experience." },
+    { type: 'p', text: "Understanding her personality helps you choose jewellery that feels more connected, thoughtful, and memorable." },
+
+    { type: 'h', text: "Best Jewellery Gifts for Long-Distance Girlfriend" },
+    { type: 'p', text: "Distance can make special moments challenging, but a meaningful jewellery gift can help maintain a strong emotional connection. A beautiful piece becomes a daily reminder of your love, even when you are apart." },
+    { type: 'p', text: "Jewellery is one of the most thoughtful long-distance romantic gifts for her because it is something she can carry with her every day." },
+    { type: 'p', text: "Perfect choices include:<br/>• Delicate pendants with personal meaning<br/>• Everyday bracelets she can wear regularly<br/>• Elegant rings representing your connection<br/>• Classic earrings for daily elegance" },
+    { type: 'p', text: "A carefully selected jewellery gift helps bridge the distance by creating a lasting emotional connection." },
+
+    { type: 'h', text: "Jewellery Gifts for Different Relationship Milestones" },
+    { type: 'p', text: "Every relationship has moments worth celebrating. Jewellery makes these milestones even more meaningful because it represents memories, growth, and the journey you share together." },
+    { type: 'p', text: "• <strong>First Date Anniversary:</strong> A delicate bracelet or pendant can beautifully represent the beginning of your relationship.<br/>• <strong>First Relationship Anniversary:</strong> Choose a timeless jewellery piece that celebrates your journey and shared memories.<br/>• <strong>Proposal or Commitment Moment:</strong> A meaningful ring can symbolize love, trust, and the future you are building together.<br/>• <strong>Achievement Celebration:</strong> Celebrate her personal success with elegant jewellery that recognizes her hard work and achievements." },
+    { type: 'p', text: "A jewellery gift becomes a symbol of the special chapters you create together." },
+
+    { type: 'h', text: "How to Make a Jewellery Gift More Special" },
+    { type: 'p', text: "A jewellery gift becomes even more memorable when it includes personal touches. Small details can transform a beautiful piece into an unforgettable experience." },
+    { type: 'p', text: "• <strong>Add a Personal Message:</strong> A heartfelt note expressing your feelings can make the gift emotionally valuable.<br/>• <strong>Choose the Right Moment:</strong> Surprising her during a special occasion or unexpected moment makes the experience more meaningful.<br/>• <strong>Select a Design with Meaning:</strong> Choose jewellery that represents a memory, personality trait, or special connection.<br/>• <strong>Present It Thoughtfully:</strong> Beautiful packaging and a memorable presentation can enhance the excitement of receiving the gift." },
+    { type: 'p', text: "The effort behind the gift often becomes as meaningful as the jewellery itself." },
+
+    { type: 'h', text: "Why Jewellery Is Better Than Traditional Gifts" },
+    { type: 'p', text: "Many gifts may create temporary happiness, but jewellery offers lasting emotional value. Unlike flowers, chocolates, or other short-term presents, jewellery becomes something she can keep and treasure." },
+
+    { type: 'h', text: "Benefits of Choosing Jewellery Gifts" },
+    { type: 'p', text: "• Long-lasting and meaningful<br/>• Suitable for every occasion<br/>• Represents love and appreciation<br/>• Becomes a personal keepsake<br/>• Can be worn and enjoyed regularly" },
+    { type: 'p', text: "A <strong>jewellery gift for girlfriend</strong> is not just about beauty—it is about creating a memory that lasts." },
+
+    { type: 'h', text: "Trending Jewellery Styles for Girlfriend Gifts" },
+    { type: 'p', text: "Modern jewellery trends focus on designs that combine elegance, comfort, and everyday wearability. Choosing a trendy yet timeless piece ensures your gift feels stylish and meaningful." },
+    { type: 'p', text: "Popular styles include:<br/>• <strong>Minimal Gold Jewellery:</strong> Simple gold designs offer timeless elegance and effortless styling.<br/>• <strong>Layered Jewellery Pieces:</strong> Layering allows her to create personalised looks with bracelets and pendants.<br/>• <strong>Elegant Everyday Jewellery:</strong> Lightweight pieces that transition from casual to formal occasions are always appreciated.<br/>• <strong>Modern Classic Designs:</strong> Contemporary jewellery with timeless elements creates a perfect balance between fashion and elegance." },
+
+    { type: 'h', text: "Gift Jewellery for Every Budget" },
+    { type: 'p', text: "A meaningful jewellery gift does not always need to be extravagant. Thoughtful designs at different price points can create equally special moments." },
+
+    { type: 'h', text: "Affordable Jewellery Gifts" },
+    { type: 'p', text: "• Minimal earrings<br/>• Simple bracelets<br/>• Elegant pendants" },
+
+    { type: 'h', text: "Premium Jewellery Gifts" },
+    { type: 'p', text: "• Gold rings<br/>• Luxury bracelets<br/>• Statement jewellery pieces" },
+
+    { type: 'p', text: "The value of a jewellery gift comes from the emotion behind it and the thoughtfulness of the choice." },
+
+    { type: 'h', text: "Why Choose Barosche for Jewellery Gifts for Girlfriend" },
+    { type: 'p', text: "At Barosche, we believe that every <strong>jewellery gift for girlfriend</strong> should be more than just a beautiful accessory—it should carry emotions, memories, and a story of your special relationship. A thoughtfully chosen piece of jewellery reflects love, appreciation, and the unique bond you share, making every gifting moment more meaningful." },
+    { type: 'p', text: "Our designs are created for modern women who appreciate elegance, simplicity, and timeless style. We focus on creating jewellery that feels special for romantic occasions while remaining comfortable and versatile enough for everyday wear." },
+
+    { type: 'h', text: "What Makes Us Special" },
+
+    { type: 'h', text: "1. Minimalist Luxury Designs" },
+    { type: 'p', text: "Our jewellery reflects a modern approach to luxury, featuring refined designs that combine simplicity with sophistication. Each piece is created to enhance her personal style while offering an elegant and timeless appeal." },
+
+    { type: 'h', text: "2. Premium Craftsmanship" },
+    { type: 'p', text: "Every Barosche piece is crafted with careful attention to detail, quality, and finishing. From the design process to the final touch, we focus on creating jewellery that offers lasting beauty and a premium feel." },
+
+    { type: 'h', text: "3. Perfect for Romantic Gifting" },
+    { type: 'p', text: "Whether it is a birthday, anniversary, Valentine's Day, relationship milestone, or a surprise gesture, our collections are designed to help you find meaningful jewellery gifts that express your feelings in a special way." },
+
+    { type: 'h', text: "4. Everyday Elegance" },
+    { type: 'p', text: "We create jewellery that blends beauty with comfort. Lightweight designs and versatile styles allow her to wear your gift effortlessly, making it a part of her everyday moments and special occasions." },
+
+    { type: 'h', text: "5. Timeless Style & Lasting Memories" },
+    { type: 'p', text: "At Barosche, we believe the best gifts are those that remain meaningful over time. A carefully selected ring, bracelet, earring, or pendant becomes more than jewellery—it becomes a cherished reminder of your love and the memories you create together." },
+
+    { type: 'p', text: "Choosing Barosche means giving more than just a jewellery piece—it means giving a lasting expression of affection, elegance, and a symbol of your relationship that she can treasure for years to come." },
+
+    { type: 'h', text: "Make Her Feel Special with the Perfect Jewellery Gift" },
+    { type: 'p', text: "A carefully selected jewellery gift for a girlfriend is more than just an accessory—it is an expression of love, care, and appreciation. Whether you are searching for a gold ring gift for your girlfriend, a romantic surprise, or timeless jewellery gifts, Barosche offers elegant <a href='https://barosche.com/' style='color: #007bff; text-decoration: underline;'>fine jewellery online</a> designs created to celebrate your special bond." },
+    { type: 'p', text: "Explore our collection and find the perfect jewellery piece that makes every moment unforgettable." },
 ];
 
 const flattenFashionContent = (content) => content.map((item) => item.text);
@@ -351,12 +425,13 @@ const rebuildFaq = (translatedArr) => {
 const TOP_OFFSET = 40;
 
 // ───────
-//  HELPER
+//  HELPER — ab videos bhi return karega (Rings.js jaisa pattern)
 // ───────
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice,
         isSale: product.isSale || false,
@@ -387,14 +462,44 @@ function Toast({ message, visible }) {
 }
 
 // ─────────────────────────────────────────────────────────
-//  QUICK VIEW MODAL
+//  QUICK VIEW MODAL — image + video support (Rings.js pattern)
 // ─────────────────────────────────────────────────────────
 function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist, onToggleWishlist }) {
-    const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
     const variant = getFirstVariant(product);
     const images = variant.images || [];
+    const videos = variant.videos || [];
     const categoryUrl = categorySlugMap[product.category] || 'jewellery';
+
+    // ── mediaList: pehli image, phir video (agar hai), phir baaki images ──
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [activeIdx, setActiveIdx] = useState(0);
+    const videoRef = useRef(null);
+    const activeItem = mediaList[activeIdx] || null;
+
+    // Jab active slide video ho, use play karo (aur reset se)
+    useEffect(() => {
+        if (activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [activeIdx, activeItem]);
+
+    // Modal band hote hi video pause ho jaye
+    useEffect(() => {
+        return () => {
+            if (videoRef.current) {
+                videoRef.current.pause();
+            }
+        };
+    }, [activeIdx]);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -408,18 +513,52 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
             <div style={{ background: '#fff', borderRadius: '8px', maxWidth: '860px', width: '100%', maxHeight: '90vh', overflow: 'auto', display: 'flex', flexDirection: 'row', position: 'relative', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
                 <button onClick={onClose} style={{ position: 'absolute', top: '12px', right: '16px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#555', zIndex: 1, lineHeight: 1 }} aria-label="Close">✕</button>
 
-                {/* Images */}
+                {/* Images / Video */}
                 <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
                     <div style={{ background: '#f7f6f4', borderRadius: '6px', aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px' }}>
-                        {images.length > 0
-                            ? <img src={`${API_BASE}${images[activeImg]}`} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
-                            : <img src="/placeholder.jpg" alt="placeholder" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                        {activeItem ? (
+                            activeItem.type === 'video' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={`${API_BASE}${activeItem.src}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    muted
+                                    playsInline
+                                    loop
+                                    controls
+                                />
+                            ) : (
+                                <img src={`${API_BASE}${activeItem.src}`} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                            )
+                        ) : (
+                            <img src="/placeholder.jpg" alt="placeholder" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
                     </div>
-                    {images.length > 1 && (
+                    {mediaList.length > 1 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {images.map((img, i) => (
-                                <button key={i} onClick={() => setActiveImg(i)} style={{ width: '54px', height: '54px', padding: 0, border: i === activeImg ? '2px solid #1a1a1a' : '2px solid transparent', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', background: '#f7f6f4' }}>
-                                    <img src={`${API_BASE}${img}`} alt={`view ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                            {mediaList.map((item, i) => (
+                                <button key={i} onClick={() => setActiveIdx(i)} style={{ width: '54px', height: '54px', padding: 0, border: i === activeIdx ? '2px solid #1a1a1a' : '2px solid transparent', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', background: '#f7f6f4', position: 'relative' }}>
+                                    {item.type === 'video' ? (
+                                        <>
+                                            <video
+                                                src={`${API_BASE}${item.src}`}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                muted
+                                                playsInline
+                                            />
+                                            <span style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'rgba(0,0,0,0.25)', pointerEvents: 'none',
+                                            }}>
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                                                    <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                                                </svg>
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <img src={`${API_BASE}${item.src}`} alt={`view ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -485,23 +624,87 @@ function AccordionItem({ title, children }) {
 }
 
 // ─────────────────────────────────────────────────────────
-//  PRODUCT CARD
+//  PRODUCT CARD — image + video hover cycling (Rings.js pattern)
 // ─────────────────────────────────────────────────────────
 function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const videos = variant.videos || [];
+
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
 
     const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => { setCurrentImg(idx); idx = (idx + 1) % images.length; }, 800);
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
     };
-    const stopHover = () => { clearInterval(intervalRef.current); setCurrentImg(0); };
-    useEffect(() => () => clearInterval(intervalRef.current), []);
 
-    const imgSrc = images.length > 0 ? `${API_BASE}${images[currentImg]}` : "/placeholder.jpg";
+    const stopHover = () => {
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    };
+
+    // Jab bhi current slide video ho, use (re)play karo
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
+
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
+
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice;
     const isSale = variant.isSale;
@@ -511,10 +714,30 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView })
         <Link href={`/product-category/${categoryUrl}/${p.slug}`} className="jw-card" onMouseEnter={startHover} onMouseLeave={stopHover}>
             <div className="jw-card-img-wrap">
                 {isSale && <span className="jw-sale-badge">{ui.sale}</span>}
-                <img src={imgSrc} alt={p.title} className="jw-card-img" loading="lazy" onError={(e) => { e.target.src = "/placeholder.jpg"; }} />
-                {images.length > 1 && (
+
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={`${API_BASE}${currentItem.src}`}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? `${API_BASE}${currentItem.src}` : "/placeholder.jpg"}
+                        alt={p.title}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+                    />
+                )}
+
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => <span key={i} className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`} />)}
+                        {mediaList.map((_, i) => <span key={i} className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`} />)}
                     </div>
                 )}
                 <div className="jw-card-actions">
@@ -825,11 +1048,33 @@ export default function Girlfriend() {
               <div className="jw-bottom-accordions">
                         <AccordionItem title={ui.fashionJewellery}>
                             <div className="jw-accordion-text">
-                                {translatedFashionContent.map((item, i) =>
-                                    item.type === 'h'
-                                        ? <h3 key={i} className="jw-accordion-heading" dangerouslySetInnerHTML={{ __html: item.text }} />
-                                        : <p key={i} dangerouslySetInnerHTML={{ __html: item.text }} />
-                                )}
+                                {translatedFashionContent.map((item, i) => {
+                                    if (item.type === 'h' || item.type === 'h2') {
+                                        return <h2 key={i} className="jw-accordion-heading" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    if (item.type === 'h3') {
+                                        return <h3 key={i} className="jw-accordion-subheading" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    if (item.type === 'h3link') {
+                                        return (
+                                            <h3 key={i} className="jw-accordion-subheading">
+                                                <Link href={item.href} style={{ color: '#007bff', textDecoration: 'underline' }}>
+                                                    <span dangerouslySetInnerHTML={{ __html: item.text }} />
+                                                </Link>
+                                            </h3>
+                                        );
+                                    }
+                                    if (item.type === 'h4') {
+                                        return <h4 key={i} className="jw-accordion-subsubheading" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    if (item.type === 'ul') {
+                                        return <ul key={i} className="jw-accordion-list" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    if (item.type === 'ol') {
+                                        return <ol key={i} className="jw-accordion-list" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    return <p key={i} dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                })}
                             </div>
                         </AccordionItem>
                         <AccordionItem title={ui.faq}>

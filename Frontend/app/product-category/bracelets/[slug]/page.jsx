@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import BraceletsDetailClient from './braceletsDetailClient';
 import { generateCategoryStaticParams } from '../../staticParamsHelper.js';
 
@@ -66,9 +67,6 @@ export async function generateMetadata({ params }) {
     };
 }
 
-// ─────────────────────────────────────────────────────────
-//  JSON-LD SCHEMA — built dynamically from live product data
-// ─────────────────────────────────────────────────────────
 function ProductJsonLd({ product }) {
     const pageUrl = `${SITE_URL}/product-category/${CATEGORY_SLUG}/${product.slug}/`;
 
@@ -108,7 +106,6 @@ function ProductJsonLd({ product }) {
         "publisher": { "@id": `${SITE_URL}/#organization` },
     };
 
-    // ── 2. ImageObject schema ──
     const imageObjectSchema = {
         "@context": "https://schema.org",
         "@type": "ImageObject",
@@ -119,7 +116,6 @@ function ProductJsonLd({ product }) {
         "representativeOfPage": true,
     };
 
-    // ── 3. Product + BreadcrumbList schema (@graph) ──
     const productGraphSchema = {
         "@context": "https://schema.org",
         "@graph": [
@@ -263,6 +259,37 @@ function ProductJsonLd({ product }) {
         ],
     };
 
+    // ── 4. Organization schema ──
+    const organizationSchema = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        "name": "Barosche",
+        "legalName": "Barosche GbR",
+        "url": `${SITE_URL}/`,
+        "logo": {
+            "@type": "ImageObject",
+            "@id": `${SITE_URL}/#logo`,
+            "url": `${SITE_URL}/logo.png`,
+            "contentUrl": `${SITE_URL}/logo.png`,
+            "caption": "Barosche",
+        },
+        "image": { "@id": `${SITE_URL}/#logo` },
+    };
+
+    // ── 5. WebSite schema ──
+    const webSiteSchema = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        "url": `${SITE_URL}/`,
+        "name": "Barosche",
+        "alternateName": "Barosche Fine Jewellery",
+        "description": "Barosche offers fine jewellery, gemstone jewellery and lab-grown diamond jewellery crafted for modern everyday elegance.",
+        "inLanguage": "en",
+        "publisher": { "@id": `${SITE_URL}/#organization` },
+    };
+
     return (
         <>
             <script
@@ -276,6 +303,14 @@ function ProductJsonLd({ product }) {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(productGraphSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
             />
         </>
     );
@@ -296,19 +331,39 @@ async function getRelatedProducts(category, slug) {
     }
 }
 
+async function RelatedProductsSection({ category, slug, product }) {
+    const relatedProducts = await getRelatedProducts(category, slug);
+    return (
+        <BraceletsDetailClient
+            slug={slug}
+            initialProduct={product}
+            initialRelated={relatedProducts}
+        />
+    );
+}
+
 export default async function BraceletsDetailPage({ params }) {
     const { slug } = await params;
     const product = await getProduct(slug);
-    const relatedProducts = product ? await getRelatedProducts(product.category, slug) : [];
 
     return (
         <>
             {product && <ProductJsonLd product={product} />}
-            <BraceletsDetailClient
-                slug={slug}
-                initialProduct={product}
-                initialRelated={relatedProducts}
-            />
+            <Suspense
+                fallback={
+                    <BraceletsDetailClient
+                        slug={slug}
+                        initialProduct={product}
+                        initialRelated={[]}
+                    />
+                }
+            >
+                <RelatedProductsSection
+                    category={product?.category || CATEGORY_NAME}
+                    slug={slug}
+                    product={product}
+                />
+            </Suspense>
         </>
     );
 }

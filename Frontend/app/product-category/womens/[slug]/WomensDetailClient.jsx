@@ -147,21 +147,21 @@ function MetalTypeSelector({ metalTypes, selectedMetal, onSelect }) {
                     background: 'linear-gradient(135deg, #c9a96e 0%, #e8c97a 50%, #b8873a 100%)',
                     color: '#fff',
                     border: '1.5px solid #b8873a',
-                    boxShadow: '0 2px 8px rgba(201,169,110,0.45)',
+                    boxShadow: '0 2px 8px #c9a96e73',
                 };
             case 'Silver':
                 return {
                     background: 'linear-gradient(135deg, #c9a96e 0%, #e8c97a 50%, #b8873a 100%)',
                     color: '#fff',
                     border: '1.5px solid #b8873a',
-                    boxShadow: '0 2px 8px rgba(201,169,110,0.45)',
+                    boxShadow: '0 2px 8px #c9a96e73',
                 };
             default: // 'All'
                 return {
                     background: 'linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%)',
                     color: '#fff',
                     border: '1.5px solid #1a1a1a',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                    boxShadow: '0 2px 8px #00000040',
                 };
         }
     };

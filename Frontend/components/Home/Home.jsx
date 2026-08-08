@@ -334,7 +334,6 @@ const schemaData = [
 export default function Home() {
   return (
     <>
-      {/* Dynamic JSON-LD schema rendering */}
       {schemaData.map((schema, index) => (
         <Script
           key={schema["@id"] || index}

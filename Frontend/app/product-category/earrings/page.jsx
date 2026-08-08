@@ -1,11 +1,11 @@
-import Script from "next/script";
+import { Suspense } from "react";
 import Earrings from './Earrings';
 
 const SITE_URL = "https://barosche.com";
 const API_BASE = "https://api.barosche.com";
-const FETCH_TIMEOUT_MS = 15000;
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+const FETCH_TIMEOUT_MS = 8000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1000;
 
 const PAGE_URL = "https://barosche.com/product-category/earrings/";
 const OG_IMAGE = "/Meta-image-1.jpg";
@@ -19,11 +19,12 @@ async function fetchWithTimeout(url, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(url, { signal: controller.signal });
+    return await fetch(url, { signal: controller.signal, cache: "no-store" });
   } finally {
     clearTimeout(timer);
   }
 }
+
 async function getInitialProducts(category) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -94,7 +95,7 @@ export const metadata = {
 };
 
 const schemaData = [
- 
+
   // 1. ItemList schema
   {
     "@context": "https://schema.org",
@@ -222,19 +223,26 @@ const schemaData = [
   },
 ];
 
-export default async function Page() {
+async function EarringsData() {
   const initialProducts = await getInitialProducts("Earrings");
+  return <Earrings initialProducts={initialProducts} />;
+}
+
+export default function Page() {
   return (
     <>
       {schemaData.map((schema, index) => (
-        <Script
+        <script
           key={schema["@id"] || index}
           id={`schema-${schema["@type"]}-${index}`}
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
-      <Earrings initialProducts={initialProducts} />
+
+      <Suspense fallback={<div>Loading products...</div>}>
+        <EarringsData />
+      </Suspense>
     </>
   );
 }

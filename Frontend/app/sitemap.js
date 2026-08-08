@@ -1,7 +1,6 @@
-
 export const dynamic = "force-static";
 export const revalidate = 3600;
-const SITE_URL = "https://www.barosche.com";
+const SITE_URL = "https://barosche.com";
 const API_URL = "https://api.barosche.com";
 
 const getRoute = (category = "") => {
@@ -17,7 +16,16 @@ const getRoute = (category = "") => {
   if (cat.includes("ring")) return "/product-category/rings";
   if (cat.includes("jewellery") || cat.includes("jewelry")) return "/product-category/jewellery";
 
-  return null;
+  console.warn(`Sitemap: unmapped category "${category}", using fallback route /product-category/jewellery`);
+  return "/product-category/jewellery";
+};
+
+const extractArray = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.products)) return payload.products;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.blogs)) return payload.blogs;
+  return [];
 };
 
 export default async function sitemap() {
@@ -33,6 +41,14 @@ export default async function sitemap() {
     { url: `${SITE_URL}/product-category/new-in`, priority: 0.8 },
     { url: `${SITE_URL}/product-category/mens`, priority: 0.8 },
     { url: `${SITE_URL}/product-category/womens`, priority: 0.8 },
+    { url: `${SITE_URL}/product-category/jewellery-gifts-for-her`, priority: 0.8 },
+    { url: `${SITE_URL}/product-category/christmas-jewellery-gifts`, priority: 0.8 },
+    { url: `${SITE_URL}/product-category/valentine-jewellery-gifts`, priority: 0.8 },
+    { url: `${SITE_URL}/product-category/gold-jewellery-gifts`, priority: 0.8 },
+    { url: `${SITE_URL}/product-category/luxury-jewellery-gifts`, priority: 0.8 },
+    { url: `${SITE_URL}/product-category/jewellery-gifts-for-girlfriend`, priority: 0.8 },
+    { url: `${SITE_URL}/product-category/gifts-for-her`, priority: 0.8 },
+    { url: `${SITE_URL}/product-category/minimalist-dainty-jewellery-gifts`, priority: 0.8 },
     { url: `${SITE_URL}/blogs`, priority: 0.8 },
     { url: `${SITE_URL}/about`, priority: 0.7 },
     { url: `${SITE_URL}/return`, priority: 0.6 },
@@ -53,22 +69,33 @@ export default async function sitemap() {
       next: { revalidate: 3600 },
     });
 
-    if (!res.ok) throw new Error(`API ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Products API returned ${res.status} ${res.statusText}`);
+    }
 
-    const products = await res.json();
+    const payload = await res.json();
+    const products = extractArray(payload);
+
+    if (products.length === 0) {
+      console.error(
+        `Sitemap: products API returned 0 usable items. Raw payload keys: ${
+          typeof payload === "object" ? Object.keys(payload).join(", ") : typeof payload
+        }`
+      );
+    }
+
     const seenSlugs = new Set();
 
     productPages = products
       .map((product) => {
-        if (!product.slug) return null;
+        if (!product.slug) {
+          console.warn(`Sitemap: product missing slug, skipping (id: ${product._id || "unknown"})`);
+          return null;
+        }
         if (seenSlugs.has(product.slug)) return null;
         seenSlugs.add(product.slug);
 
         const route = getRoute(product.category);
-        if (!route) {
-          console.warn(`Sitemap: no route mapped for category "${product.category}" (slug: ${product.slug})`);
-          return null;
-        }
 
         return {
           url: `${SITE_URL}${route}/${product.slug}`,
@@ -79,8 +106,10 @@ export default async function sitemap() {
       })
       .filter(Boolean);
 
+    console.log(`Sitemap: ${productPages.length} product URLs generated out of ${products.length} products fetched`);
+
   } catch (err) {
-    console.error("Sitemap product fetch failed:", err);
+    console.error("Sitemap: PRODUCT FETCH FAILED —", err.message);
   }
 
   let blogPages = [];
@@ -90,12 +119,15 @@ export default async function sitemap() {
       next: { revalidate: 3600 },
     });
 
-    if (!res.ok) throw new Error(`API ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Blogs API returned ${res.status} ${res.statusText}`);
+    }
 
-    const blogs = await res.json();
+    const payload = await res.json();
+    const blogs = extractArray(payload);
     const seenBlogSlugs = new Set();
 
-    blogPages = (Array.isArray(blogs) ? blogs : [])
+    blogPages = blogs
       .map((blog) => {
         const slug = blog.urlHandle || blog.slug;
         if (!slug) return null;
@@ -111,8 +143,10 @@ export default async function sitemap() {
       })
       .filter(Boolean);
 
+    console.log(`Sitemap: ${blogPages.length} blog URLs generated`);
+
   } catch (err) {
-    console.error("Sitemap blog fetch failed:", err);
+    console.error("Sitemap: BLOG FETCH FAILED —", err.message);
   }
 
   return [...staticPages, ...productPages, ...blogPages];

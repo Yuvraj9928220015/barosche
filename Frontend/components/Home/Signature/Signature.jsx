@@ -125,7 +125,7 @@ export default function Signature() {
 
   return (
     <>
-      <div className="Signature-title">{content.heading}</div>
+      <h2 className="Signature-title">{content.heading}</h2>
       <div className="signature-container">
         {products.map((product) => (
           <div className="signature-card" key={product.id}>
@@ -147,13 +147,13 @@ export default function Signature() {
             </div>
 
             {/* Title click → navigate */}
-            <h2
+            <h3
               className="signature-title"
               onClick={() => handleProductClick(product.url)}
               style={{ cursor: "pointer" }}
             >
               {product.title}
-            </h2>
+            </h3>
 
             <div className="signature-text-container">
               {product.descriptions.map((desc, i) => (

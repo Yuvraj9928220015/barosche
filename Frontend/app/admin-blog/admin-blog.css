@@ -410,3 +410,69 @@
         padding: 24px;
     }
 }
+
+/* ── LOGIN SCREEN STYLES ── */
+.admin-login-wrapper {
+    background: linear-gradient(135deg, #f5f0e8 0%, #faf8f5 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.admin-login-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f0ebe3;
+}
+
+.admin-login-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.admin-login-header h2 {
+    font-size: 1.8rem;
+    color: #2c2825;
+    margin: 0 0 8px 0;
+}
+
+.admin-login-header p {
+    font-size: 0.85rem;
+    color: #777;
+    margin: 0;
+}
+
+.admin-login-error {
+    background: #fde8e8;
+    color: #e05252;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+    border: 1px solid #f8b4b4;
+    text-align: center;
+}
+
+.admin-logout-btn {
+    background: #f5f0e8;
+    color: #555;
+    border: 1px solid #e8e0d5;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.admin-logout-btn:hover {
+    background: #e05252;
+    color: white;
+    border-color: #e05252;
+}

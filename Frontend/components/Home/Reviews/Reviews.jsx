@@ -25,7 +25,6 @@ const CURRENCY_MAP = {
   default: { code: "EUR", symbol: "€", rate: 1 },
 };
 
-// Free shipping threshold base value (EUR me)
 const FREE_SHIPPING_EUR = 200;
 
 function formatPrice(eurPrice, currency) {
@@ -65,11 +64,10 @@ const reviewsData = [
 ];
 
 const Reviews = () => {
-  // States for translation
+
   const [content, setContent] = useState(DEFAULT_CONTENT);
   const [reviews, setReviews] = useState(reviewsData);
 
-  // ── Currency state (Bracelets.jsx wale pattern se) ──
   const [currency, setCurrency] = useState(CURRENCY_MAP.default);
 
   useEffect(() => {
@@ -83,7 +81,6 @@ const Reviews = () => {
         const { languageCode, countryCode } = detectData;
         console.log("Detected language:", languageCode, "Country:", countryCode);
 
-        // ── Currency set karo country code ke hisaab se ──
         if (countryCode && CURRENCY_MAP[countryCode]) {
           setCurrency(CURRENCY_MAP[countryCode]);
         } else {
@@ -152,7 +149,7 @@ const Reviews = () => {
 
         <div className="feature-item">
           <img src="/FLASH_SALE_USP_BANNER_ICONS-13.svg" alt="" />
-          {/* ── Price ab currency ke hisaab se dynamically convert hoke aayega ── */}
+
           <p>
             {content.usp2} {formatPrice(FREE_SHIPPING_EUR, currency)}
           </p>
@@ -218,7 +215,7 @@ const Reviews = () => {
                       </svg>
                     ))}
                   </div>
-                  <h4 className="reviewer-name">{review.name}</h4>
+                  <p className="reviewer-name">{review.name}</p>
                 </div>
               </div>
             </SwiperSlide>

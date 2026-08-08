@@ -2,11 +2,11 @@ import Script from "next/script";
 import Minimalist from './Minimalist';
 
 const SITE_URL = "https://barosche.com";
-const PAGE_URL = "https://barosche.com/product-category/jewellery/";
+const PAGE_URL = "https://barosche.com/product-category/minimalist-dainty-jewellery-gifts/ ";
 const OG_IMAGE = "/Meta-image-1.jpg";
-const TITLE = "Buy Semi-Precious Gemstone & Gold Fashion Jewellery Online";
+const TITLE = " Dainty Minimalist Gold Jewellery Gifts – Everyday Elegance ";
 const DESCRIPTION =
-  "Shop semi-precious gemstone & gold fashion jewellery online at Barosche. Discover elegant designs in fine silver, gold jewellery & modern accessories.";
+  "Shop dainty minimalist gold jewellery gifts at Barosche. Discover delicate, refined pieces designed for effortless everyday wear and thoughtful, meaningful gifting. ";
 
 export const metadata = {
   title: TITLE,
@@ -59,10 +59,7 @@ export const metadata = {
 
 const schemaData = [
 
-  
-
-
-  // 1. ItemList schema
+  // 1. ItemList schema (dynamic — unchanged)
   {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -101,43 +98,43 @@ const schemaData = [
     ],
   },
 
-  // 2. FAQPage schema
+  // 2. FAQPage schema — updated to match the Minimalist Dainty Jewellery Gifts FAQ content
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "@id": `${PAGE_URL}#faq`,
     mainEntity: [
-      { "@type": "Question", name: "What is fine silver jewellery?", acceptedAnswer: { "@type": "Answer", text: "Fine silver jewellery is made using high-quality silver known for its bright shine, smooth finish, and elegant appearance, making it suitable for both daily and occasion wear." } },
-      { "@type": "Question", name: "Is fine silver jewellery suitable for everyday use?", acceptedAnswer: { "@type": "Answer", text: "Yes, fine silver jewellery is lightweight and comfortable, making it ideal for everyday wear when handled with proper care." } },
-      { "@type": "Question", name: "What is jewellery with gold?", acceptedAnswer: { "@type": "Answer", text: "Jewellery with gold includes pieces that feature gold elements or gold-inspired finishes, offering a luxurious and timeless look." } },
-      { "@type": "Question", name: "What is gold fashion jewellery?", acceptedAnswer: { "@type": "Answer", text: "Gold fashion jewellery refers to lightweight, modern designs inspired by traditional gold jewellery, created for everyday styling and comfort." } },
-      { "@type": "Question", name: "Is gold fashion jewellery durable?", acceptedAnswer: { "@type": "Answer", text: "Yes, gold fashion jewellery is designed for regular use and can maintain its appearance with proper care and storage." } },
-      { "@type": "Question", name: "What is semi precious gemstone jewellery?", acceptedAnswer: { "@type": "Answer", text: "It is jewellery made using natural stones like amethyst, quartz, or turquoise, known for their unique colors and patterns." } },
-      { "@type": "Question", name: "Are semi precious stones real?", acceptedAnswer: { "@type": "Answer", text: "Yes, semi precious stones are natural gemstones, each with its own unique characteristics and appearance." } },
-      { "@type": "Question", name: "Can I wear semi precious jewellery daily?", acceptedAnswer: { "@type": "Answer", text: "Yes, many semi precious jewellery pieces are designed for daily wear, especially lightweight and minimal designs." } },
-      { "@type": "Question", name: "How do I style semi precious stones jewellery?", acceptedAnswer: { "@type": "Answer", text: "You can style them with casual outfits for a subtle look or use bold pieces as statement accessories for special occasions." } },
-      { "@type": "Question", name: "Can I mix silver and gold jewellery together?", acceptedAnswer: { "@type": "Answer", text: "Yes, mixing metals like silver and gold is a popular trend that creates a modern and stylish layered look." } },
-      { "@type": "Question", name: "How should I care for silver jewellery?", acceptedAnswer: { "@type": "Answer", text: "Store it in a dry place, avoid moisture, and clean it gently to maintain its shine and prevent tarnishing." } },
-      { "@type": "Question", name: "Does gold fashion jewellery fade over time?", acceptedAnswer: { "@type": "Answer", text: "With proper care, gold fashion jewellery retains its finish for a long time, though exposure to chemicals should be avoided." } },
-      { "@type": "Question", name: "What makes gemstone jewellery unique?", acceptedAnswer: { "@type": "Answer", text: "Each gemstone has natural variations in color and texture, making every piece one-of-a-kind." } },
-      { "@type": "Question", name: "Is your jewellery suitable for sensitive skin?", acceptedAnswer: { "@type": "Answer", text: "Most modern jewellery is designed with skin-friendly materials, but it's always best to check product details." } },
-      { "@type": "Question", name: "Can jewellery be worn for both casual and formal occasions?", acceptedAnswer: { "@type": "Answer", text: "Yes, the versatility of modern jewellery allows it to complement casual, office, and formal outfits." } },
-      { "@type": "Question", name: "Is your jewellery lightweight?", acceptedAnswer: { "@type": "Answer", text: "Yes, the collection focuses on lightweight designs for maximum comfort during long hours of wear." } },
-      { "@type": "Question", name: "What are the latest jewellery trends?", acceptedAnswer: { "@type": "Answer", text: "Popular trends include minimalist designs, layered necklaces, stacked rings, and mixed metal styling." } },
-      { "@type": "Question", name: "Is jewellery a good gift option?", acceptedAnswer: { "@type": "Answer", text: "Yes, jewellery is a timeless and meaningful gift suitable for birthdays, anniversaries, and special occasions." } },
-      { "@type": "Question", name: "Can I wear multiple jewellery pieces together?", acceptedAnswer: { "@type": "Answer", text: "Absolutely, layering and stacking jewellery pieces is a popular styling technique for a modern look." } },
-      { "@type": "Question", name: "Is it safe to shop jewellery online?", acceptedAnswer: { "@type": "Answer", text: "Yes, shopping online is safe when done through a trusted platform with secure payment options and clear product details." } },
+      { "@type": "Question", name: "What are minimalist dainty jewellery gifts?", acceptedAnswer: { "@type": "Answer", text: "Minimalist dainty jewellery gifts are elegant jewellery pieces designed with simple details, delicate shapes, and refined finishes. They are perfect for women who appreciate subtle elegance and timeless accessories that can be worn every day." } },
+      { "@type": "Question", name: "Why is minimalist jewellery a good gift for her?", acceptedAnswer: { "@type": "Answer", text: "Minimalist jewellery makes a thoughtful gift because it combines beauty, simplicity, and emotional value. A delicate jewellery piece can represent love, appreciation, and special memories while becoming a part of her everyday style." } },
+      { "@type": "Question", name: "What are the best minimalist jewellery gifts for women?", acceptedAnswer: { "@type": "Answer", text: "Popular minimalist jewellery gifts for women include delicate gold rings, lightweight bracelets, elegant earrings, and dainty pendants. These pieces are versatile, stylish, and suitable for different personalities and occasions." } },
+      { "@type": "Question", name: "What makes dainty gold jewellery a meaningful gift?", acceptedAnswer: { "@type": "Answer", text: "A dainty gold jewellery gift combines timeless beauty with sentimental value. Its elegant design makes it a thoughtful way to express love, appreciation, and care while offering a piece she can cherish for years." } },
+      { "@type": "Question", name: "Is minimalist jewellery suitable for everyday wear?", acceptedAnswer: { "@type": "Answer", text: "Yes, minimalist jewellery is ideal for everyday wear because of its lightweight designs and comfortable style. Delicate rings, bracelets, earrings, and pendants can easily complement daily outfits without feeling heavy." } },
+      { "@type": "Question", name: "What is an everyday jewellery gift?", acceptedAnswer: { "@type": "Answer", text: "An everyday jewellery gift is a piece designed for regular use while maintaining elegance and comfort. Minimalist rings, fine bracelets, subtle earrings, and simple pendants are excellent choices for everyday wear." } },
+      { "@type": "Question", name: "Are minimalist gold rings good gifts for her?", acceptedAnswer: { "@type": "Answer", text: "Yes, minimalist gold rings are beautiful gifts for women who appreciate simple and elegant designs. They can symbolize love, appreciation, special memories, or important milestones." } },
+      { "@type": "Question", name: "What occasions are suitable for gifting minimalist jewellery?", acceptedAnswer: { "@type": "Answer", text: "Minimalist jewellery is suitable for birthdays, anniversaries, Valentine's Day, festivals, relationship milestones, achievements, and even surprise gifts without a specific occasion." } },
+      { "@type": "Question", name: "Why are dainty jewellery gifts becoming popular?", acceptedAnswer: { "@type": "Answer", text: "Dainty jewellery gifts are popular because they offer a perfect balance of elegance, comfort, and versatility. Their subtle designs suit modern lifestyles and can be styled with different outfits." } },
+      { "@type": "Question", name: "What jewellery should I gift if she prefers simple designs?", acceptedAnswer: { "@type": "Answer", text: "If she prefers simple jewellery, consider minimalist gold rings, delicate bracelets, small earrings, or elegant pendants. These designs provide a refined look while matching her understated style." } },
+      { "@type": "Question", name: "Can minimalist jewellery be worn with different outfits?", acceptedAnswer: { "@type": "Answer", text: "Yes, minimalist jewellery is highly versatile and can be paired with casual, professional, and special occasion outfits. Its timeless design allows it to complement different fashion styles effortlessly." } },
+      { "@type": "Question", name: "How do I choose the right minimalist jewellery gift for her?", acceptedAnswer: { "@type": "Answer", text: "To choose the right gift, consider her personal style, the jewellery she already wears, her lifestyle, and the occasion. Selecting a piece that matches her preferences makes the gift more meaningful." } },
+      { "@type": "Question", name: "Are minimalist jewellery pieces suitable for romantic gifts?", acceptedAnswer: { "@type": "Answer", text: "Yes, minimalist jewellery makes a romantic gift because it represents thoughtfulness, affection, and the special connection between two people. A delicate piece can become a lasting reminder of your relationship." } },
+      { "@type": "Question", name: "What is included in an everyday fine jewellery gift set?", acceptedAnswer: { "@type": "Answer", text: "An everyday fine jewellery gift set may include coordinated pieces such as delicate earrings, elegant rings, fine bracelets, and minimalist pendants designed to complement each other." } },
+      { "@type": "Question", name: "Why choose minimalist gold jewellery over bold designs?", acceptedAnswer: { "@type": "Answer", text: "Minimalist gold jewellery offers timeless elegance and everyday versatility. Unlike bold statement pieces, delicate designs can be worn regularly and remain stylish across changing trends." } },
+      { "@type": "Question", name: "Are minimalist jewellery gifts suitable for all age groups?", acceptedAnswer: { "@type": "Answer", text: "Yes, minimalist jewellery gifts are suitable for women of different ages because their elegant and timeless designs complement various styles and preferences." } },
+      { "@type": "Question", name: "How can I make a minimalist jewellery gift more personal?", acceptedAnswer: { "@type": "Answer", text: "You can make the gift more personal by choosing a design that reflects her personality, selecting a piece connected to a special memory, or choosing jewellery that matches her everyday style." } },
+      { "@type": "Question", name: "Why choose Barosche for minimalist jewellery gifts?", acceptedAnswer: { "@type": "Answer", text: "Barosche offers thoughtfully designed minimalist jewellery that combines refined aesthetics, premium craftsmanship, comfort, and timeless appeal. Each piece is created to make gifting moments more meaningful." } },
+      { "@type": "Question", name: "How should minimalist jewellery be cared for?", acceptedAnswer: { "@type": "Answer", text: "To maintain the beauty of minimalist jewellery, store pieces in a jewellery box or soft pouch, avoid contact with harsh chemicals, clean gently with a soft cloth, and remove jewellery during heavy activities." } },
+      { "@type": "Question", name: "Why is minimalist jewellery considered a timeless gift?", acceptedAnswer: { "@type": "Answer", text: "Minimalist jewellery is considered timeless because its simple and elegant designs remain beautiful beyond changing trends. A carefully chosen piece becomes a lasting keepsake filled with memories and emotional value." } },
     ],
   },
 
-  // 3. CollectionPage schema
+  // 3. CollectionPage schema — headline updated to match the current page content
   {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "@id": `${PAGE_URL}#webpage`,
     url: PAGE_URL,
     name: TITLE,
-    headline: "Semi-Precious Gemstone & Gold Fashion Jewellery – Elegant Modern Designs",
+    headline: "Minimalist Dainty Jewellery Gifts – Elegant Everyday Jewellery for Her",
     description: DESCRIPTION,
     inLanguage: "en",
     isPartOf: { "@id": `${SITE_URL}/#website` },
@@ -154,7 +151,7 @@ const schemaData = [
     hasPart: { "@id": `${PAGE_URL}#faq` },
   },
 
-  // 4. BreadcrumbList schema
+  // 4. BreadcrumbList schema (dynamic — unchanged)
   {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",

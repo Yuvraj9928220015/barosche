@@ -2,11 +2,11 @@ import Script from "next/script";
 import Christmas from './Christmas';
 
 const SITE_URL = "https://barosche.com";
-const PAGE_URL = "https://barosche.com/product-category/jewellery/";
+const PAGE_URL = "https://barosche.com/product-category/christmas-jewellery-gifts/";
 const OG_IMAGE = "/Meta-image-1.jpg";
-const TITLE = "Buy Semi-Precious Gemstone & Gold Fashion Jewellery Online";
+const TITLE = "Christmas Jewellery Gifts for Her – Luxury & Elegant Picks  ";
 const DESCRIPTION =
-  "Shop semi-precious gemstone & gold fashion jewellery online at Barosche. Discover elegant designs in fine silver, gold jewellery & modern accessories.";
+  "Shop luxury Christmas jewellery gifts for her at Barosche. Discover elegant pieces for women, from timeless designs to everyday jewellery perfect for festive gifting. ";
 
 export const metadata = {
   title: TITLE,
@@ -59,16 +59,48 @@ export const metadata = {
 
 const schemaData = [
 
-  
+  // 1. CollectionPage schema
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${PAGE_URL}#webpage`,
+    url: PAGE_URL,
+    name: TITLE,
+    headline: "Semi-Precious Gemstone & Gold Fashion Jewellery – Elegant Modern Designs",
+    description: DESCRIPTION,
+    inLanguage: "en",
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    about: { "@id": `${SITE_URL}/#organization` },
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      "@id": `${PAGE_URL}#primaryimage`,
+      url: "https://barosche.com/logo.png",
+      contentUrl: "https://barosche.com/logo.png",
+      caption: "Barosche Jewellery Collection",
+    },
+    breadcrumb: { "@id": `${PAGE_URL}#breadcrumb` },
+    mainEntity: { "@id": `${PAGE_URL}#product-list` },
+    hasPart: { "@id": `${PAGE_URL}#faq` },
+  },
 
+  // 2. BreadcrumbList schema 
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "@id": `${PAGE_URL}#breadcrumb`,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "Christmas Jewellery Gifts", item: PAGE_URL },
+    ],
+  },
 
-  // 1. ItemList schema
+  // 3. ItemList schema
   {
     "@context": "https://schema.org",
     "@type": "ItemList",
     "@id": `${PAGE_URL}#product-list`,
-    name: TITLE,
-    description: DESCRIPTION,
+    name: "Christmas Jewellery Collection",
+    description: "Explore 25 luxury Christmas jewellery gift designs from the Barosche collection.",
     url: PAGE_URL,
     numberOfItems: 25,
     itemListOrder: "https://schema.org/ItemListOrderAscending",
@@ -101,11 +133,15 @@ const schemaData = [
     ],
   },
 
-  // 2. FAQPage schema
+  // 4. FAQPage schema
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "@id": `${PAGE_URL}#faq`,
+    url: `${PAGE_URL}#faq`,
+    name: "Frequently Asked Questions About Christmas Jewellery Gifts",
+    isPartOf: { "@id": `${PAGE_URL}#webpage` },
+    inLanguage: "en",
     mainEntity: [
       { "@type": "Question", name: "What is fine silver jewellery?", acceptedAnswer: { "@type": "Answer", text: "Fine silver jewellery is made using high-quality silver known for its bright shine, smooth finish, and elegant appearance, making it suitable for both daily and occasion wear." } },
       { "@type": "Question", name: "Is fine silver jewellery suitable for everyday use?", acceptedAnswer: { "@type": "Answer", text: "Yes, fine silver jewellery is lightweight and comfortable, making it ideal for everyday wear when handled with proper care." } },
@@ -127,41 +163,6 @@ const schemaData = [
       { "@type": "Question", name: "Is jewellery a good gift option?", acceptedAnswer: { "@type": "Answer", text: "Yes, jewellery is a timeless and meaningful gift suitable for birthdays, anniversaries, and special occasions." } },
       { "@type": "Question", name: "Can I wear multiple jewellery pieces together?", acceptedAnswer: { "@type": "Answer", text: "Absolutely, layering and stacking jewellery pieces is a popular styling technique for a modern look." } },
       { "@type": "Question", name: "Is it safe to shop jewellery online?", acceptedAnswer: { "@type": "Answer", text: "Yes, shopping online is safe when done through a trusted platform with secure payment options and clear product details." } },
-    ],
-  },
-
-  // 3. CollectionPage schema
-  {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "@id": `${PAGE_URL}#webpage`,
-    url: PAGE_URL,
-    name: TITLE,
-    headline: "Semi-Precious Gemstone & Gold Fashion Jewellery – Elegant Modern Designs",
-    description: DESCRIPTION,
-    inLanguage: "en",
-    isPartOf: { "@id": `${SITE_URL}/#website` },
-    about: { "@id": `${SITE_URL}/#organization` },
-    primaryImageOfPage: {
-      "@type": "ImageObject",
-      "@id": `${PAGE_URL}#primaryimage`,
-      url: "https://barosche.com/logo.png",
-      contentUrl: "https://barosche.com/logo.png",
-      caption: "Barosche Jewellery Collection",
-    },
-    breadcrumb: { "@id": `${PAGE_URL}#breadcrumb` },
-    mainEntity: { "@id": `${PAGE_URL}#product-list` },
-    hasPart: { "@id": `${PAGE_URL}#faq` },
-  },
-
-  // 4. BreadcrumbList schema
-  {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "@id": `${PAGE_URL}#breadcrumb`,
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
-      { "@type": "ListItem", position: 2, name: "Jewellery", item: PAGE_URL },
     ],
   },
 ];

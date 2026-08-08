@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './ForToday.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,9 +10,6 @@ import { useWishlist } from '../../context/WishlistContext';
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
-// ────────────────
-//  CURRENCY CONFIG
-// ────────────────
 const CURRENCY_MAP = {
     US: { code: "USD", symbol: "$", rate: 1.14 },
     GB: { code: "GBP", symbol: "£", rate: 0.86 },
@@ -34,9 +31,6 @@ function formatPrice(eurPrice, currency) {
     return `${currency.symbol}${converted.toLocaleString()}`;
 }
 
-// ─────────────────
-//  TRANSLATION HOOK
-// ─────────────────
 function useTranslation(strings) {
     const [translated, setTranslated] = useState(strings);
     const [status, setStatus] = useState("idle");
@@ -175,10 +169,6 @@ const UI_STRINGS = [
     "Yes, its versatile design complements both traditional and modern styles.",
     "It offers the perfect balance of elegance, durability, and comfort for daily use.",
 
-    // ════════════════════════════════════════════════════
-    //  MAIN CONTENT (73 onward)
-    // ════════════════════════════════════════════════════
-
     "Daily Wear Jewellery – Lightweight, Stylish & Perfect for Everyday Use",
     "Discover a thoughtfully curated collection of <b>daily wear jewellery</b>, including <b>daily wear gold jewellery</b>, <b>dainty jewellery</b>, and <b>everyday fine jewellery</b> designed to bring together comfort, simplicity, and modern style. Created for today's fast-paced lifestyle, our jewellery blends elegance with practicality, allowing you to look polished, confident, and effortlessly stylish every day without compromising on comfort.",
     "Each piece in our collection is crafted with a focus on lightweight construction, smooth finishing, and minimal design, making it ideal for long hours of wear. Whether you prefer subtle elegance or a slightly layered look, our jewellery offers versatile styling options that seamlessly adapt to your daily routine. From delicate chains and refined rings to minimal earrings and understated pendants, every design is created to enhance your natural style without feeling heavy or overwhelming.",
@@ -292,7 +282,6 @@ const UI_STRINGS = [
     "Timeless and long-lasting",
     "Ideal for daily use",
 
-    // 178-184 Who Should Buy
     "<h2>Who Should Buy Everyday Jewellery?</h2>",
     "<b>Everyday jewellery</b> is designed for anyone who values comfort, simplicity, and style in their daily life.",
     "<b>Ideal For:</b>",
@@ -301,7 +290,6 @@ const UI_STRINGS = [
     "Travelers who prefer lightweight jewellery",
     "Minimalist fashion lovers",
 
-    // 185-191 Materials Used
     "<h2>Materials Used in Everyday Jewellery</h2>",
     "Understanding materials helps customers make informed choices. <b>Everyday jewellery</b> is crafted using high-quality metals and finishes that ensure durability and comfort.",
     "<b>Common Materials:</b>",
@@ -310,7 +298,6 @@ const UI_STRINGS = [
     "Stainless steel",
     "Semi-precious stones",
 
-    // 192-198 Benefits of Lightweight Jewellery
     "<h2>Benefits of Lightweight Jewellery</h2>",
     "Lightweight jewellery is not just about comfort—it enhances your overall experience of wearing accessories daily.",
     "<b>Key Benefits:</b>",
@@ -319,7 +306,6 @@ const UI_STRINGS = [
     "Reduces strain on ears and neck",
     "Ideal for daily routines",
 
-    // 199-205 Why Minimal Jewellery is Trending
     "<h2>Why Minimal Jewellery is Trending</h2>",
     "<b>Minimal jewellery</b> has become a major fashion trend due to its clean, elegant, and versatile appeal. It aligns perfectly with modern lifestyles that value simplicity and functionality.",
     "<b>Reasons for Popularity:</b>",
@@ -328,7 +314,6 @@ const UI_STRINGS = [
     "Timeless and elegant",
     "Complements all fashion styles",
 
-    // 206-212 Build Your Everyday Jewellery Collection
     "<h2>Build Your Everyday Jewellery Collection</h2>",
     "Creating a capsule jewellery collection helps simplify your styling routine while ensuring you always look put together.",
     "<b>Must-Have Pieces:</b>",
@@ -337,7 +322,6 @@ const UI_STRINGS = [
     "A minimal ring",
     "A lightweight bracelet",
 
-    // 213-221 Why Choose Our Everyday Jewellery Collection
     "<h2>Why Choose Our Everyday Jewellery Collection</h2>",
     "Our <b>everyday jewellery collection</b> is designed to meet the needs of modern lifestyles where comfort, style, and durability are equally important. Each piece is carefully crafted to ensure a perfect balance between aesthetics and functionality.",
     "We focus on delivering jewellery that you can wear every day with confidence, without worrying about discomfort or maintenance. From minimal designs to slightly detailed styles, our collection offers something for every preference.",
@@ -348,7 +332,6 @@ const UI_STRINGS = [
     "Versatile jewellery for all occasions",
     "Durable pieces with long-lasting appeal",
 
-    // 222-229 Shop Everyday Jewellery Online
     "<h2>Shop Everyday Jewellery Online – Simple, Fast & Secure</h2>",
     "Shopping for daily wear <a href='/product-category/jewellery/' style='color: #007bff; text-decoration: underline;'>minimalist jewellery</a> online provides a convenient and efficient way to explore a wide range of minimal and stylish designs. Our platform ensures a smooth browsing experience, allowing you to find the perfect jewellery for your daily needs.",
     "With secure payment options and easy navigation, you can shop confidently from anywhere and enjoy a hassle-free experience.",
@@ -358,11 +341,9 @@ const UI_STRINGS = [
     "Secure checkout process",
     "Ideal for personal styling and gifting",
 
-    // ── Utilities (230-235) ──
     "SALE", "Add to Wishlist", "Quick View", "Add to Cart", "Price on request", "in",
 ];
 
-// Office wear list has links — kept as static hrefs alongside translated labels (idx 160-163)
 const OFFICE_LINKS = [
     { idx: 160, href: '/product-category/earrings/' },
     { idx: 161, href: '/product-category/pendants/' },
@@ -419,12 +400,19 @@ const FOR_TODAY_CONTENT_STRUCTURE = [
 const FAQ_COUNT = 20;
 const TOP_OFFSET = 40;
 
+function getImgSrc(path) {
+    if (!path) return '/placeholder.jpg';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return `${API_BASE}${path.startsWith('/') ? path : '/' + path}`;
+}
+
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) {
         return product.variants[0];
     }
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice,
         isSale: product.isSale || false,
@@ -432,9 +420,6 @@ function getFirstVariant(product) {
     };
 }
 
-// ─────────────────────────────────────────────────────────
-//  TOAST NOTIFICATION
-// ─────────────────────────────────────────────────────────
 function Toast({ message, visible }) {
     if (!visible) return null;
     return (
@@ -451,7 +436,7 @@ function Toast({ message, visible }) {
             zIndex: 9999,
             pointerEvents: 'none',
             whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            boxShadow: '0 4px 12px #00000033',
             transition: 'opacity 0.3s ease',
             opacity: visible ? 1 : 0,
         }}>
@@ -460,15 +445,37 @@ function Toast({ message, visible }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  QUICK VIEW MODAL
-// ─────────────────────────────────────────────────────────
 function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, onToggleWishlist }) {
-    const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
     const variant = getFirstVariant(product);
     const images = variant.images || [];
+    const videos = variant.videos || [];
     const categoryUrl = categorySlugMap[product.category] || 'for-today-jewellery';
+
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [activeIdx, setActiveIdx] = useState(0);
+    const videoRef = useRef(null);
+    const activeItem = mediaList[activeIdx] || null;
+
+    useEffect(() => {
+        if (activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [activeIdx, activeItem]);
+
+    useEffect(() => {
+        return () => {
+            if (videoRef.current) videoRef.current.pause();
+        };
+    }, [activeIdx]);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -484,7 +491,7 @@ function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, 
         <div
             style={{
                 position: 'fixed', inset: 0, zIndex: 9000,
-                background: 'rgba(0,0,0,0.55)',
+                background: '#0000008c0.55)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '16px',
             }}
@@ -501,7 +508,6 @@ function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, 
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Close Button */}
                 <button
                     onClick={onClose}
                     style={{
@@ -512,43 +518,77 @@ function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, 
                     aria-label="Close"
                 >✕</button>
 
-                {/* Images Left Side */}
+                {/* Images / Video Left Side */}
                 <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
                     <div style={{
                         background: '#f7f6f4', borderRadius: '6px',
                         aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px',
                     }}>
-                        {images.length > 0 ? (
-                            <img
-                                src={`${API_BASE}${images[activeImg]}`}
-                                alt={product.title || product.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                            />
+                        {activeItem ? (
+                            activeItem.type === 'video' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={getImgSrc(activeItem.src)}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    muted
+                                    playsInline
+                                    loop
+                                    controls
+                                />
+                            ) : (
+                                <img
+                                    src={getImgSrc(activeItem.src)}
+                                    alt={product.title || product.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                />
+                            )
                         ) : (
                             <img src="/placeholder.jpg" alt="placeholder"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         )}
                     </div>
-                    {images.length > 1 && (
+
+                    {/* Thumbnail strip — image + video dono */}
+                    {mediaList.length > 1 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {images.map((img, i) => (
+                            {mediaList.map((item, i) => (
                                 <button
                                     key={i}
-                                    onClick={() => setActiveImg(i)}
+                                    onClick={() => setActiveIdx(i)}
                                     style={{
                                         width: '54px', height: '54px', padding: 0,
-                                        border: i === activeImg ? '2px solid #1a1a1a' : '2px solid transparent',
+                                        border: i === activeIdx ? '2px solid #1a1a1a' : '2px solid transparent',
                                         borderRadius: '4px', overflow: 'hidden', cursor: 'pointer',
-                                        background: '#f7f6f4',
+                                        background: '#f7f6f4', position: 'relative',
                                     }}
                                 >
-                                    <img
-                                        src={`${API_BASE}${img}`}
-                                        alt={`view ${i + 1}`}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                                    />
+                                    {item.type === 'video' ? (
+                                        <>
+                                            <video
+                                                src={getImgSrc(item.src)}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                muted
+                                                playsInline
+                                            />
+                                            <span style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'rgba(0,0,0,0.25)', pointerEvents: 'none',
+                                            }}>
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                                                    <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                                                </svg>
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <img
+                                            src={getImgSrc(item.src)}
+                                            alt={`view ${i + 1}`}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                        />
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -574,7 +614,6 @@ function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, 
                         {product.title || product.name}
                     </h2>
 
-                    {/* Price */}
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '20px' }}>
                         {variant.oldPrice && (
                             <span style={{ fontSize: '15px', color: '#aaa', textDecoration: 'line-through' }}>
@@ -709,31 +748,90 @@ function AccordionItem({ title, children }) {
 }
 
 // ─────────────────────────────────────────────────────────
-//  PRODUCT CARD
+//  PRODUCT CARD — 🆕 media-aware hover slider (image + video), same pattern as Pendants
 // ─────────────────────────────────────────────────────────
 function ProductCard({ p, wishlist, toggleWishlist, T, currency, onQuickView }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const videos = variant.videos || [];
+
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    // Image slides advance after a fixed delay; video slides advance only
+    // on their own 'ended' event (handled separately), so no timer here.
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+        // video: no timer — handleVideoEnded() below drives the advance
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
 
     const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => {
-            setCurrentImg(idx);
-            idx = (idx + 1) % images.length;
-        }, 800);
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
     };
 
     const stopHover = () => {
-        clearInterval(intervalRef.current);
-        setCurrentImg(0);
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
     };
 
-    useEffect(() => () => clearInterval(intervalRef.current), []);
+    // Jab bhi current slide video ho, use (re)play karo
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
 
-    const imgSrc = images.length > 0 ? `${API_BASE}${images[currentImg]}` : '/placeholder.jpg';
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
+
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice;
     const isSale = variant.isSale;
@@ -749,20 +847,32 @@ function ProductCard({ p, wishlist, toggleWishlist, T, currency, onQuickView }) 
             <div className="jw-card-img-wrap">
                 {isSale && <span className="jw-sale-badge">{T[230]}</span>}
 
-                <img
-                    src={imgSrc}
-                    alt={p.title || p.name}
-                    className="jw-card-img"
-                    loading="lazy"
-                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                />
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={getImgSrc(currentItem.src)}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? getImgSrc(currentItem.src) : '/placeholder.jpg'}
+                        alt={p.title || p.name}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                    />
+                )}
 
-                {images.length > 1 && (
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => (
+                        {mediaList.map((_, i) => (
                             <span
                                 key={i}
-                                className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`}
+                                className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`}
                             />
                         ))}
                     </div>

@@ -2,6 +2,8 @@ import BlogClient from "./BlogClient";
 import { notFound } from "next/navigation";
 import { fetchAllBlogsOnce, getBlog, API_URL } from "@/lib/getBlogs";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com"
+
 export async function generateStaticParams() {
   const blogs = await fetchAllBlogsOnce();
 
@@ -34,10 +36,15 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const blog = await getBlog(slug);
 
+  const canonicalUrl = `${BACKEND_URL}/blogs/${slug}/`;
+
   if (!blog) {
     return {
       title: "Barosché | Fine Jewellery Blog",
       description: "Explore fine jewellery guides, trends and tips from Barosché.",
+      alternates: {
+        canonical: canonicalUrl,
+      },
     };
   }
 
@@ -50,9 +57,13 @@ export async function generateMetadata({ params }) {
   return {
     title: blog.pageTitle || blog.title,
     description: blog.metaDescription || "",
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: blog.pageTitle || blog.title,
       description: blog.metaDescription || "",
+      url: canonicalUrl,
       images: imageUrl ? [imageUrl] : [],
     },
   };

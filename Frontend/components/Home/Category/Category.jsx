@@ -91,7 +91,7 @@ export default function Category() {
   return (
     <>
       <div className="category-section">
-        <h1 className="category-main-title">{content.mainTitle}</h1>
+        <h2 className="category-main-title">{content.mainTitle}</h2>
 
         <div className="category-grid">
           {categories.map((item) => (

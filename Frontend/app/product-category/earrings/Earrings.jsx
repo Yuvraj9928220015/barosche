@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './Earrings.css';
 import Link from 'next/link';
 import Reviews from '../../../components/Home/Reviews/Reviews';
@@ -397,6 +397,7 @@ function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice ?? product.price,
         isSale: product.isSale || false,
@@ -405,7 +406,6 @@ function getFirstVariant(product) {
     };
 }
 
-// Ek hi jagah stock-check logic — admin dashboard jaisa hi (quantity + inStock dono check)
 function isVariantOutOfStock(v) {
     return (Number(v?.quantity) || 0) <= 0 || v?.inStock === false;
 }
@@ -423,36 +423,152 @@ function Toast({ message, visible }) {
 }
 
 function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist, onToggleWishlist }) {
-    const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
     const variant = getFirstVariant(product);
     const images = variant.images || [];
-    const categoryUrl = categorySlugMap[product.category] || 'earrings';
+    const videos = variant.videos || [];
+    const categoryUrl = categorySlugMap[product.category] || 'bracelets';
     const outOfStock = isVariantOutOfStock(variant);
+
+    // ── mediaList: ProductCard jaisa hi order — image[0] → video[0] → baaki images ──
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [activeIdx, setActiveIdx] = useState(0);
+    const videoRef = useRef(null);
+    const activeItem = mediaList[activeIdx] || null;
+
+    // Active slide video ho to play karo (reset se)
+    useEffect(() => {
+        if (activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [activeIdx, activeItem]);
+
+    useEffect(() => {
+        return () => {
+            if (videoRef.current) videoRef.current.pause();
+        };
+    }, [activeIdx]);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
         window.addEventListener('keydown', handler);
         document.body.style.overflow = 'hidden';
-        return () => { window.removeEventListener('keydown', handler); document.body.style.overflow = ''; };
+        return () => {
+            window.removeEventListener('keydown', handler);
+            document.body.style.overflow = '';
+        };
     }, [onClose]);
 
     return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9000, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }} onClick={onClose}>
-            <div style={{ background: '#fff', borderRadius: '8px', maxWidth: '860px', width: '100%', maxHeight: '90vh', overflow: 'auto', display: 'flex', flexDirection: 'row', position: 'relative', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
-                <button onClick={onClose} style={{ position: 'absolute', top: '12px', right: '16px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#555', zIndex: 1, lineHeight: 1 }} aria-label="Close">✕</button>
+        <div
+            style={{
+                position: 'fixed', inset: 0, zIndex: 9000,
+                background: 'rgba(0,0,0,0.55)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '16px',
+            }}
+            onClick={onClose}
+        >
+            <div
+                style={{
+                    background: '#fff', borderRadius: '8px',
+                    maxWidth: '860px', width: '100%',
+                    maxHeight: '90vh', overflow: 'auto',
+                    display: 'flex', flexDirection: 'row',
+                    position: 'relative',
+                    flexWrap: 'wrap',
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute', top: '12px', right: '16px',
+                        background: 'none', border: 'none', fontSize: '22px',
+                        cursor: 'pointer', color: '#555', zIndex: 1, lineHeight: 1,
+                    }}
+                    aria-label="Close"
+                >✕</button>
 
+                {/* Images / Video Left Side */}
                 <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
-                    <div style={{ background: '#f7f6f4', borderRadius: '6px', aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px' }}>
-                        {images.length > 0
-                            ? <img src={getImgSrc(images[activeImg])} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
-                            : <img src="/placeholder.jpg" alt="placeholder" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                    <div style={{
+                        background: '#f7f6f4', borderRadius: '6px',
+                        aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px',
+                    }}>
+                        {activeItem ? (
+                            activeItem.type === 'video' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={getImgSrc(activeItem.src)}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    muted
+                                    playsInline
+                                    loop
+                                    controls
+                                />
+                            ) : (
+                                <img
+                                    src={getImgSrc(activeItem.src)}
+                                    alt={product.title || product.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                />
+                            )
+                        ) : (
+                            <img src="/placeholder.jpg" alt="placeholder"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
                     </div>
-                    {images.length > 1 && (
+
+                    {/* Thumbnail strip — image + video dono */}
+                    {mediaList.length > 1 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {images.map((img, i) => (
-                                <button key={i} onClick={() => setActiveImg(i)} style={{ width: '54px', height: '54px', padding: 0, border: i === activeImg ? '2px solid #1a1a1a' : '2px solid transparent', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', background: '#f7f6f4' }}>
-                                    <img src={getImgSrc(img)} alt={`view ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                            {mediaList.map((item, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setActiveIdx(i)}
+                                    style={{
+                                        width: '54px', height: '54px', padding: 0,
+                                        border: i === activeIdx ? '2px solid #1a1a1a' : '2px solid transparent',
+                                        borderRadius: '4px', overflow: 'hidden', cursor: 'pointer',
+                                        background: '#f7f6f4', position: 'relative',
+                                    }}
+                                >
+                                    {item.type === 'video' ? (
+                                        <>
+                                            <video
+                                                src={getImgSrc(item.src)}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                muted
+                                                playsInline
+                                            />
+                                            <span style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'rgba(0,0,0,0.25)', pointerEvents: 'none',
+                                            }}>
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                                                    <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                                                </svg>
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <img
+                                            src={getImgSrc(item.src)}
+                                            alt={`view ${i + 1}`}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                        />
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -460,48 +576,123 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
                 </div>
 
                 <div style={{ flex: '1 1 280px', padding: '32px 24px 24px 16px', minWidth: '240px' }}>
-                    {variant.isSale && !outOfStock && <span style={{ background: '#1a1a1a', color: '#fff', fontSize: '11px', letterSpacing: '1px', padding: '3px 8px', borderRadius: '2px', display: 'inline-block', marginBottom: '10px' }}>{ui.sale}</span>}
-                    {outOfStock && <span style={{ background: '#999', color: '#fff', fontSize: '11px', letterSpacing: '1px', padding: '3px 8px', borderRadius: '2px', display: 'inline-block', marginBottom: '10px' }}>{ui.outOfStock}</span>}
-                    <p style={{ fontSize: '12px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>{product.category}</p>
-                    <h2 style={{ fontSize: '20px', fontWeight: '500', margin: '0 0 14px', lineHeight: 1.3 }}>{product.title}</h2>
+                    {variant.isSale && !outOfStock && (
+                        <span style={{
+                            background: '#1a1a1a', color: '#fff',
+                            fontSize: '11px', letterSpacing: '1px',
+                            padding: '3px 8px', borderRadius: '2px',
+                            display: 'inline-block', marginBottom: '10px',
+                        }}>
+                            {ui.sale}
+                        </span>
+                    )}
+                    {outOfStock && (
+                        <span style={{
+                            background: '#999', color: '#fff',
+                            fontSize: '11px', letterSpacing: '1px',
+                            padding: '3px 8px', borderRadius: '2px',
+                            display: 'inline-block', marginBottom: '10px',
+                        }}>
+                            {ui.outOfStock}
+                        </span>
+                    )}
+                    <p style={{ fontSize: '12px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }}>
+                        {product.category}
+                    </p>
+                    <h2 style={{ fontSize: '20px', fontWeight: '500', margin: '0 0 14px', lineHeight: 1.3 }}>
+                        {product.title || product.name}
+                    </h2>
+
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '20px' }}>
-                        {variant.oldPrice && <span style={{ fontSize: '15px', color: '#aaa', textDecoration: 'line-through' }}>{formatPrice(variant.oldPrice, currency)}</span>}
+                        {variant.oldPrice && (
+                            <span style={{ fontSize: '15px', color: '#aaa', textDecoration: 'line-through' }}>
+                                {formatPrice(variant.oldPrice, currency)}
+                            </span>
+                        )}
                         <span style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a1a' }}>
-                            {variant.newPrice !== null && variant.newPrice !== undefined ? formatPrice(variant.newPrice, currency) : ui.priceOnRequest}
+                            {variant.newPrice !== null && variant.newPrice !== undefined
+                                ? formatPrice(variant.newPrice, currency)
+                                : ui.priceOnRequest}
                         </span>
                     </div>
-                    {product.description && <p style={{ fontSize: '14px', color: '#666', lineHeight: 1.6, marginBottom: '20px' }}>{product.description}</p>}
+
+                    {product.description && (
+                        <p style={{ fontSize: '14px', color: '#666', lineHeight: 1.6, marginBottom: '20px' }}>
+                            {product.description}
+                        </p>
+                    )}
+
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                        <span style={{ fontSize: '13px', color: '#555' }}>{ui.qty}:</span>
+                        <span style={{ fontSize: '13px', color: '#555' }}>Qty:</span>
                         <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #ddd', borderRadius: '4px' }}>
-                            <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: '32px', height: '32px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px' }}>−</button>
+                            <button
+                                onClick={() => setQty(q => Math.max(1, q - 1))}
+                                style={{ width: '32px', height: '32px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px' }}
+                            >−</button>
                             <span style={{ minWidth: '28px', textAlign: 'center', fontSize: '14px' }}>{qty}</span>
-                            <button onClick={() => setQty(q => q + 1)} style={{ width: '32px', height: '32px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px' }}>+</button>
+                            <button
+                                onClick={() => setQty(q => q + 1)}
+                                style={{ width: '32px', height: '32px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px' }}
+                            >+</button>
                         </div>
                     </div>
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <button
                             onClick={() => { if (!outOfStock) onAddToCart(product, qty); }}
                             disabled={outOfStock}
                             style={{
-                                background: outOfStock ? '#bbb' : '#1a1a1a', color: '#fff', border: 'none', padding: '13px 20px',
-                                fontSize: '13px', letterSpacing: '0.5px', cursor: outOfStock ? 'not-allowed' : 'pointer',
-                                borderRadius: '4px', textTransform: 'uppercase',
+                                background: outOfStock ? '#bbb' : '#1a1a1a', color: '#fff',
+                                border: 'none', padding: '13px 20px',
+                                fontSize: '13px', letterSpacing: '0.5px',
+                                cursor: outOfStock ? 'not-allowed' : 'pointer', borderRadius: '4px',
+                                textTransform: 'uppercase',
                             }}
                         >
                             {outOfStock ? ui.outOfStock : ui.addToCart}
                         </button>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button
-                                onClick={() => onToggleWishlist(product._id, { _id: product._id, slug: product.slug, title: product.title, category: product.category, images: variant.images || [], oldPrice: variant.oldPrice, newPrice: variant.newPrice, isSale: variant.isSale })}
-                                style={{ flex: 1, border: '1px solid #ddd', background: '#fff', padding: '11px 12px', borderRadius: '4px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: wishlist.includes(product._id) ? '#c0392b' : '#555' }}
+                                onClick={() => onToggleWishlist(product._id, {
+                                    _id: product._id,
+                                    slug: product.slug,
+                                    title: product.title || product.name,
+                                    category: product.category,
+                                    images: variant.images || [],
+                                    oldPrice: variant.oldPrice,
+                                    newPrice: variant.newPrice,
+                                    isSale: variant.isSale,
+                                })}
+                                style={{
+                                    flex: 1,
+                                    border: '1px solid #ddd', background: '#fff',
+                                    padding: '11px 12px', borderRadius: '4px',
+                                    fontSize: '13px', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                                    color: wishlist.includes(product._id) ? '#c0392b' : '#555',
+                                }}
                             >
                                 <svg width="15" height="14" viewBox="0 0 16 15" fill="none">
-                                    <path d="M8 13.5C8 13.5 1 9 1 4.5C1 2.567 2.567 1 4.5 1C5.892 1 7.1 1.8 8 3C8.9 1.8 10.108 1 11.5 1C13.433 1 15 2.567 15 4.5C15 9 8 13.5 8 13.5Z" stroke="currentColor" strokeWidth="1.3" fill={wishlist.includes(product._id) ? 'currentColor' : 'none'} />
+                                    <path d="M8 13.5C8 13.5 1 9 1 4.5C1 2.567 2.567 1 4.5 1C5.892 1 7.1 1.8 8 3C8.9 1.8 10.108 1 11.5 1C13.433 1 15 2.567 15 4.5C15 9 8 13.5 8 13.5Z"
+                                        stroke="currentColor" strokeWidth="1.3"
+                                        fill={wishlist.includes(product._id) ? 'currentColor' : 'none'} />
                                 </svg>
                                 {ui.addToWishlist}
                             </button>
-                            <Link href={`/product-category/${categoryUrl}/${product.slug}`} onClick={onClose} style={{ flex: 1, textAlign: 'center', border: '1px solid #ddd', background: '#fff', padding: '11px 12px', borderRadius: '4px', fontSize: '13px', cursor: 'pointer', textDecoration: 'none', color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{ui.viewDetails}</Link>
+                            <Link
+                                href={`/product-category/${categoryUrl}/${product.slug}`}
+                                onClick={onClose}
+                                style={{
+                                    flex: 1, textAlign: 'center',
+                                    border: '1px solid #ddd', background: '#fff',
+                                    padding: '11px 12px', borderRadius: '4px',
+                                    fontSize: '13px', cursor: 'pointer',
+                                    textDecoration: 'none', color: '#555',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}
+                            >
+                                View Details
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -509,6 +700,7 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
         </div>
     );
 }
+
 
 function AccordionItem({ title, children }) {
     const [open, setOpen] = useState(false);
@@ -529,20 +721,83 @@ function AccordionItem({ title, children }) {
 function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, onAddToCart }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const videos = variant.videos || [];
 
     const outOfStock = isVariantOutOfStock(variant);
 
-    const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => { setCurrentImg(idx); idx = (idx + 1) % images.length; }, 800);
-    };
-    const stopHover = () => { clearInterval(intervalRef.current); setCurrentImg(0); };
-    useEffect(() => () => clearInterval(intervalRef.current), []);
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
 
-    const imgSrc = images.length > 0 ? getImgSrc(images[currentImg]) : '/placeholder.jpg';
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
+
+    const startHover = () => {
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
+    };
+
+    const stopHover = () => {
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    };
+
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
+
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
+
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice ?? variant.price;
     const isSale = variant.isSale;
@@ -553,10 +808,30 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
             <div className="jw-card-img-wrap">
                 {isSale && !outOfStock && <span className="jw-sale-badge">{ui.sale}</span>}
                 {outOfStock && <span className="jw-sale-badge" style={{ background: '#999' }}>{ui.outOfStock}</span>}
-                <img src={imgSrc} alt={p.title} className="jw-card-img" loading="lazy" onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
-                {images.length > 1 && (
+
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={getImgSrc(currentItem.src)}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? getImgSrc(currentItem.src) : '/placeholder.jpg'}
+                        alt={p.title}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                    />
+                )}
+
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => <span key={i} className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`} />)}
+                        {mediaList.map((_, i) => <span key={i} className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`} />)}
                     </div>
                 )}
                 <div className="jw-card-actions">
@@ -623,9 +898,6 @@ function SkeletonCard() {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  MAIN EARRINGS PAGE
-// ─────────────────────────────────────────────────────────
 export default function Earrings({ initialProducts = [] }) {
     const router = useRouter();
 
@@ -644,7 +916,6 @@ export default function Earrings({ initialProducts = [] }) {
     const [sort, setSort] = useState("default");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // ── SSR se initialProducts — pehli load par instantly render karne ke liye ──
     const [products, setProducts] = useState(initialProducts);
     const [loading, setLoading] = useState(initialProducts.length === 0);
     const [error, setError] = useState(null);
@@ -709,15 +980,6 @@ export default function Earrings({ initialProducts = [] }) {
     };
 
     useEffect(() => {
-        // FIX: Pehle yahan pe agar SSR se initialProducts mil jaate the (activeCategory
-        // === "Earrings") to hum dobara fetch hi skip kar dete the — isliye admin me
-        // stock/quantity update karne ke baad bhi listing page purana (stale) data
-        // dikhata rehta tha jab tak SSR cache refresh na ho. Detail page live
-        // client-fetch karta hai isliye wahan turant sahi dikhta tha.
-        //
-        // Ab: SSR data se instant render (SEO ke liye first paint fast rehta hai),
-        // lekin background me hamesha ek fresh fetch chalta hai (no-store) jo
-        // products ko silently update kar deta hai — bina skeleton flash kiye.
         const hasSSRData = !skippedInitialFetch.current && initialProducts.length > 0 && activeCategory === "Earrings";
         skippedInitialFetch.current = true;
 
@@ -732,8 +994,6 @@ export default function Earrings({ initialProducts = [] }) {
                 if (data.success) { setProducts(data.products || []); } else { throw new Error(data.message || "Failed to fetch data."); }
             } catch (err) {
                 console.error("[Earrings] Fetch error:", err);
-                // agar SSR data already dikha hua hai to error sirf log karo,
-                // UI ko error state me mat le jao (stale-but-shown data > blank error)
                 if (!hasSSRData) setError(err.message);
             } finally {
                 setLoading(false);
@@ -748,7 +1008,7 @@ export default function Earrings({ initialProducts = [] }) {
 
     const handleAddToCart = useCallback((product, qty = 1) => {
         const variant = getFirstVariant(product);
-        if (isVariantOutOfStock(variant)) return; // safety net — UI already blocks this, but double-check
+        if (isVariantOutOfStock(variant)) return;
         window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { item: { _id: product._id, slug: product.slug, title: product.title, category: product.category, images: variant.images || [], oldPrice: variant.oldPrice, newPrice: variant.newPrice, isSale: variant.isSale, qty } } }));
         setTimeout(() => window.dispatchEvent(new CustomEvent('open-cart-drawer')), 400);
         showToast(`"${product.title}" added to cart`);

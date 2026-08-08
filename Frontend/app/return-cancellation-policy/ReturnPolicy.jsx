@@ -230,7 +230,6 @@ export default function ReturnPolicy() {
                                     </div>
                                     <div className="Shipping-Coverage-prag">{content.exchanges.p2}</div>
                                 </div>
-
                              
                                 <div className="Coverage-container">
                                     <div className="Coverage-title">{content.cancellation.title}</div>

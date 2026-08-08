@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import "./admin-blog.css";
 
+const ADMIN_USERNAME = "barosche";
+const ADMIN_PASSWORD = "Barosche@2024";
+
 const MDXEditorComponent = dynamic(
   () => import("../../components/Toolbar/MDXEditorComponent"),
   { ssr: false }
@@ -16,6 +19,13 @@ function cleanHandle(str) {
 const CATEGORY_OPTIONS = ["Blog", "Guides"];
 
 export default function AdminPage() {
+  // Authentication States
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [inputUsername, setInputUsername] = useState("");
+  const [inputPassword, setInputPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
+  // Blog States
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("Barosché");
   const [image, setImage] = useState(null);
@@ -33,6 +43,15 @@ export default function AdminPage() {
   const [categoryFilter, setCategoryFilter] = useState("All");
 
   useEffect(() => {
+    const loggedInStatus = sessionStorage.getItem("admin_authenticated");
+    if (loggedInStatus === "true") {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
     fetch("https://api.barosche.com/api/blogs")
       .then((res) => res.json())
       .then((data) => {
@@ -44,9 +63,8 @@ export default function AdminPage() {
         setBlogs([]);
         setLoadingBlogs(false);
       });
-  }, []);
+  }, [isAuthenticated]);
 
-  // Title change hone par urlHandle aur pageTitle auto-fill (agar user ne manually urlHandle edit nahi kiya)
   useEffect(() => {
     if (title) {
       if (!urlHandleTouched) {
@@ -54,7 +72,25 @@ export default function AdminPage() {
       }
       if (!pageTitle) setPageTitle(title);
     }
-  }, [title]);
+  }, [title, urlHandleTouched, pageTitle]);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (inputUsername === ADMIN_USERNAME && inputPassword === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      sessionStorage.setItem("admin_authenticated", "true");
+      setLoginError("");
+    } else {
+      setLoginError("Invalid Username or Password!");
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem("admin_authenticated");
+    setInputUsername("");
+    setInputPassword("");
+  };
 
   const fetchBlogs = () => {
     fetch("https://api.barosche.com/api/blogs")
@@ -85,6 +121,7 @@ export default function AdminPage() {
     formData.append("urlHandle", urlHandle);
     formData.append("script", script);
     formData.append("category", category);
+
     try {
       const response = await fetch("https://api.barosche.com/api/blogs", {
         method: "POST",
@@ -130,11 +167,57 @@ export default function AdminPage() {
     }
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="admin-login-wrapper">
+        <div className="admin-login-card">
+          <div className="admin-login-header">
+            <h2>Blog Admin</h2>
+            <p>Please enter your credentials to access the admin portal.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="admin-login-form">
+            {loginError && <div className="admin-login-error">{loginError}</div>}
+
+            <div className="admin-input-group">
+              <label>Username</label>
+              <input
+                type="text"
+                className="admin-input-field"
+                value={inputUsername}
+                onChange={(e) => setInputUsername(e.target.value)}
+                placeholder="Enter username"
+                required
+              />
+            </div>
+
+            <div className="admin-input-group">
+              <label>Password</label>
+              <input
+                type="password"
+                className="admin-input-field"
+                value={inputPassword}
+                onChange={(e) => setInputPassword(e.target.value)}
+                placeholder="Enter password"
+                required
+              />
+            </div>
+
+            <button type="submit" className="admin-submit-btn">
+              Login to Dashboard
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   const visibleBlogs =
     categoryFilter === "All"
       ? blogs
       : blogs.filter((blog) => (blog.category || "Blog") === categoryFilter);
 
+  // 🔓 IF AUTHENTICATED: Show Admin Dashboard
   return (
     <div className="admin-page-wrapper">
       <div className="admin-layout">
@@ -143,6 +226,9 @@ export default function AdminPage() {
         <div className="admin-card">
           <div className="admin-header">
             <h2>New Blog Article</h2>
+            <button className="admin-logout-btn" onClick={handleLogout}>
+              Logout 🔒
+            </button>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -177,9 +263,11 @@ export default function AdminPage() {
                 URL Handle
               </label>
               <div style={{ display: "flex" }}>
-                <span style={{ padding: "10px 12px", background: "#1a1a1a", border: "1px solid #333",
+                <span style={{
+                  padding: "10px 12px", background: "#1a1a1a", border: "1px solid #333",
                   borderRight: "none", borderRadius: "6px 0 0 6px", color: "#666",
-                  fontSize: "0.875rem", whiteSpace: "nowrap" }}>
+                  fontSize: "0.875rem", whiteSpace: "nowrap"
+                }}>
                   blogs/
                 </span>
                 <input className="admin-input-field" type="text" value={urlHandle}
@@ -187,7 +275,7 @@ export default function AdminPage() {
                   style={{ borderRadius: "0 6px 6px 0", marginBottom: 0 }} />
               </div>
               <small style={{ color: "#666", fontSize: "0.75rem", marginTop: "4px", display: "block" }}>
-                Live URL:{" "}
+                Live URL:
               </small>
             </div>
 

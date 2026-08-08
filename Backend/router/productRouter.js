@@ -16,19 +16,32 @@ const storage = multer.diskStorage({
   },
 });
 
+const allowedImageExt = /jpeg|jpg|png|gif|webp/;
+const allowedVideoExt = /mp4|mov|webm|avi|mkv|m4v/;
+
 const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|gif|webp/;
-  const ok = allowed.test(path.extname(file.originalname).toLowerCase()) &&
-             allowed.test(file.mimetype);
-  ok ? cb(null, true) : cb(new Error("Only image files allowed (jpeg, jpg, png, gif, webp)"), false);
+  const ext = path.extname(file.originalname).toLowerCase();
+  const isVariantVideoField = /^variantVideos_\d+$/.test(file.fieldname);
+
+  if (isVariantVideoField) {
+    const ok = allowedVideoExt.test(ext) && file.mimetype.startsWith("video/");
+    return ok
+      ? cb(null, true)
+      : cb(new Error("Only video files allowed (mp4, mov, webm, avi, mkv, m4v)"), false);
+  }
+
+  const ok = allowedImageExt.test(ext) && file.mimetype.startsWith("image/");
+  return ok
+    ? cb(null, true)
+    : cb(new Error("Only image files allowed (jpeg, jpg, png, gif, webp)"), false);
 };
 
 const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024,
-    files: 50,
+    fileSize: 100 * 1024 * 1024,
+    files: 60,
   },
 });
 
@@ -41,7 +54,7 @@ router.delete("/:id", deleteProduct);
 router.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE")
-      return res.status(400).json({ success: false, message: "File too large. Max 5 MB allowed." });
+      return res.status(400).json({ success: false, message: "File too large. Max 100 MB allowed." });
     if (err.code === "LIMIT_FILE_COUNT")
       return res.status(400).json({ success: false, message: "Too many files." });
     return res.status(400).json({ success: false, message: err.message });

@@ -37,7 +37,6 @@ const EarringsRings = () => {
 
         if (languageCode === "en") return;
 
-        // Extract values to translate
         const textKeys = Object.keys(DEFAULT_CONTENT);
         const textValues = Object.values(DEFAULT_CONTENT);
 
@@ -57,7 +56,6 @@ const EarringsRings = () => {
 
         if (!translateData.success) return;
 
-        // Reconstruct the state with translated values
         const translatedContent = {};
         textKeys.forEach((key, index) => {
           translatedContent[key] = translateData.translations[index] || DEFAULT_CONTENT[key];
@@ -75,7 +73,7 @@ const EarringsRings = () => {
   return (
     <div className="jewelry-container">
       {/* Main Header */}
-      <h1 className="main-title">{content.heading}</h1>
+      <h2 className="main-title">{content.heading}</h2>
 
       <section className="jewelry-section">
         <div className="jewelry-image-container">

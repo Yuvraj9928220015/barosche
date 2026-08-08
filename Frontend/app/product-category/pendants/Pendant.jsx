@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './Pendants.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -266,9 +266,6 @@ const rebuildFaq = (translatedArr) => {
     return result;
 };
 
-// ─────────────────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────────────────
 function getImgSrc(path) {
     if (!path) return '/placeholder.jpg';
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
@@ -279,6 +276,7 @@ function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice ?? product.price,
         isSale: product.isSale || false,
@@ -287,14 +285,10 @@ function getFirstVariant(product) {
     };
 }
 
-// Ek hi jagah stock-check logic — Earrings jaisa hi (quantity + inStock dono check)
 function isVariantOutOfStock(v) {
     return (Number(v?.quantity) || 0) <= 0 || v?.inStock === false;
 }
 
-// ─────────────────────────────────────────────────────────
-//  TOAST
-// ─────────────────────────────────────────────────────────
 function Toast({ message, visible }) {
     if (!visible) return null;
     return (
@@ -314,9 +308,6 @@ function Toast({ message, visible }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  QUICK VIEW MODAL
-// ─────────────────────────────────────────────────────────
 function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist, onToggleWishlist }) {
     const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
@@ -537,9 +528,6 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  ACCORDION
-// ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children }) {
     const [open, setOpen] = useState(false);
     const bodyRef = useRef(null);
@@ -562,26 +550,87 @@ function AccordionItem({ title, children }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  PRODUCT CARD
-// ─────────────────────────────────────────────────────────
 function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, onAddToCart }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const videos = variant.videos || [];
 
     const outOfStock = isVariantOutOfStock(variant);
 
-    const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => { setCurrentImg(idx); idx = (idx + 1) % images.length; }, 800);
-    };
-    const stopHover = () => { clearInterval(intervalRef.current); setCurrentImg(0); };
-    useEffect(() => () => clearInterval(intervalRef.current), []);
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
 
-    const imgSrc = images.length > 0 ? getImgSrc(images[currentImg]) : '/placeholder.jpg';
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
+
+    const startHover = () => {
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
+    };
+
+    const stopHover = () => {
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    };
+
+    // Jab bhi current slide video ho, use (re)play karo
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
+
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
+
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice ?? variant.price;
     const isSale = variant.isSale;
@@ -595,12 +644,31 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
             <div className="jw-card-img-wrap">
                 {isSale && !outOfStock && <span className="jw-sale-badge">{ui.sale}</span>}
                 {outOfStock && <span className="jw-sale-badge" style={{ background: '#999' }}>{ui.outOfStock}</span>}
-                <img src={imgSrc} alt={p.title} className="jw-card-img" loading="lazy"
-                    onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
-                {images.length > 1 && (
+
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={getImgSrc(currentItem.src)}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? getImgSrc(currentItem.src) : '/placeholder.jpg'}
+                        alt={p.title}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                    />
+                )}
+
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => (
-                            <span key={i} className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`} />
+                        {mediaList.map((_, i) => (
+                            <span key={i} className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`} />
                         ))}
                     </div>
                 )}
@@ -685,9 +753,6 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView, o
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  SKELETON
-// ─────────────────────────────────────────────────────────
 function SkeletonCard() {
     return (
         <div className="jw-card jw-skeleton">
@@ -701,9 +766,6 @@ function SkeletonCard() {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  MAIN PENDANTS PAGE
-// ─────────────────────────────────────────────────────────
 export default function Pendant({ initialProducts = [] }) {
     const router = useRouter();
 
@@ -843,7 +905,7 @@ export default function Pendant({ initialProducts = [] }) {
 
     const handleAddToCart = useCallback((product, qty = 1) => {
         const variant = getFirstVariant(product);
-        if (isVariantOutOfStock(variant)) return; // safety net — UI already blocks this, but double-check
+        if (isVariantOutOfStock(variant)) return;
         const cartItem = {
             _id: product._id,
             slug: product.slug,

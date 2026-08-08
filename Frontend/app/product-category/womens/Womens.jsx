@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './Womens.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,9 +9,6 @@ import { useWishlist } from '../../context/WishlistContext';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
-// ─────────────────────────────────────────────────────────
-//  CURRENCY CONFIG
-// ─────────────────────────────────────────────────────────
 const CURRENCY_MAP = {
     US: { code: 'USD', symbol: '$', rate: 1.08 },
     GB: { code: 'GBP', symbol: '£', rate: 0.85 },
@@ -46,10 +43,6 @@ const categories = [
     { name: "Womens" },
 ];
 
-// NOTE: This "prices" array was missing before, but the filter logic below
-// referenced it as `prices.find(...)`, causing a runtime
-// "ReferenceError: prices is not defined" as soon as a price filter is applied.
-// Added a sane default price-range list so the filter never crashes.
 const prices = [
     { label: "Under ₹5,000", min: 0, max: 5000 },
     { label: "₹5,000 - ₹15,000", min: 5000, max: 15000 },
@@ -178,6 +171,7 @@ function getFirstVariant(product) {
     }
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice,
         isSale: product.isSale || false,
@@ -185,9 +179,6 @@ function getFirstVariant(product) {
     };
 }
 
-// ─────────────────────────────────────────────────────────
-//  TOAST NOTIFICATION
-// ─────────────────────────────────────────────────────────
 function Toast({ message, visible }) {
     if (!visible) return null;
     return (
@@ -204,7 +195,7 @@ function Toast({ message, visible }) {
             zIndex: 9999,
             pointerEvents: 'none',
             whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            boxShadow: '0 4px 12px #00000033',
             transition: 'opacity 0.3s ease',
             opacity: visible ? 1 : 0,
         }}>
@@ -213,15 +204,39 @@ function Toast({ message, visible }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  QUICK VIEW MODAL
-// ─────────────────────────────────────────────────────────
 function QuickViewModal({ product, currency, onClose, onAddToCart, wishlist, onToggleWishlist }) {
-    const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
     const variant = getFirstVariant(product);
     const images = variant.images || [];
+    const videos = variant.videos || [];
     const categoryUrl = categorySlugMap[product.category] || 'womens';
+
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [activeIdx, setActiveIdx] = useState(0);
+    const videoRef = useRef(null);
+    const activeItem = mediaList[activeIdx] || null;
+
+    useEffect(() => {
+        if (activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [activeIdx, activeItem]);
+
+    useEffect(() => {
+        return () => {
+            if (videoRef.current) {
+                videoRef.current.pause();
+            }
+        };
+    }, [activeIdx]);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -237,7 +252,7 @@ function QuickViewModal({ product, currency, onClose, onAddToCart, wishlist, onT
         <div
             style={{
                 position: 'fixed', inset: 0, zIndex: 9000,
-                background: 'rgba(0,0,0,0.55)',
+                background: '#0000008c',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '16px',
             }}
@@ -264,43 +279,75 @@ function QuickViewModal({ product, currency, onClose, onAddToCart, wishlist, onT
                     aria-label="Close"
                 >✕</button>
 
-                {/* Images */}
+                {/* Images / Video */}
                 <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
                     <div style={{
                         background: '#f7f6f4', borderRadius: '6px',
                         aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px',
                     }}>
-                        {images.length > 0 ? (
-                            <img
-                                src={`${API_BASE}${images[activeImg]}`}
-                                alt={product.title || product.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                            />
+                        {activeItem ? (
+                            activeItem.type === 'video' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={`${API_BASE}${activeItem.src}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    muted
+                                    playsInline
+                                    loop
+                                    controls
+                                />
+                            ) : (
+                                <img
+                                    src={`${API_BASE}${activeItem.src}`}
+                                    alt={product.title || product.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                />
+                            )
                         ) : (
                             <img src="/placeholder.jpg" alt="placeholder"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         )}
                     </div>
-                    {images.length > 1 && (
+                    {mediaList.length > 1 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {images.map((img, i) => (
+                            {mediaList.map((item, i) => (
                                 <button
                                     key={i}
-                                    onClick={() => setActiveImg(i)}
+                                    onClick={() => setActiveIdx(i)}
                                     style={{
                                         width: '54px', height: '54px', padding: 0,
-                                        border: i === activeImg ? '2px solid #1a1a1a' : '2px solid transparent',
+                                        border: i === activeIdx ? '2px solid #1a1a1a' : '2px solid transparent',
                                         borderRadius: '4px', overflow: 'hidden', cursor: 'pointer',
-                                        background: '#f7f6f4',
+                                        background: '#f7f6f4', position: 'relative',
                                     }}
                                 >
-                                    <img
-                                        src={`${API_BASE}${img}`}
-                                        alt={`view ${i + 1}`}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                                    />
+                                    {item.type === 'video' ? (
+                                        <>
+                                            <video
+                                                src={`${API_BASE}${item.src}`}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                muted
+                                                playsInline
+                                            />
+                                            <span style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'rgba(0,0,0,0.25)', pointerEvents: 'none',
+                                            }}>
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                                                    <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                                                </svg>
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <img
+                                            src={`${API_BASE}${item.src}`}
+                                            alt={`view ${i + 1}`}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                        />
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -413,9 +460,6 @@ function QuickViewModal({ product, currency, onClose, onAddToCart, wishlist, onT
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  ACCORDION ITEM
-// ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children }) {
     const [open, setOpen] = useState(false);
     const bodyRef = useRef(null);
@@ -445,34 +489,84 @@ function AccordionItem({ title, children }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  PRODUCT CARD
-//  NOTE: "Add to Cart" hover icon has been removed as requested.
-//  Only Wishlist (heart) and Quick View (eye) icons show on hover now.
-// ─────────────────────────────────────────────────────────
 function ProductCard({ p, wishlist, toggleWishlist, currency, onQuickView, onAddToCart }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const videos = variant.videos || [];
+
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
 
     const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => {
-            setCurrentImg(idx);
-            idx = (idx + 1) % images.length;
-        }, 800);
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
     };
 
     const stopHover = () => {
-        clearInterval(intervalRef.current);
-        setCurrentImg(0);
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
     };
 
-    useEffect(() => () => clearInterval(intervalRef.current), []);
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
 
-    const imgSrc = images.length > 0 ? `${API_BASE}${images[currentImg]}` : '/placeholder.jpg';
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
+
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice;
     const isSale = variant.isSale;
@@ -487,17 +581,31 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, onQuickView, onAdd
         >
             <div className="jw-card-img-wrap">
                 {isSale && <span className="jw-sale-badge">SALE</span>}
-                <img
-                    src={imgSrc}
-                    alt={p.title || p.name}
-                    className="jw-card-img"
-                    loading="lazy"
-                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                />
-                {images.length > 1 && (
+
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={`${API_BASE}${currentItem.src}`}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? `${API_BASE}${currentItem.src}` : '/placeholder.jpg'}
+                        alt={p.title || p.name}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                    />
+                )}
+
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => (
-                            <span key={i} className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`} />
+                        {mediaList.map((_, i) => (
+                            <span key={i} className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`} />
                         ))}
                     </div>
                 )}
@@ -566,9 +674,6 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, onQuickView, onAdd
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  SKELETON CARD
-// ─────────────────────────────────────────────────────────
 function SkeletonCard() {
     return (
         <div className="jw-card jw-skeleton">
@@ -582,13 +687,9 @@ function SkeletonCard() {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  MAIN WOMENS PAGE
-// ─────────────────────────────────────────────────────────
 export default function Womens() {
     const router = useRouter();
 
-    // ── Currency — detect from IP ──
     const [currency, setCurrency] = useState(CURRENCY_MAP.default);
 
     useEffect(() => {
@@ -600,7 +701,6 @@ export default function Womens() {
                     setCurrency(CURRENCY_MAP[data.countryCode]);
                 }
             } catch (err) {
-                // silent fail, default EUR stays
             }
         };
         detectCurrency();
@@ -615,7 +715,6 @@ export default function Womens() {
     const [sort, setSort] = useState("default");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // ── Wishlist — WishlistContext ──
     const { wishlistItems, addToWishlist, removeFromWishlist: removeFromWishlistCtx } = useWishlist();
     const wishlist = (wishlistItems || []).map(item => item._id || item);
 
@@ -623,7 +722,6 @@ export default function Womens() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // ── Quick View ──
     const [quickViewProduct, setQuickViewProduct] = useState(null);
 
     // ── Toast ──
@@ -675,7 +773,6 @@ export default function Womens() {
         fetchProducts();
     }, [activeCategory]);
 
-    // ── Wishlist toggle ──
     const toggleWishlist = useCallback((id, productData) => {
         if (wishlist.includes(id)) {
             removeFromWishlistCtx(id);
@@ -684,9 +781,6 @@ export default function Womens() {
         }
     }, [wishlist, addToWishlist, removeFromWishlistCtx]);
 
-    // ── Add to Cart ──
-    // Kept in logic (still used by the Quick View modal's own "Add to Cart" button);
-    // only the hover icon on the product card grid was removed.
     const handleAddToCart = useCallback((product, qty = 1) => {
         const variant = getFirstVariant(product);
         const cartItem = {

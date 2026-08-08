@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import "./Collection.css";
@@ -53,6 +53,7 @@ const normaliseProduct = (p) => {
   const url = `/product-category/${primaryCategory}/${p.slug}/`;
 
   const images = v.images && v.images.length > 0 ? v.images : p.images || [];
+  const videos = v.videos && v.videos.length > 0 ? v.videos : p.videos || [];
   const imageUrl = images?.[0] ? `${BACKEND_URL}${images[0]}` : null;
 
   return {
@@ -66,16 +67,48 @@ const normaliseProduct = (p) => {
     newPrice: v.newPrice ?? null,
     isSale: v.isSale || false,
     images,
+    videos,
     image: imageUrl,
     url,
     description: p.description || v.description || "",
   };
 };
 
+/* ───────────────────────── Quick View Modal (with video support) ───────────────────────── */
+
 function QuickViewModal({ product, currency, content, onClose, onAddToCart, wishlist, onToggleWishlist }) {
-  const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
+
   const images = product.images || [];
+  const videos = product.videos || [];
+
+  // pehli image, phir video (agar hai), phir baaki images — Rings.js wala hi order
+  const mediaList = useMemo(() => {
+    const list = [];
+    if (images.length > 0) list.push({ type: "image", src: images[0] });
+    if (videos.length > 0) list.push({ type: "video", src: videos[0] });
+    images.slice(1).forEach((img) => list.push({ type: "image", src: img }));
+    return list;
+  }, [images, videos]);
+
+  const [activeIdx, setActiveIdx] = useState(0);
+  const videoRef = useRef(null);
+  const activeItem = mediaList[activeIdx] || null;
+
+  // active slide video ho to play karo
+  useEffect(() => {
+    if (activeItem?.type === "video" && videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [activeIdx, activeItem]);
+
+  // slide change / unmount pe video pause
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) videoRef.current.pause();
+    };
+  }, [activeIdx]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -137,7 +170,7 @@ function QuickViewModal({ product, currency, content, onClose, onAddToCart, wish
           ✕
         </button>
 
-        {/* Images Left Side */}
+        {/* Images / Video Left Side */}
         <div style={{ flex: "1 1 300px", minWidth: "240px", padding: "24px 16px 24px 24px" }}>
           <div
             style={{
@@ -148,13 +181,25 @@ function QuickViewModal({ product, currency, content, onClose, onAddToCart, wish
               marginBottom: "12px",
             }}
           >
-            {images.length > 0 ? (
-              <img
-                src={`${BACKEND_URL}${images[activeImg]}`}
-                alt={product.title}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                onError={(e) => { e.target.src = "/placeholder.jpg"; }}
-              />
+            {activeItem ? (
+              activeItem.type === "video" ? (
+                <video
+                  ref={videoRef}
+                  src={`${BACKEND_URL}${activeItem.src}`}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  muted
+                  playsInline
+                  loop
+                  controls
+                />
+              ) : (
+                <img
+                  src={`${BACKEND_URL}${activeItem.src}`}
+                  alt={product.title}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+                />
+              )
             ) : (
               <img
                 src="/placeholder.jpg"
@@ -163,29 +208,58 @@ function QuickViewModal({ product, currency, content, onClose, onAddToCart, wish
               />
             )}
           </div>
-          {images.length > 1 && (
+
+          {/* Thumbnail strip — image + video dono */}
+          {mediaList.length > 1 && (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {images.map((img, i) => (
+              {mediaList.map((item, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveImg(i)}
+                  onClick={() => setActiveIdx(i)}
                   style={{
                     width: "54px",
                     height: "54px",
                     padding: 0,
-                    border: i === activeImg ? "2px solid #1a1a1a" : "2px solid transparent",
+                    border: i === activeIdx ? "2px solid #1a1a1a" : "2px solid transparent",
                     borderRadius: "4px",
                     overflow: "hidden",
                     cursor: "pointer",
                     background: "#f7f6f4",
+                    position: "relative",
                   }}
                 >
-                  <img
-                    src={`${BACKEND_URL}${img}`}
-                    alt={`view ${i + 1}`}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    onError={(e) => { e.target.src = "/placeholder.jpg"; }}
-                  />
+                  {item.type === "video" ? (
+                    <>
+                      <video
+                        src={`${BACKEND_URL}${item.src}`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        muted
+                        playsInline
+                      />
+                      <span
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "rgba(0,0,0,0.25)",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                          <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                        </svg>
+                      </span>
+                    </>
+                  ) : (
+                    <img
+                      src={`${BACKEND_URL}${item.src}`}
+                      alt={`view ${i + 1}`}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+                    />
+                  )}
                 </button>
               ))}
             </div>
@@ -375,8 +449,90 @@ function Toast({ message, visible }) {
   );
 }
 
+/* ───────────────────────── Product Card (image + video hover slideshow) ───────────────────────── */
+
 function ProductCard({ product, content, currency, wishlist, onToggleWishlist, onQuickView, onCardClick }) {
+  const images = product.images || [];
+  const videos = product.videos || [];
+
+  // pehli image, phir video (agar hai), phir baaki images
+  const mediaList = useMemo(() => {
+    const list = [];
+    if (images.length > 0) list.push({ type: "image", src: images[0] });
+    if (videos.length > 0) list.push({ type: "video", src: videos[0] });
+    images.slice(1).forEach((img) => list.push({ type: "image", src: img }));
+    return list;
+  }, [images, videos]);
+
+  const [currentIdx, setCurrentIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
+  const videoRef = useRef(null);
+  const imageTimerRef = useRef(null);
+  const hoveringRef = useRef(false);
+
+  const clearImageTimer = () => {
+    if (imageTimerRef.current) {
+      clearTimeout(imageTimerRef.current);
+      imageTimerRef.current = null;
+    }
+  };
+
+  const advanceTo = (idx) => {
+    setCurrentIdx(idx);
+    scheduleFrom(idx);
+  };
+
+  const scheduleFrom = (idx) => {
+    clearImageTimer();
+    const item = mediaList[idx];
+    if (!item || mediaList.length <= 1) return;
+    if (item.type === "image") {
+      imageTimerRef.current = setTimeout(() => {
+        if (!hoveringRef.current) return;
+        const next = (idx + 1) % mediaList.length;
+        advanceTo(next);
+      }, 800);
+    }
+  };
+
+  const handleVideoEnded = () => {
+    if (!hoveringRef.current) return;
+    const next = (currentIdx + 1) % mediaList.length;
+    advanceTo(next);
+  };
+
+  const startHover = () => {
+    setHovered(true);
+    if (mediaList.length <= 1) return;
+    hoveringRef.current = true;
+    const next = 1 % mediaList.length;
+    advanceTo(next);
+  };
+
+  const stopHover = () => {
+    setHovered(false);
+    hoveringRef.current = false;
+    clearImageTimer();
+    setCurrentIdx(0);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  };
+
+  // jab bhi current slide video ho, use (re)play karo
+  useEffect(() => {
+    const item = mediaList[currentIdx];
+    if (item?.type === "video" && videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [currentIdx, mediaList]);
+
+  useEffect(() => () => clearImageTimer(), []);
+
+  const currentItem =
+    mediaList[currentIdx] || (images.length > 0 ? { type: "image", src: images[0] } : null);
 
   const iconBtnStyle = {
     width: "34px",
@@ -397,8 +553,8 @@ function ProductCard({ product, content, currency, wishlist, onToggleWishlist, o
       className="product-card"
       style={{ cursor: "pointer", position: "relative" }}
       onClick={() => onCardClick(product.url)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={startHover}
+      onMouseLeave={stopHover}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onCardClick(product.url)}
@@ -407,8 +563,26 @@ function ProductCard({ product, content, currency, wishlist, onToggleWishlist, o
       <div className="image-wrapper" style={{ position: "relative" }}>
         {product.isSale && <span className="sale-badge">{content.saleBadge}</span>}
 
-        {product.image ? (
-          <img src={product.image} alt={product.title} className="product-image" draggable={false} />
+        {currentItem ? (
+          currentItem.type === "video" ? (
+            <video
+              ref={videoRef}
+              src={`${BACKEND_URL}${currentItem.src}`}
+              className="product-image"
+              muted
+              playsInline
+              autoPlay
+              onEnded={handleVideoEnded}
+            />
+          ) : (
+            <img
+              src={`${BACKEND_URL}${currentItem.src}`}
+              alt={product.title}
+              className="product-image"
+              draggable={false}
+              onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+            />
+          )
         ) : (
           <div
             className="product-image"
@@ -422,6 +596,35 @@ function ProductCard({ product, content, currency, wishlist, onToggleWishlist, o
             }}
           >
             💍
+          </div>
+        )}
+
+        {/* dots — jitne media items utne dots, active wala highlight */}
+        {mediaList.length > 1 && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              gap: "5px",
+              zIndex: 1,
+            }}
+          >
+            {mediaList.map((_, i) => (
+              <span
+                key={i}
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: i === currentIdx ? "#1a1a1a" : "#ffffffb3",
+                  boxShadow: "0 0 2px #00000040",
+                  transition: "background 0.2s ease",
+                }}
+              />
+            ))}
           </div>
         )}
 
@@ -506,6 +709,8 @@ function ProductCard({ product, content, currency, wishlist, onToggleWishlist, o
     </div>
   );
 }
+
+/* ───────────────────────── Main Collection Component ───────────────────────── */
 
 const Collection = () => {
   const router = useRouter();
@@ -626,6 +831,7 @@ const Collection = () => {
 
     detectAndTranslate();
   }, [products.length]);
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 640) setVisibleItems(2);
@@ -636,21 +842,29 @@ const Collection = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
   useEffect(() => {
     if (products.length === 0) return;
     setInfiniteProducts([...products, ...products, ...products]);
     setCurrentIndex(products.length);
   }, [products]);
-  useEffect(() => {
-    if (products.length === 0) return;
 
+  // ── auto-slide ──
+  const startAutoSlide = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setIsTransitioning(true);
       setCurrentIndex((prev) => prev + 1);
     }, 4000);
+  }, []);
 
-    return () => clearInterval(intervalRef.current);
-  }, [products]);
+  useEffect(() => {
+    if (products.length === 0) return;
+    startAutoSlide();
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [products, startAutoSlide]);
 
   useEffect(() => {
     if (infiniteProducts.length === 0) return;
@@ -687,7 +901,12 @@ const Collection = () => {
     setCurrentIndex((prev) => prev - 1);
   };
 
+  // ── product click: slider turant stop, phir navigate ──
   const handleProductClick = (url) => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     router.push(url);
   };
 
@@ -726,14 +945,6 @@ const Collection = () => {
   const closeQuickView = useCallback(() => setQuickViewProduct(null), []);
 
   // ── swipe handlers (manual slide, mobile/touch) ─────────────────────────────
-  const restartAutoSlide = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setIsTransitioning(true);
-      setCurrentIndex((prev) => prev + 1);
-    }, 4000);
-  };
-
   const handleTouchStart = (e) => {
     touchStartXRef.current = e.touches[0].clientX;
     touchDeltaXRef.current = 0;
@@ -757,7 +968,7 @@ const Collection = () => {
       nextSlide();
     }
     touchDeltaXRef.current = 0;
-    restartAutoSlide();
+    startAutoSlide();
   };
 
   // ── render guards ──
@@ -765,7 +976,7 @@ const Collection = () => {
     return (
       <section className="jewelry-collection-wrapper">
         <div className="collection-header">
-          <h1 className="main-title">{DEFAULT_CONTENT.mainTitle}</h1>
+          <h2 className="main-title">{DEFAULT_CONTENT.mainTitle}</h2>
         </div>
         {/* Skeleton cards */}
         <div
@@ -818,7 +1029,7 @@ const Collection = () => {
       )}
 
       <div className="collection-header">
-        <h1 className="main-title">{content.mainTitle}</h1>
+        <h2 className="main-title">{content.mainTitle}</h2>
         <div className="sub-text-block">
           <p>{content.subText1}</p>
           <p>{content.subText2}</p>

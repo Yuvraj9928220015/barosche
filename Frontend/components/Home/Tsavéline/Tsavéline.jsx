@@ -46,7 +46,6 @@ const Tsavéline = () => {
 
         if (!translateData.success) return;
 
-        // Reconstruct the state with translated values
         const translatedContent = {};
         textKeys.forEach((key, index) => {
           translatedContent[key] = translateData.translations[index] || DEFAULT_CONTENT[key];
@@ -63,10 +62,22 @@ const Tsavéline = () => {
 
   return (
     <>
-      <div className="Tsaveline-Ttitle">{content.mainHeading}</div>
-      <div className="tsaveline-banner">
+      <h2 className="Tsaveline-Ttitle">{content.mainHeading}</h2>
+
+      {/* Desktop banner - image CSS me background hai */}
+      <div className="tsaveline-banner tsaveline-banner-desktop">
         <div className="tsaveline-content">
-          <h2 className="tsaveline-title">{content.subHeading}</h2>
+          <h3 className="tsaveline-title">{content.subHeading}</h3>
+          <a href="/product-category/rings/">
+            <button className="hero-btn">{content.buttonText}</button>
+          </a>
+        </div>
+      </div>
+
+      {/* Mobile banner - alag image */}
+      <div className="tsaveline-banner tsaveline-banner-mobile">
+        <div className="tsaveline-content">
+          <h3 className="tsaveline-title">{content.subHeading}</h3>
           <a href="/product-category/rings/">
             <button className="hero-btn">{content.buttonText}</button>
           </a>

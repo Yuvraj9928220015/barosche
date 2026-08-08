@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './Rings.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,9 +9,6 @@ import { useWishlist } from '../../context/WishlistContext';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.barosche.com";
 
-// ─────────────────────────────────────────────────────────
-//  CURRENCY CONFIG — same as Jewellery.js
-// ─────────────────────────────────────────────────────────
 const CURRENCY_MAP = {
     US: { code: "USD", symbol: "$", rate: 1.14 },
     GB: { code: "GBP", symbol: "£", rate: 0.86 },
@@ -33,9 +30,6 @@ function formatPrice(eurPrice, currency) {
     return `${currency.symbol}${converted.toLocaleString()}`;
 }
 
-// ─────────────────────────────────────────────────────────
-//  TRANSLATION HOOK — extended to also return countryCode
-// ─────────────────────────────────────────────────────────
 function useTranslation(strings) {
     const [translated, setTranslated] = useState(strings);
     const [status, setStatus] = useState("idle");
@@ -112,9 +106,6 @@ function useTranslation(strings) {
     return { translated, status, countryCode };
 }
 
-// ─────────────────────────────────────────────────────────
-//  STATIC DATA
-// ─────────────────────────────────────────────────────────
 const categories = [
     { name: "Chosen" },
     { name: "Earrings" },
@@ -144,6 +135,10 @@ const categorySlugMap = {
     "Womens": "womens",
 };
 
+const DEFAULT_RING_SIZES = [
+    "5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10",
+];
+
 const UI_STRINGS = [
     // 0-17
     "Filters", "Product Categories", "Price",
@@ -157,7 +152,6 @@ const UI_STRINGS = [
     // 27-32 price ranges
     "€1–€500", "€500–€1000", "€1000–€2000", "€2000–€5000", "€5000–€10000", "€10000+",
 
-    // ── FAQ Questions (33-52) ──
     "What types of rings are available online?",
     "Are gold rings suitable for daily wear?",
     "What is the difference between a diamond ring and a gemstone ring?",
@@ -200,10 +194,6 @@ const UI_STRINGS = [
     "Popular trends include minimal rings, geometric designs, and stackable rings.",
     "Yes, many ring designs are versatile and suitable for both men and women.",
     "Online shopping offers more variety, easy comparison, and convenient access to the latest designs.",
-
-    // ════════════════════════════════════════════════════
-    //  MAIN CONTENT (73 onward)
-    // ════════════════════════════════════════════════════
 
     // 73-78
     "Rings for Men & Women – Timeless Style, Modern Elegance & Everyday Comfort",
@@ -405,6 +395,7 @@ const UI_STRINGS = [
     "With a strong focus on craftsmanship, comfort, and modern aesthetics, this collection ensures that every ring adds value to your personal style and becomes a meaningful part of your jewellery journey.",
     "SALE", "Add to Wishlist", "Quick View", "Add to Cart", "Price on request",
     "in",
+    "Size", "Select Size", "Please select a ring size / Size select karo pehle",
 ];
 
 const RINGS_CONTENT_STRUCTURE = [
@@ -488,6 +479,7 @@ function getFirstVariant(product) {
     }
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice,
         isSale: product.isSale || false,
@@ -511,7 +503,7 @@ function Toast({ message, visible }) {
             zIndex: 9999,
             pointerEvents: 'none',
             whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            boxShadow: '0 4px 12px #00000033',
             transition: 'opacity 0.3s ease',
             opacity: visible ? 1 : 0,
         }}>
@@ -520,16 +512,48 @@ function Toast({ message, visible }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  QUICK VIEW MODAL
-// ─────────────────────────────────────────────────────────
 function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, onToggleWishlist }) {
-    const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
+
+    const availableSizes =
+        product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0
+            ? product.sizes
+            : DEFAULT_RING_SIZES;
+    const [selectedSize, setSelectedSize] = useState('');
+    const [sizeError, setSizeError] = useState(false);
+
     const variant = getFirstVariant(product);
     const images = variant.images || [];
+    const videos = variant.videos || [];
     const API_BASE = process.env.NEXT_PUBLIC_API_URL;
     const categoryUrl = categorySlugMap[product.category] || 'rings';
+
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [activeIdx, setActiveIdx] = useState(0);
+    const videoRef = useRef(null);
+    const activeItem = mediaList[activeIdx] || null;
+
+    useEffect(() => {
+        if (activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [activeIdx, activeItem]);
+
+    useEffect(() => {
+        return () => {
+            if (videoRef.current) {
+                videoRef.current.pause();
+            }
+        };
+    }, [activeIdx]);
 
     // ESC key se close
     useEffect(() => {
@@ -541,6 +565,15 @@ function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, 
             document.body.style.overflow = '';
         };
     }, [onClose]);
+
+    const handleAddToCartClick = () => {
+        if (!selectedSize) {
+            setSizeError(true);
+            return;
+        }
+        setSizeError(false);
+        onAddToCart(product, qty, selectedSize);
+    };
 
     return (
         <div
@@ -574,44 +607,78 @@ function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, 
                     aria-label="Close"
                 >✕</button>
 
-                {/* Images Left Side */}
+                {/* Images / Video Left Side */}
                 <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
                     <div style={{
                         background: '#f7f6f4', borderRadius: '6px',
                         aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px',
                     }}>
-                        {images.length > 0 ? (
-                            <img
-                                src={`${API_BASE}${images[activeImg]}`}
-                                alt={product.title || product.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                            />
+                        {activeItem ? (
+                            activeItem.type === 'video' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={`${API_BASE}${activeItem.src}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    muted
+                                    playsInline
+                                    loop
+                                    controls
+                                />
+                            ) : (
+                                <img
+                                    src={`${API_BASE}${activeItem.src}`}
+                                    alt={product.title || product.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                />
+                            )
                         ) : (
                             <img src="/placeholder.jpg" alt="placeholder"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         )}
                     </div>
-                    {/* Thumbnail strip */}
-                    {images.length > 1 && (
+
+                    {/* Thumbnail strip — image + video dono */}
+                    {mediaList.length > 1 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {images.map((img, i) => (
+                            {mediaList.map((item, i) => (
                                 <button
                                     key={i}
-                                    onClick={() => setActiveImg(i)}
+                                    onClick={() => setActiveIdx(i)}
                                     style={{
                                         width: '54px', height: '54px', padding: 0,
-                                        border: i === activeImg ? '2px solid #1a1a1a' : '2px solid transparent',
+                                        border: i === activeIdx ? '2px solid #1a1a1a' : '2px solid transparent',
                                         borderRadius: '4px', overflow: 'hidden', cursor: 'pointer',
-                                        background: '#f7f6f4',
+                                        background: '#f7f6f4', position: 'relative',
                                     }}
                                 >
-                                    <img
-                                        src={`${API_BASE}${img}`}
-                                        alt={`view ${i + 1}`}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                                    />
+                                    {item.type === 'video' ? (
+                                        <>
+                                            <video
+                                                src={`${API_BASE}${item.src}`}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                muted
+                                                playsInline
+                                            />
+                                            {/* Play icon overlay taki pata chale ye video thumbnail hai */}
+                                            <span style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'rgba(0,0,0,0.25)', pointerEvents: 'none',
+                                            }}>
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                                                    <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                                                </svg>
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <img
+                                            src={`${API_BASE}${item.src}`}
+                                            alt={`view ${i + 1}`}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                                        />
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -674,10 +741,48 @@ function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, 
                         </div>
                     </div>
 
+                    {/* Size selector */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <label
+                            htmlFor="ring-size-select"
+                            style={{ display: 'block', fontSize: '13px', color: '#555', marginBottom: '6px' }}
+                        >
+                            {T[234]}{selectedSize ? `: ${selectedSize}` : ''}
+                        </label>
+                        <select
+                            id="ring-size-select"
+                            value={selectedSize}
+                            onChange={(e) => {
+                                setSelectedSize(e.target.value);
+                                if (e.target.value) setSizeError(false);
+                            }}
+                            style={{
+                                width: '100%',
+                                padding: '10px 12px',
+                                border: sizeError ? '1px solid #c0392b' : '1px solid #ddd',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                background: '#fff',
+                                color: '#1a1a1a',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            <option value="">{T[235]}</option>
+                            {availableSizes.map((sz) => (
+                                <option key={sz} value={sz}>{sz}</option>
+                            ))}
+                        </select>
+                        {sizeError && (
+                            <p style={{ color: '#c0392b', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
+                                {T[236]}
+                            </p>
+                        )}
+                    </div>
+
                     {/* Action Buttons */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <button
-                            onClick={() => onAddToCart(product, qty)}
+                            onClick={handleAddToCartClick}
                             style={{
                                 background: '#1a1a1a', color: '#fff',
                                 border: 'none', padding: '13px 20px',
@@ -738,9 +843,6 @@ function QuickViewModal({ product, currency, T, onClose, onAddToCart, wishlist, 
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  ACCORDION ITEM
-// ─────────────────────────────────────────────────────────
 function AccordionItem({ title, children }) {
     const [open, setOpen] = useState(false);
     const bodyRef = useRef(null);
@@ -774,35 +876,83 @@ function AccordionItem({ title, children }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────
-//  PRODUCT CARD
-// ─────────────────────────────────────────────────────────
 function ProductCard({ p, wishlist, toggleWishlist, T, currency, onQuickView, onAddToCart }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const videos = variant.videos || [];
+
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
 
     const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => {
-            setCurrentImg(idx);
-            idx = (idx + 1) % images.length;
-        }, 800);
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
     };
 
     const stopHover = () => {
-        clearInterval(intervalRef.current);
-        setCurrentImg(0);
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
     };
 
-    useEffect(() => () => clearInterval(intervalRef.current), []);
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
 
-    const imgSrc =
-        images.length > 0
-            ? `${API_BASE}${images[currentImg]}`
-            : '/placeholder.jpg';
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
 
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice;
@@ -820,20 +970,32 @@ function ProductCard({ p, wishlist, toggleWishlist, T, currency, onQuickView, on
             <div className="jw-card-img-wrap">
                 {isSale && <span className="jw-sale-badge">{T[228]}</span>}
 
-                <img
-                    src={imgSrc}
-                    alt={p.title || p.name}
-                    className="jw-card-img"
-                    loading="lazy"
-                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                />
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={`${API_BASE}${currentItem.src}`}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? `${API_BASE}${currentItem.src}` : '/placeholder.jpg'}
+                        alt={p.title || p.name}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                    />
+                )}
 
-                {images.length > 1 && (
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => (
+                        {mediaList.map((_, i) => (
                             <span
                                 key={i}
-                                className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`}
+                                className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`}
                             />
                         ))}
                     </div>
@@ -888,8 +1050,6 @@ function ProductCard({ p, wishlist, toggleWishlist, T, currency, onQuickView, on
                             />
                         </svg>
                     </button>
-
-                    {/* ── ADD TO CART BUTTON — REMOVED (hover icon) as requested ── */}
                 </div>
             </div>
 
@@ -931,7 +1091,6 @@ function SkeletonCard() {
 export default function Rings({ initialProducts = [] }) {
     const router = useRouter();
 
-    // ── Translation + country detection ──
     const { translated: rawT, status: tStatus, countryCode } = useTranslation(UI_STRINGS);
 
     const [mounted, setMounted] = useState(false);
@@ -962,13 +1121,11 @@ export default function Rings({ initialProducts = [] }) {
     const [perPage, setPerPage] = useState(30);
     const [sort, setSort] = useState("default");
 
-    // ── Wishlist — WishlistContext se (navbar count auto update hoga) ──
     const { wishlistItems, addToWishlist, removeFromWishlist: removeFromWishlistCtx } = useWishlist();
     const wishlist = (wishlistItems || []).map(item => item._id || item);
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // ── SSR se initialProducts — pehli load par re-fetch skip karega (crawl fix) ──
     const [products, setProducts] = useState(initialProducts);
     const [loading, setLoading] = useState(initialProducts.length === 0);
     const [error, setError] = useState(null);
@@ -1003,22 +1160,17 @@ export default function Rings({ initialProducts = [] }) {
     };
 
     useEffect(() => {
-        if (!skippedInitialFetch.current) {
-            skippedInitialFetch.current = true;
-            if (initialProducts.length > 0 && activeCategory === "Rings") {
-                setLoading(false);
-                return;
-            }
-        }
+        const hasSSRData = !skippedInitialFetch.current && initialProducts.length > 0 && activeCategory === "Rings";
+        skippedInitialFetch.current = true;
 
         const fetchProducts = async () => {
             try {
-                setLoading(true);
+                if (!hasSSRData) setLoading(true);
                 setError(null);
                 const queryParams = new URLSearchParams();
                 if (activeCategory) queryParams.append('category', activeCategory);
                 const url = `${API_BASE}/api/products?${queryParams.toString()}`;
-                const res = await fetch(url);
+                const res = await fetch(url, { cache: 'no-store' });
                 if (!res.ok) throw new Error(`Server error: ${res.status}`);
                 const data = await res.json();
                 if (data.success) {
@@ -1028,7 +1180,7 @@ export default function Rings({ initialProducts = [] }) {
                 }
             } catch (err) {
                 console.error('Fetch error:', err);
-                setError(err.message);
+                if (!hasSSRData) setError(err.message);
             } finally {
                 setLoading(false);
             }
@@ -1036,7 +1188,6 @@ export default function Rings({ initialProducts = [] }) {
         fetchProducts();
     }, [activeCategory]);
 
-    // ── Wishlist toggle — WishlistContext se (WishlistPage jaisa pattern) ──
     const toggleWishlist = useCallback((id, productData) => {
         if (wishlist.includes(id)) {
             removeFromWishlistCtx(id);
@@ -1045,8 +1196,7 @@ export default function Rings({ initialProducts = [] }) {
         }
     }, [wishlist, addToWishlist, removeFromWishlistCtx]);
 
-    // ── Add to Cart — WishlistPage jaisa custom event pattern (Quick View modal me use hota hai) ──
-    const handleAddToCart = useCallback((product, qty = 1) => {
+    const handleAddToCart = useCallback((product, qty = 1, size = null) => {
         const variant = getFirstVariant(product);
         const cartItem = {
             _id: product._id,
@@ -1058,10 +1208,13 @@ export default function Rings({ initialProducts = [] }) {
             newPrice: variant.newPrice,
             isSale: variant.isSale,
             qty,
+            size,
         };
         window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { item: cartItem } }));
         setTimeout(() => window.dispatchEvent(new CustomEvent('open-cart-drawer')), 400);
-        showToast(`"${product.title || product.name}" added to cart`);
+        showToast(
+            `"${product.title || product.name}"${size ? ` (Size: ${size})` : ''} added to cart`
+        );
     }, [showToast]);
 
     // ── Quick View open/close ──
@@ -1157,8 +1310,8 @@ export default function Rings({ initialProducts = [] }) {
                     currency={currency}
                     T={T}
                     onClose={closeQuickView}
-                    onAddToCart={(product, qty) => {
-                        handleAddToCart(product, qty);
+                    onAddToCart={(product, qty, size) => {
+                        handleAddToCart(product, qty, size);
                         closeQuickView();
                     }}
                     wishlist={wishlist}

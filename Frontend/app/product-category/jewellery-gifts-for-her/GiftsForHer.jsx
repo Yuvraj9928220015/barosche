@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import './GiftsForHer.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -47,7 +47,7 @@ const DEFAULT_UI = {
     priceHighLow: "Price: High to Low",
     newest: "Newest",
     filtersText: "Filters",
-    fashionJewellery: "Fashion Jewellery",
+    fashionJewellery: "Luxury Jewellery Gifts",
     faq: "Frequently Asked Questions",
     retry: "Retry",
     gridView: "Grid view",
@@ -59,7 +59,7 @@ const DEFAULT_UI = {
 
     showingOf: "Showing",
     showingResults: "results",
-    pageTitle: "Elegant Semi-Precious & Gold Fashion Jewellery Collection",
+    pageTitle: "Luxury Jewellery Gifts for Her – Elegant & Timeless Style ",
     priceOnRequest: "Price on request",
 };
 
@@ -165,170 +165,181 @@ const rebuildCategories = (originalCats, translatedNames) =>
     originalCats.map((c, i) => ({ ...c, translatedName: translatedNames[i] }));
 
 // ─────────────────────────────────────────────────────────
-//  FAQ DATA
+//  FAQ DATA — Luxury Jewellery Gifts
 // ─────────────────────────────────────────────────────────
 const faqData = [
+  
     {
-        q: " What is fine silver jewellery?",
-        a: " Fine silver jewellery is made using high-quality silver known for its bright shine, smooth finish, and elegant appearance, making it suitable for both daily and occasion wear."
+        q: "What is the best jewellery gift for her?",
+        a: " The best <strong>jewellery gift for her</strong> depends on her personal style, but minimalist rings, bracelets, and pendants are always safe and elegant choices."
     },
     {
-        q: "Is fine silver jewellery suitable for everyday use?",
-        a: " Yes, fine silver jewellery is lightweight and comfortable, making it ideal for everyday wear when handled with proper care."
+        q: "Is jewellery a good gift for everyday wear?",
+        a: " Yes, especially when it is designed as <strong>jewellery for everyday</strong>—lightweight, versatile, and comfortable for daily use."
     },
     {
-        q: " What is jewellery with gold?",
-        a: " Jewellery with gold includes pieces that feature gold elements or gold-inspired finishes, offering a luxurious and timeless look."
+        q: "How do I choose the right jewellery for her?",
+        a: " Observe her style preferences—whether she likes minimal, bold, or classic designs—and choose something that matches her personality."
     },
     {
-        q: " What is gold fashion jewellery?",
-        a: "Gold fashion jewellery refers to lightweight, modern designs inspired by traditional gold jewellery, created for everyday styling and comfort."
+        q: "What type of jewellery is most popular for gifting?",
+        a: " Bracelets, rings, earrings, and pendants are among the most popular options for a <strong> gift for her jewellery.</strong>."
     },
     {
-        q: " Is gold fashion jewellery durable?",
-        a: " Yes, gold fashion jewellery is designed for regular use and can maintain its appearance with proper care and storage."
+        q: "Are minimalist jewellery pieces good for gifting?",
+        a: " Yes, minimalist jewellery is timeless, versatile, and easy to wear, making it perfect for gifting."
     },
     {
-        q: "What is semi precious gemstone jewellery?",
-        a: " It is jewellery made using natural stones like amethyst, quartz, or turquoise, known for their unique colors and patterns."
+        q: "Can jewellery be worn daily?",
+        a: " Absolutely. Many pieces are designed specifically as <strong>jewellery for everyday,</strong> ensuring comfort and durability."
     },
     {
-        q: "Are semi precious stones real?",
-        a: " Yes, semi precious stones are natural gemstones, each with its own unique characteristics and appearance."
+        q: "What makes jewellery a meaningful gift?",
+        a: " Jewellery carries emotional value and often represents special memories, making it a lasting and meaningful gift."
     },
     {
-        q: "Can I wear semi precious jewellery daily?",
-        a: " Yes, many semi precious jewellery pieces are designed for daily wear, especially lightweight and minimal designs."
+        q: "Are bracelets a good jewellery gift for her?",
+        a: " Yes, a <strong> bracelet gift for her</strong> is elegant, versatile, and suitable for both casual and formal occasions."
     },
     {
-        q: "How do I style semi precious stones jewellery?",
-        a: " You can style them with casual outfits for a subtle look or use bold pieces as statement accessories for special occasions."
+        q: "What occasions are best for gifting jewellery?",
+        a: " Jewellery is perfect for birthdays, anniversaries, Valentine's Day, Christmas, and even \"just because\" moments."
     },
     {
-        q: " Can I mix silver and gold jewellery together?",
-        a: " Yes, mixing metals like silver and gold is a popular trend that creates a modern and stylish layered look."
-    },
-
-
-     {
-        q: " How should I care for silver jewellery?",
-        a: "  Store it in a dry place, avoid moisture, and clean it gently to maintain its shine and prevent tarnishing."
+        q: "How can I make a jewellery gift more special?",
+        a: " Choose a piece that reflects her personality and style to make your <strong>jewellery gift for her</strong> more personal and thoughtful."
     },
     {
-        q: " Does gold fashion jewellery fade over time?",
-        a: "  With proper care, gold fashion jewellery retains its finish for a long time, though exposure to chemicals should be avoided."
+        q: "Is jewellery a good last-minute gift?",
+        a: " Yes, jewellery is a reliable and thoughtful last-minute gift that still feels meaningful and elegant."
     },
     {
-        q: " What makes gemstone jewellery unique?",
-        a: "  Each gemstone has natural variations in color and texture, making every piece one-of-a-kind."
+        q: "What type of jewellery suits all outfits?",
+        a: " Minimalist and timeless designs easily complement both casual and formal outfits."
     },
     {
-        q: "  Is your jewellery suitable for sensitive skin?",
-        a: " Most modern jewellery is designed with skin-friendly materials, but it’s always best to check product details."
+        q: "Can I gift jewellery without knowing her exact style?",
+        a: " Yes, simple and classic designs are safe options if you are unsure about her preferences."
     },
     {
-        q: "Can jewellery be worn for both casual and formal occasions? ",
-        a: " Yes, the versatility of modern jewellery allows it to complement casual, office, and formal outfits. "
+        q: "Are earrings a good everyday gift?",
+        a: " Yes, lightweight and minimal earrings are perfect for everyday wear and add subtle elegance."
     },
     {
-        q: "Is your jewellery lightweight?",
-        a: " Yes, the collection focuses on lightweight designs for maximum comfort during long hours of wear. "
+        q: "Why are rings a popular jewellery gift?",
+        a: " Rings symbolize connection and style, making them a timeless and meaningful choice."
     },
     {
-        q: "What are the latest jewellery trends?",
-        a: "  Popular trends include minimalist designs, layered necklaces, stacked rings, and mixed metal styling."
+        q: "What should I consider before buying jewellery as a gift?",
+        a: " Consider her style, comfort, lifestyle, and whether the piece can be worn daily."
     },
     {
-        q: " Is jewellery a good gift option?",
-        a: " Yes, jewellery is a timeless and meaningful gift suitable for birthdays, anniversaries, and special occasions. "
+        q: "Is layering jewellery a good trend?",
+        a: " Yes, layering rings, necklaces, and bracelets allows for personalized styling and is very popular."
     },
     {
-        q: "Can I wear multiple jewellery pieces together?",
-        a: " Absolutely, layering and stacking jewellery pieces is a popular styling technique for a modern look. "
+        q: "How long does jewellery typically last?",
+        a: " With proper care, high-quality jewellery can last for years while maintaining its beauty."
     },
     {
-        q: " Is it safe to shop jewellery online?",
-        a: " Yes, shopping online is safe when done through a trusted platform with secure payment options and clear product details. "
+        q: "Can jewellery be both stylish and comfortable?",
+        a: " Yes, modern designs focus on both aesthetics and comfort, making them ideal for everyday wear."
+    },
+    {
+        q: "Why choose Barosche for jewellery gifts?",
+        a: " Barosche offers minimalist, high-quality designs that are perfect for both gifting and everyday elegance."
     }
 ];
 
 // ─────────────────────────────────────────────────────────
-//  FASHION JEWELLERY CONTENT DATA
+//  FASHION JEWELLERY CONTENT DATA — Luxury Jewellery Gifts
 // ─────────────────────────────────────────────────────────
 const fashionJewelleryContent = [
-    { type: 'h', text: "Fine Silver Jewellery, Gold & Semi Precious Jewellery – Elegant & Modern Designs" },
-    { type: 'p', text: "Explore a thoughtfully curated collection of <strong>fine silver jewellery</strong>, <strong>jewellery with gold</strong>, and <strong>semi precious gemstone jewellery</strong> that brings together elegance, craftsmanship, and contemporary style. Each piece in our collection is designed to reflect modern fashion sensibilities while preserving the timeless charm that jewellery is known for. Whether you are looking for everyday essentials or statement pieces for special occasions, our designs offer the perfect blend of versatility and sophistication." },
-    { type: 'p', text: "<strong>Fine silver jewellery</strong> stands out for its clean, polished finish and understated elegance, making it an ideal choice for minimal and refined styling. Jewellery with gold adds a touch of warmth and luxury, effortlessly elevating both casual and formal looks. Meanwhile, semi precious gemstone jewellery introduces color, character, and individuality, allowing you to express your unique sense of style through beautifully crafted pieces." },
-    { type: 'p', text: "Our collection is designed with attention to detail, ensuring comfort, durability, and long-lasting shine. Lightweight materials and smooth finishes make each piece suitable for all-day wear, while versatile designs allow easy styling across different outfits and occasions. From office wear and casual outings to festive celebrations and evening events, our jewellery adapts seamlessly to your lifestyle." },
-    { type: 'p', text: "With a focus on quality craftsmanship and trend-inspired aesthetics, we aim to offer jewellery that not only enhances your appearance but also reflects your confidence and personality. Whether you prefer subtle elegance or bold fashion statements, this collection provides endless possibilities to create looks that are both modern and timeless." },
-    { type: 'h', text: "Fine Silver Jewellery – Timeless Elegance with Modern Craftsmanship" },
-    { type: 'p', text: "<strong>Fine silver jewellery</strong> continues to be a symbol of understated luxury, admired for its refined appearance, durability, and effortless versatility. With its naturally bright finish and sophisticated tone, silver jewellery remains a staple in modern fashion, offering a perfect balance between simplicity and elegance. It seamlessly complements a wide range of styles, making it an essential addition to every jewellery collection." },
-    { type: 'p', text: "Designed to evolve with changing trends, fine silver jewellery ranges from delicate minimalist pieces to bold contemporary designs. Whether it's a sleek chain, an elegant ring, or a statement accessory, silver jewellery enhances your look without overwhelming it. Its neutral color makes it easy to pair with casual outfits, office wear, and even formal ensembles, allowing you to transition effortlessly from day to night." },
-    { type: 'p', text: "Beyond its aesthetic appeal, <strong>fine silver jewellery</strong> is also valued for its comfort and practicality. Lightweight construction ensures ease of wear throughout the day, while high-quality finishing techniques provide a smooth, polished surface that feels as good as it looks. With proper care, silver jewellery retains its shine and beauty over time, making it a reliable choice for long-term use." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Premium craftsmanship with precise detailing and smooth finishing<br/>• Lightweight design for all-day comfort<br/>• Versatile styling suitable for casual, office, and formal looks<br/>• Retains long-lasting shine with proper care and maintenance" },
-    { type: 'p', text: "Fine silver jewellery is more than just an accessory—it is a timeless expression of style that adapts to your lifestyle while maintaining its classic elegance." },
-    { type: 'h', text: "Latest Trends in Fashion Jewellery" },
-    { type: 'p', text: "The world of fashion jewellery is constantly evolving, with new trends redefining how jewellery is styled and worn. Today’s trends emphasize simplicity, layering, and versatility, allowing individuals to create personalized looks that suit their style." },
-    { type: 'p', text: "<strong>Minimalist jewellery</strong> continues to dominate everyday fashion, while layered necklaces and stacked rings offer a more expressive and modern approach. Mixed metals, including silver and gold combinations, are also gaining popularity for their contemporary appeal." },
-    { type: 'p', text: "<strong>Trending Styles Include:</strong><br/>• Minimalist and delicate jewellery pieces<br/>• Layered necklaces and stacked rings<br/>• Mixed metal styling (silver + gold)<br/>• Lightweight statement jewellery<br/>• Gemstone accents for color and uniqueness" },
-    { type: 'h', text: "Modern Jewellery for Women – Designed for Everyday Elegance" },
-    { type: 'p', text: "<strong>Modern jewellery for women </strong>is no longer limited to occasional wear—it is designed to be a part of your daily lifestyle. Today’s designs focus on combining style with comfort, ensuring that each piece feels as good as it looks. Lightweight construction, smooth edges, and skin-friendly finishes make it easy to wear jewellery throughout the day without discomfort." },
-    { type: 'p', text: "Whether you're heading to work, meeting friends, or attending an event, modern jewellery adapts effortlessly to your routine. From subtle elegance to bold fashion statements, these pieces allow you to express your personality while staying comfortable and confident." },
-    { type: 'p', text: "<strong>Why It Works for Daily Wear:</strong><br/>• Lightweight and easy to wear for long hours<br/>• Minimal designs for effortless styling<br/>• Comfortable finishes suitable for all skin types<br/>• Perfect balance of fashion and functionality" },
-    { type: 'h', text: "Jewellery with Gold – Classic Luxury Meets Modern Style" },
-    { type: 'p', text: "<strong>Jewellery with gold</strong> has always been a symbol of elegance, sophistication, and timeless beauty. Blending traditional charm with modern design sensibilities, today’s gold jewellery offers a refined yet contemporary appeal that suits a wide range of styles and occasions. Whether you prefer subtle detailing or eye-catching statement pieces, <strong>gold jewellery</strong> effortlessly enhances your overall look with a touch of luxury." },
-    { type: 'p', text: "Modern jewellery with gold is designed to be more versatile and wearable than ever before. From delicate chains and minimal accents to bold, fashion-forward designs, these pieces cater to both classic and contemporary preferences.<strong> Gold fashion jewellery,</strong> in particular, has gained popularity for its lightweight construction and stylish appearance, making it ideal for everyday wear without compromising on elegance." },
-    { type: 'p', text: "One of the key strengths of gold jewellery is its adaptability. It pairs beautifully with casual outfits, complements professional attire, and adds sophistication to festive and evening wear. This flexibility allows you to transition seamlessly between different looks while maintaining a polished and confident style." },
-    { type: 'p', text: "Beyond aesthetics, jewellery with gold is crafted with attention to comfort and durability. Modern techniques ensure smooth finishes and long-lasting shine, allowing each piece to retain its beauty over time. This makes gold jewellery not only a fashion choice but also a practical addition to your collection." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Elegant and luxurious gold-inspired designs<br/>• Perfect balance of style and everyday practicality<br/>• Suitable for both daily wear and special occasions<br/>• Trend-driven designs with timeless appeal" },
-    { type: 'p', text: "Jewellery with gold offers the perfect combination of heritage and modern fashion, allowing you to express your style with confidence, grace, and enduring elegance." },
-    { type: 'h', text: "Semi Precious Gemstone Jewellery – Natural Beauty & Unique Designs" },
-    { type: 'p', text: "<strong>Semi precious gemstone jewellery</strong> beautifully captures the essence of nature through vibrant colors, organic textures, and one-of-a-kind patterns. Each gemstone is naturally formed, giving every piece its own distinct identity and charm. This uniqueness makes gemstone jewellery an excellent choice for those who appreciate individuality and artistic expression in their accessories." },
-    { type: 'p', text: "Designed to showcase the natural brilliance of stones, these jewellery pieces strike a perfect balance between elegance and durability. Skilled craftsmanship ensures that each gemstone is carefully set and polished, enhancing its visual appeal while maintaining comfort for everyday wear. Whether you prefer soft, subtle tones or bold, eye-catching colors, gemstone jewellery allows you to create looks that truly reflect your personality." },
-    { type: 'p', text: "Versatility is another key advantage of <strong>semi precious gemstone jewellery</strong>. It can effortlessly complement casual outfits, add a refined touch to office wear, or become the highlight of your look for festive occasions and evening events. From minimal designs to statement pieces, these accessories offer endless styling possibilities for modern fashion enthusiasts." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Unique designs featuring natural, one-of-a-kind gemstones<br/>• Rich colors with strong artistic and visual appeal<br/>• Durable craftsmanship designed for comfort and long-term wear<br/>• Suitable for both everyday styling and special occasions" },
-    { type: 'p', text: "Semi precious gemstone jewellery is more than just an accessory—it is a reflection of natural beauty and personal style, allowing you to stand out with elegance and confidence." },
-    { type: 'h', text: "Semi Precious Stones Jewellery – Trendy, Versatile & Expressive" },
-    { type: 'p', text: "<strong>Semi precious stones jewellery</strong> brings together the beauty of nature and the creativity of modern design, offering a diverse range of styles, colors, and patterns. Known for its versatility and expressive appeal, this category has become a favorite among those who enjoy experimenting with fashion while maintaining a sense of elegance. Each piece is thoughtfully crafted to highlight the natural charm of the stones while aligning with contemporary trends." },
-    { type: 'p', text: "From soft, minimal designs to bold, statement-making accessories, semi precious stones jewellery caters to a wide spectrum of style preferences. The variety of stones available allows you to explore different looks—whether you prefer subtle tones for <strong>everyday wear</strong> or vibrant hues that stand out during special occasions. This flexibility makes it easy to build a jewellery collection that reflects your personality and evolves with your style." },
-    { type: 'p', text: "One of the key advantages of semi precious stones jewellery is its ability to mix and match effortlessly. These pieces can be layered, paired with other metals, or styled individually to create unique combinations. Whether you're dressing for a casual day out, a professional setting, or a festive event, they adapt seamlessly to different outfits and occasions." },
-    { type: 'p', text: "Crafted with a focus on comfort and durability, these jewellery pieces are suitable for regular wear while maintaining their visual appeal over time. Their combination of trend-driven design and practical usability ensures that you can enjoy both style and convenience in your everyday accessories." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Wide variety of stones, colors, and design options<br/>• Trendy, contemporary styles for modern fashion<br/>• Easy to mix, match, and layer with different outfits<br/>• Ideal for both daily wear and special occasions" },
-    { type: 'p', text: "Semi precious stones jewellery offers endless possibilities for self-expression, allowing you to create looks that are stylish, modern, and uniquely yours." },
-    { type: 'h', text: "Gold Fashion Jewellery – Modern Luxury for Everyday Styling" },
-    { type: 'p', text: "<strong>Gold fashion jewellery</strong> brings a fresh perspective to traditional luxury by combining the timeless appeal of gold with modern, wearable designs. Created for today’s fast-paced lifestyles, these pieces offer elegance without the heaviness of conventional jewellery, making them perfect for daily use. They allow you to enjoy the richness of gold-inspired styling while maintaining comfort and ease throughout the day." },
-    { type: 'p', text: "With a strong focus on contemporary aesthetics, gold fashion jewellery features sleek silhouettes, minimal detailing, and trend-driven designs that align with current fashion preferences. Whether you choose delicate chains, stylish earrings, or bold statement pieces, each design is crafted to enhance your look while remaining practical for regular wear. This makes it easy to incorporate a touch of luxury into your everyday outfits." },
-    { type: 'p', text: "Another key advantage of <strong>gold fashion jewellery</strong> is its versatility. These pieces transition effortlessly from casual settings to office environments and even evening occasions. You can wear them individually for a subtle look or layer them for a more expressive style, allowing you to adapt your jewellery to different moods and outfits." },
-    { type: 'p', text: "Designed with attention to quality and comfort, gold fashion jewellery uses lightweight materials and smooth finishes to ensure long-lasting wearability. It offers an accessible way to enjoy premium aesthetics without compromising on functionality, making it a smart and stylish addition to any jewellery collection." },
-    { type: 'p', text: "<strong>Key Highlights:</strong><br/>• Lightweight designs for all-day comfort<br/>• Modern, trend-driven styles<br/>• Perfect for everyday wear and versatile styling<br/>• Affordable luxury with a refined, premium look" },
-    { type: 'p', text: "Gold fashion jewellery is the ideal choice for those who want to embrace modern luxury in a practical and stylish way, enhancing everyday fashion with effortless elegance." },
-    { type: 'h', text: "How to Style Your Jewellery for Different Occasions" },
-    { type: 'p', text: "Styling jewellery correctly can enhance your entire look. The key is to match your jewellery with the occasion while maintaining balance and elegance." },
-    { type: 'p', text: "For everyday wear, opt for minimal and lightweight pieces that add subtle charm. In professional settings, choose refined and elegant jewellery that complements your outfit without being overpowering. For festive and evening events, you can experiment with bold designs, layered styles, or gemstone pieces to create a statement look." },
-    { type: 'p', text: "<strong>Quick Styling Tips:</strong><br/>• Keep it minimal for daily wear<br/>• Choose elegant designs for office outfits<br/>• Go bold with statement pieces for events<br/>• Mix and layer jewellery for a modern look" },
-    { type: 'h', text: "Jewellery Care Tips – Maintain Shine & Longevity" },
-    { type: 'p', text: "Proper care is essential to keep your jewellery looking new and maintaining its shine over time. Whether it’s silver, gold fashion jewellery, or gemstone pieces, simple maintenance can significantly extend their lifespan." },
-    { type: 'p', text: "Avoid exposure to moisture, perfumes, and harsh chemicals, as these can affect the finish and durability. Always store jewellery in a clean, dry place, preferably in separate pouches to prevent scratches." },
-    { type: 'p', text: "<strong>Care Tips:</strong><br/>• Store jewellery in a dry, airtight space<br/>• Avoid contact with water and chemicals<br/>• Clean gently with a soft cloth<br/>• Remove jewellery before workouts or sleep" },
-    { type: 'h', text: "Perfect Jewellery Gift Guide" },
-    { type: 'p', text: "Jewellery is one of the most meaningful and timeless gifts you can give. Whether you're celebrating a birthday, anniversary, or special milestone, the right piece of jewellery can create lasting memories." },
-    { type: 'p', text: "Fine silver jewellery makes a great choice for elegant gifting, while gold fashion jewellery offers a luxurious yet practical option. Semi precious gemstone jewellery is perfect for those who love unique and expressive designs." },
-    { type: 'p', text: "<strong>Best Gifting Ideas:</strong><br/>• Minimal silver jewellery for everyday elegance<br/>• Gold fashion jewellery for modern luxury<br/>• Gemstone jewellery for unique personality-based gifts<br/>• Versatile pieces suitable for all occasions" },
-    { type: 'h', text: "Why Our Jewellery Stands Out" },
-    { type: 'p', text: "Our jewellery collection is thoughtfully designed to deliver a premium experience that combines style, comfort, and durability. Every piece reflects attention to detail and a commitment to quality, ensuring that you receive jewellery that looks beautiful and lasts longer." },
-    { type: 'p', text: "We understand the needs of modern consumers, which is why our designs focus on versatility and practicality while staying aligned with current fashion trends." },
-    {
-        type: 'p', text: "<strong>What Makes Us Different:</strong><br/>• Carefully crafted, high-quality designs<br/>• Trend-focused yet timeless aesthetics<br/>• Comfortable for everyday wear<br/>• Wide variety for every style preference<br/>•Long-lasting shine and durability"
-    },
+     { type: 'h', text: "Timeless Jewellery Gifts for Her – Elegant & Meaningful" },
+    { type: 'p', text: "Finding the perfect <strong>jewellery gift for her</strong> is more than just selecting a beautiful piece—it's about expressing emotions, creating memories, and showing how much you truly care. Jewellery has a unique way of capturing meaningful moments, making it one of the most thoughtful and lasting gifts you can give. At Barosche, we curate a refined collection of jewellery that transforms everyday accessories into symbols of love, appreciation, and elegance." },
+    { type: 'p', text: "Whether you are celebrating a birthday, anniversary, or Valentine's Day or simply want to surprise her with something special, our jewellery is designed to leave a lasting impression. Each piece reflects a blend of modern minimalism and timeless sophistication, ensuring it complements her personal style while standing out with subtle luxury." },
+    { type: 'p', text: "Our collection includes elegant rings, delicate necklaces, modern bracelets, and minimalist earrings—carefully crafted to suit her everyday lifestyle. These pieces are designed not only to enhance her look but also to become a part of her daily routine. From simple designs she can wear to work to refined styles perfect for special occasions, Barosche jewellery offers versatility without compromising on elegance." },
+    { type: 'p', text: "If you are searching for a <strong>gift for her jewellery</strong> that feels personal, meaningful, and effortlessly stylish, Barosche provides the perfect balance of quality, design, and emotion. Each piece is created to be cherished, making it more than just a gift—it becomes a lasting reminder of your thoughtfulness and care." },
 
-    { type: 'h', text: "Why Choose Our Jewellery Collection" },
-    { type: 'p', text: "Our jewellery collection is designed to meet the needs of modern consumers who value style, quality, and versatility. Each piece is crafted with precision to ensure durability, elegance, and long-term value." },
-    { type: 'p', text: "We offer a wide range of options, including <strong>fine silver jewellery, jewellery with gold, </strong>and <strong> semi precious jewellery,</strong> ensuring there is something for every style preference." },
-    { type: 'p', text: "<strong>We Focus On:</strong><br/>• High-quality craftsmanship and finishing<br/>• Modern and trending designs<br/>• Comfortable everyday wear<br/>•Versatile styling for multiple occasions<br/>•Long-lasting durability and shine" },
-    { type: 'h', text: "Shop Jewellery Online – Easy, Secure & Convenient" },
-    { type: 'p', text: "Shopping for <a href='/product-category/jewellery/' style='color: #007bff; text-decoration: underline;'>find jewellery online </a>has never been easier. Explore a wide range of fine silver jewellery, gold fashion jewellery, and semi precious stones jewellery from the comfort of your home." },
-    { type: 'p', text: "<strong>Benefits:</strong><br/>• Smooth browsing and easy navigation<br/>• Secure checkout and payment options<br/>•Detailed product descriptions and images<br/>•Reliable delivery services<br/>" },
-    { type: 'p', text: "Whether you're updating your collection or searching for a meaningful gift, our platform ensures a seamless shopping experience." },
+    { type: 'h', text: "Why Jewellery is the Perfect Gift for Her" },
+    { type: 'p', text: "Jewellery has always been one of the most meaningful and timeless gifts you can give. Unlike many other presents, it carries deep emotional value and often becomes a cherished part of her everyday life. A thoughtfully chosen <strong>jewellery gift for her</strong> can symbolize love, appreciation, and the special moments you share—turning a simple accessory into a lasting memory." },
+    { type: 'p', text: "What makes jewellery truly special is its ability to connect with emotions. Whether it's a delicate bracelet, a minimalist ring, or an elegant pendant, each piece can represent an important milestone—be it a birthday, anniversary, celebration, or even a spontaneous gesture of love. Over time, these pieces become more than just fashion—they become personal keepsakes she can treasure forever." },
+    { type: 'p', text: "Another reason jewellery stands out as the perfect gift is its versatility. A well-designed piece can be worn daily, effortlessly complementing both casual and formal outfits. This makes it not only a beautiful gift but also a practical one that she can enjoy again and again. Choosing the right <strong>gift for her jewellery</strong> means selecting something that reflects her personality while fitting seamlessly into her lifestyle." },
+    { type: 'p', text: "At Barosche, we focus on minimalist luxury—creating jewellery that is refined, modern, and easy to wear. Our designs are thoughtfully crafted to balance elegance with simplicity, ensuring each piece enhances her natural style without feeling overwhelming. Whether she prefers subtle everyday pieces or understated statement designs, our collection offers something she can wear with confidence." },
+    { type: 'p', text: "Barosche jewellery is designed to complement every outfit and occasion, making it ideal for both everyday wear and special moments. When you choose a piece from our collection, you're not just giving jewellery—you're giving a meaningful expression of care, style, and lasting beauty." },
+
+    { type: 'h', text: "Explore Our Jewellery Gift Collection" },
+    { type: 'p', text: "At Barosche, our curated range of jewellery is designed to make every <strong>jewellery gift for her</strong> feel thoughtful, elegant, and timeless. Whether you are looking for something minimal for daily wear or a refined piece for special occasions, our collection offers versatile options that suit every style and personality. Each piece is crafted to combine modern aesthetics with lasting comfort, making it a meaningful addition to her jewellery collection." },
+
+    { type: 'h', text: "1. <a href='https://barosche.com/product-category/bracelets/'>Bracelet Gift for Her</a>" },
+    { type: 'p', text: "A <strong>bracelet gift for her</strong> is one of the most elegant and versatile choices you can make. Bracelets effortlessly enhance any outfit, adding a subtle touch of sophistication to both casual and formal looks. At Barosche, our bracelets are designed with clean lines and modern aesthetics, making them perfect for stacking or wearing individually. Whether she prefers delicate minimal designs or slightly bold statement styles, our collection offers pieces that reflect her unique taste. These bracelets are lightweight, comfortable, and ideal for everyday wear, ensuring she can carry your gift with her wherever she goes." },
+
+    { type: 'h', text: "2. <a href='https://barosche.com/product-category/rings/'>Rings That Tell a Story</a>" },
+    { type: 'p', text: "Rings are timeless symbols of connection, style, and personal expression. A thoughtfully chosen ring can hold deep emotional meaning, making it a perfect <strong>gift for her jewellery</strong>. Our minimalist rings are designed for everyday elegance and can be worn alone for a subtle look or layered to create a more personalized style. From sleek bands to modern designs, each piece is crafted to complement her individuality. A ring from Barosche is more than just jewellery—it becomes a reflection of her personality and a lasting reminder of special moments." },
+
+    { type: 'h', text: "3. <a href='https://barosche.com/product-category/earrings/'>Earrings for Everyday Elegance</a>" },
+    { type: 'p', text: "Earrings are an essential part of every jewellery collection and one of the easiest ways to elevate any look. Our collection includes everything from classic studs to contemporary minimalist designs, offering options that suit both daily wear and special occasions. Designed to be lightweight and comfortable, Barosche earrings are perfect for long wear without compromising on style. Whether she prefers subtle elegance or modern charm, these earrings add effortless sophistication to her everyday outfits." },
+
+    { type: 'h', text: "4. <a href='https://barosche.com/product-category/pendants/'>Pendants & Neck Jewellery</a>" },
+    { type: 'p', text: "Pendants and neck jewellery are perfect for adding a personal and meaningful touch to her style. These pieces are versatile enough to be worn alone for a clean, minimal look or layered with other chains for a more fashionable statement. At Barosche, our pendants are crafted to blend simplicity with elegance, making them suitable for both everyday wear and special occasions. A beautifully designed pendant not only enhances her outfit but also becomes a piece she can cherish for years to come." },
+    { type: 'p', text: "With a focus on versatility, elegance, and modern design, Barosche ensures that every piece in our collection makes the perfect <strong>jewellery gift for her</strong>—something she will love, wear, and remember every day." },
+
+    { type: 'h', text: "Jewellery for Everyday Wear" },
+    { type: 'p', text: "When choosing a <strong>jewellery gift for her</strong>, versatility plays a key role. The best pieces are not only beautiful but also practical—designed to be worn effortlessly every day. At Barosche, our collection is thoughtfully created as <strong>jewellery for everyday</strong>, allowing her to style it comfortably from morning to evening, whether she's at work, out for a casual outing, or attending a special event." },
+    { type: 'p', text: "Every piece is designed with a focus on comfort and wearability without compromising on elegance. Our jewellery blends seamlessly with different outfits and occasions, making it easy for her to express her personal style in a subtle yet refined way. From minimalist rings and delicate bracelets to elegant earrings and pendants, each design complements her daily routine while adding a touch of understated luxury." },
+
+    { type: 'h', text: "Why Barosche Jewellery is Perfect for Everyday Wear" },
+    { type: 'p', text: "<strong>Why Barosche Jewellery is Perfect for Everyday Wear:</strong><br/>• <strong>Lightweight and Comfortable:</strong> Designed for long hours of wear without discomfort<br/>•<strong> Perfect for Daily Styling:</strong> Simple yet elegant designs that suit every outfit<br/>•<strong> Minimal Yet Luxurious: </strong>A refined look that enhances style without being overpowering<br/>• <strong>Easy to Mix and Match:</strong> Pieces that can be layered or styled individually" },
+    { type: 'p', text: "Our focus on simplicity and versatility ensures that every <strong>jewellery gift for her</strong> becomes more than just an accessory—it becomes a part of her everyday life. This makes Barosche jewellery a thoughtful and meaningful choice, giving her something she can truly enjoy, style, and cherish every single day." },
+
+    { type: 'h', text: "How to Choose the Right Jewellery Gift for Her" },
+    { type: 'p', text: "Selecting the perfect <strong>gift for her jewellery</strong> can sometimes feel overwhelming, especially when you want it to be meaningful, stylish, and something she will truly love. The key is to focus on her personality, lifestyle, and how she likes to express herself through accessories. A thoughtfully chosen <strong>jewellery gift for her</strong> not only enhances her style but also becomes a lasting reminder of your care and attention." },
+    { type: 'p', text: "Here are a few simple yet effective tips to help you choose the right piece:" },
+
+    { type: 'h', text: "1. Understand Her Style" },
+    { type: 'p', text: "Start by observing her personal style. Does she prefer minimal and delicate pieces, bold statement jewellery, or classic timeless designs? Choosing jewellery that reflects her personality ensures that your gift feels personal and thoughtful. Minimalist designs are often a safe and elegant choice, especially if you are unsure of her exact preferences." },
+
+    { type: 'h', text: "2. Go for Versatility" },
+    { type: 'p', text: "Versatile jewellery is always appreciated because it can be worn across different occasions. Look for pieces that she can style with both casual and formal outfits. Everyday wear options, such as simple rings, bracelets, or earrings, make a practical yet beautiful <strong>jewellery gift for her</strong>." },
+
+    { type: 'h', text: "3. Choose Timeless Designs" },
+    { type: 'p', text: "Trends may change, but timeless designs remain relevant. Minimalist jewellery, clean shapes, and elegant finishes never go out of style. By choosing classic pieces, you ensure that your gift stays fashionable and wearable for years to come." },
+
+    { type: 'h', text: "4. Consider Layering Options" },
+    { type: 'p', text: "Layering has become a popular styling trend in modern jewellery. Pieces that can be stacked or layered—like rings, bracelets, or necklaces—offer more flexibility and creativity in styling. This allows her to mix and match different pieces to create her own unique look." },
+    { type: 'p', text: "By keeping these points in mind, you can confidently select a <strong>gift for her jewellery</strong> that feels thoughtful, stylish, and meaningful. The right piece will not only complement her wardrobe but also become something she values and enjoys wearing every day." },
+
+    { type: 'h', text: "Perfect Occasions for Jewellery Gifts" },
+    { type: 'p', text: "Jewellery is one of the most versatile and meaningful gifts you can give, making it perfect for celebrating life's most special moments. A thoughtfully chosen <strong>jewellery gift for her</strong> goes beyond the occasion—it becomes a lasting memory she can wear and cherish every day. Whether it's a grand celebration or a simple, heartfelt gesture, jewellery always feels personal and timeless." },
+
+    { type: 'h', text: "Celebrate Every Special Moment" },
+    { type: 'p', text: "<strong>Celebrate Every Special Moment:</strong><br/>• <strong>Birthday Gifts:</strong> Make her birthday unforgettable with a piece of jewellery that reflects her personality and style. Whether it's something minimal for everyday wear or a slightly statement design, it's a gift she'll treasure long after the celebration.<br/>• <strong>Anniversary Surprises:</strong> Jewellery beautifully symbolizes love and commitment, making it an ideal anniversary gift. A carefully chosen piece can represent your journey together and serve as a lasting reminder of your bond.<br/>• <strong>Valentine's Day Gifts:</strong> Express your love with elegant and meaningful jewellery. From delicate rings to charming pendants, a <strong>jewellery gift for her</strong> on Valentine's Day adds a romantic and thoughtful touch.<br/>• <strong>Christmas Gifts:</strong> The festive season is the perfect time to give something timeless and special. Jewellery makes for a memorable Christmas gift that she can wear throughout the year.<br/>• <strong>Just Because Moments:</strong> Sometimes, the most meaningful gifts are the unexpected ones. A spontaneous <strong>gift for her jewellery</strong> can brighten her day and show appreciation without needing a specific occasion." },
+    { type: 'p', text: "No matter the celebration, a well-chosen <strong>jewellery gift for her</strong> always feels special, thoughtful, and deeply meaningful. It's more than just a present—it's a lasting expression of love, style, and connection that she will carry with her every day." },
+
+    { type: 'h', text: "Trending Jewellery Gift Ideas for Her" },
+    { type: 'p', text: "Staying updated with current trends can help you choose a <strong>jewellery gift for her</strong> that feels modern and stylish. While timeless pieces are always a great choice, trending designs add a fresh and fashionable touch to your gift." },
+    { type: 'p', text: "<strong>Some popular trends include:</strong><br/>• <strong>Layered Necklaces: </strong>Perfect for creating a stylish, stacked look<br/>• <strong>Stackable Rings:</strong> Minimal rings that can be worn together<br/>•<strong> Charm Bracelets: </strong>Personal and meaningful gifting options<br/>• <strong>Minimal Stud Earrings:</strong> Clean, everyday essentials<br/>• <strong>Dainty Pendants:</strong> Subtle yet elegant statement pieces" },
+    { type: 'p', text: "At Barosche, we blend these trends with timeless design, ensuring your gift remains stylish for years to come." },
+
+    { type: 'h', text: "Personalised Jewellery Gifts for Her" },
+    { type: 'p', text: "Nothing feels more special than a personalised <strong>gift for her jewellery</strong>. Adding a personal touch transforms a beautiful accessory into a meaningful keepsake." },
+    { type: 'p', text: "<strong>You can choose jewellery that reflects the following:</strong><br/>• Her personality and style<br/>• Important milestones or memories<br/>• Everyday preferences and lifestyle" },
+    { type: 'p', text: "Even minimalist jewellery can feel deeply personal when chosen thoughtfully. At Barosche, our designs are versatile enough to feel unique to every wearer." },
+
+    { type: 'h', text: "Jewellery Care Tips – Keep Her Gift Shining" },
+    { type: 'p', text: "A <strong>jewellery gift for her</strong> becomes even more valuable when it lasts for years. Proper care ensures that each piece maintains its shine and elegance." },
+    { type: 'p', text: "<strong>Simple Care Tips:</strong><br/>• Store jewellery in a dry, soft-lined box<br/>• Avoid contact with water, perfumes, and chemicals<br/>• Clean gently with a soft cloth after use<br/>• Remove before workouts or heavy activities" },
+    { type: 'p', text: "With the right care, Barosche jewellery will continue to look beautiful and elegant over time." },
+
+    { type: 'h', text: "Why Choose Barosche for Jewellery Gifts?" },
+    { type: 'p', text: "At Barosche, we believe jewellery should be more than just visually beautiful—it should be effortlessly wearable, meaningful, and a natural part of everyday life. Our approach focuses on creating pieces that combine modern elegance with practical design, ensuring that every <strong>jewellery gift for her</strong> feels both special and easy to wear." },
+    { type: 'p', text: "We understand that today's jewellery needs to be versatile, timeless, and comfortable. That's why every Barosche piece is thoughtfully designed to complement her daily style while still standing out with a refined, luxurious touch. Whether it's for a special occasion or everyday wear, our jewellery is created to fit seamlessly into her lifestyle." },
+
+    { type: 'h', text: "What Makes Us Different" },
+    { type: 'p', text: "<br/>•<strong> Minimalist Luxury Designs:</strong> Our jewellery reflects a clean, modern aesthetic that balances simplicity with sophistication—perfect for those who appreciate understated elegance.<br/>•<strong> High-Quality Craftsmanship: </strong>Each piece is carefully crafted with attention to detail, ensuring durability, comfort, and a premium finish that lasts over time.<br/>• <strong>Perfect for Gifting: </strong>Every design is created with gifting in mind, making it easy to find a meaningful <strong>gift for her jewellery</strong> that feels personal and thoughtful.<br/>• <strong>Designed for Everyday Elegance: </strong>Our collections are made to be worn daily, allowing her to enjoy style and comfort without compromise." },
+    { type: 'p', text: "Each Barosche piece is a reflection of thoughtful design, combining sophistication with simplicity. When you choose Barosche, you're not just selecting <a href='/https://barosche.com/'>fine jewellery </a>—you're choosing a timeless expression of style, quality, and meaning that she can cherish every day." },
+    { type: 'p', text: "A thoughtful jewellery gift for her is more than just an accessory—it's a symbol of love, care, and appreciation. At Barosche, we create jewellery that blends elegance with simplicity, making every piece perfect for gifting and everyday wear." },
+    { type: 'p', text: "Explore our collection and find the perfect piece that she will cherish every day." },
 ];
 
 const flattenFashionContent = (content) => content.map((item) => item.text);
@@ -351,12 +362,13 @@ const rebuildFaq = (translatedArr) => {
 const TOP_OFFSET = 40;
 
 // ───────
-//  HELPER
+//  HELPER — ab videos bhi return karega (Rings.js jaisa pattern)
 // ───────
 function getFirstVariant(product) {
     if (product.variants && product.variants.length > 0) return product.variants[0];
     return {
         images: product.images || [],
+        videos: product.videos || [],
         oldPrice: product.oldPrice,
         newPrice: product.newPrice,
         isSale: product.isSale || false,
@@ -387,14 +399,44 @@ function Toast({ message, visible }) {
 }
 
 // ─────────────────────────────────────────────────────────
-//  QUICK VIEW MODAL
+//  QUICK VIEW MODAL — image + video support (Rings.js pattern)
 // ─────────────────────────────────────────────────────────
 function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist, onToggleWishlist }) {
-    const [activeImg, setActiveImg] = useState(0);
     const [qty, setQty] = useState(1);
     const variant = getFirstVariant(product);
     const images = variant.images || [];
+    const videos = variant.videos || [];
     const categoryUrl = categorySlugMap[product.category] || 'jewellery';
+
+    // ── mediaList: pehli image, phir video (agar hai), phir baaki images ──
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [activeIdx, setActiveIdx] = useState(0);
+    const videoRef = useRef(null);
+    const activeItem = mediaList[activeIdx] || null;
+
+    // Jab active slide video ho, use play karo (aur reset se)
+    useEffect(() => {
+        if (activeItem?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [activeIdx, activeItem]);
+
+    // Modal band hote hi video pause ho jaye
+    useEffect(() => {
+        return () => {
+            if (videoRef.current) {
+                videoRef.current.pause();
+            }
+        };
+    }, [activeIdx]);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -408,18 +450,52 @@ function QuickViewModal({ product, currency, ui, onClose, onAddToCart, wishlist,
             <div style={{ background: '#fff', borderRadius: '8px', maxWidth: '860px', width: '100%', maxHeight: '90vh', overflow: 'auto', display: 'flex', flexDirection: 'row', position: 'relative', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
                 <button onClick={onClose} style={{ position: 'absolute', top: '12px', right: '16px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#555', zIndex: 1, lineHeight: 1 }} aria-label="Close">✕</button>
 
-                {/* Images */}
+                {/* Images / Video */}
                 <div style={{ flex: '1 1 300px', minWidth: '240px', padding: '24px 16px 24px 24px' }}>
                     <div style={{ background: '#f7f6f4', borderRadius: '6px', aspectRatio: '1/1', overflow: 'hidden', marginBottom: '12px' }}>
-                        {images.length > 0
-                            ? <img src={`${API_BASE}${images[activeImg]}`} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
-                            : <img src="/placeholder.jpg" alt="placeholder" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                        {activeItem ? (
+                            activeItem.type === 'video' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={`${API_BASE}${activeItem.src}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    muted
+                                    playsInline
+                                    loop
+                                    controls
+                                />
+                            ) : (
+                                <img src={`${API_BASE}${activeItem.src}`} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                            )
+                        ) : (
+                            <img src="/placeholder.jpg" alt="placeholder" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
                     </div>
-                    {images.length > 1 && (
+                    {mediaList.length > 1 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {images.map((img, i) => (
-                                <button key={i} onClick={() => setActiveImg(i)} style={{ width: '54px', height: '54px', padding: 0, border: i === activeImg ? '2px solid #1a1a1a' : '2px solid transparent', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', background: '#f7f6f4' }}>
-                                    <img src={`${API_BASE}${img}`} alt={`view ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                            {mediaList.map((item, i) => (
+                                <button key={i} onClick={() => setActiveIdx(i)} style={{ width: '54px', height: '54px', padding: 0, border: i === activeIdx ? '2px solid #1a1a1a' : '2px solid transparent', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', background: '#f7f6f4', position: 'relative' }}>
+                                    {item.type === 'video' ? (
+                                        <>
+                                            <video
+                                                src={`${API_BASE}${item.src}`}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                muted
+                                                playsInline
+                                            />
+                                            <span style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'rgba(0,0,0,0.25)', pointerEvents: 'none',
+                                            }}>
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="#fff">
+                                                    <path d="M4 2.5v11l10-5.5-10-5.5z" />
+                                                </svg>
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <img src={`${API_BASE}${item.src}`} alt={`view ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/placeholder.jpg'; }} />
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -485,23 +561,87 @@ function AccordionItem({ title, children }) {
 }
 
 // ─────────────────────────────────────────────────────────
-//  PRODUCT CARD
+//  PRODUCT CARD — image + video hover cycling (Rings.js pattern)
 // ─────────────────────────────────────────────────────────
 function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView }) {
     const variant = getFirstVariant(p);
     const images = variant.images || [];
-    const [currentImg, setCurrentImg] = useState(0);
-    const intervalRef = useRef(null);
+    const videos = variant.videos || [];
+
+    const mediaList = useMemo(() => {
+        const list = [];
+        if (images.length > 0) list.push({ type: 'image', src: images[0] });
+        if (videos.length > 0) list.push({ type: 'video', src: videos[0] });
+        images.slice(1).forEach((img) => list.push({ type: 'image', src: img }));
+        return list;
+    }, [images, videos]);
+
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const videoRef = useRef(null);
+    const imageTimerRef = useRef(null);
+    const hoveringRef = useRef(false);
+
+    const clearImageTimer = () => {
+        if (imageTimerRef.current) {
+            clearTimeout(imageTimerRef.current);
+            imageTimerRef.current = null;
+        }
+    };
+
+    const advanceTo = (idx) => {
+        setCurrentIdx(idx);
+        scheduleFrom(idx);
+    };
+
+    const scheduleFrom = (idx) => {
+        clearImageTimer();
+        const item = mediaList[idx];
+        if (!item || mediaList.length <= 1) return;
+        if (item.type === 'image') {
+            imageTimerRef.current = setTimeout(() => {
+                if (!hoveringRef.current) return;
+                const next = (idx + 1) % mediaList.length;
+                advanceTo(next);
+            }, 800);
+        }
+    };
+
+    const handleVideoEnded = () => {
+        if (!hoveringRef.current) return;
+        const next = (currentIdx + 1) % mediaList.length;
+        advanceTo(next);
+    };
 
     const startHover = () => {
-        if (images.length <= 1) return;
-        let idx = 1;
-        intervalRef.current = setInterval(() => { setCurrentImg(idx); idx = (idx + 1) % images.length; }, 800);
+        if (mediaList.length <= 1) return;
+        hoveringRef.current = true;
+        const next = 1 % mediaList.length;
+        advanceTo(next);
     };
-    const stopHover = () => { clearInterval(intervalRef.current); setCurrentImg(0); };
-    useEffect(() => () => clearInterval(intervalRef.current), []);
 
-    const imgSrc = images.length > 0 ? `${API_BASE}${images[currentImg]}` : "/placeholder.jpg";
+    const stopHover = () => {
+        hoveringRef.current = false;
+        clearImageTimer();
+        setCurrentIdx(0);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    };
+
+    // Jab bhi current slide video ho, use (re)play karo
+    useEffect(() => {
+        const item = mediaList[currentIdx];
+        if (item?.type === 'video' && videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIdx, mediaList]);
+
+    useEffect(() => () => clearImageTimer(), []);
+
+    const currentItem = mediaList[currentIdx] || (images.length > 0 ? { type: 'image', src: images[0] } : null);
+
     const oldPrice = variant.oldPrice;
     const newPrice = variant.newPrice;
     const isSale = variant.isSale;
@@ -511,10 +651,30 @@ function ProductCard({ p, wishlist, toggleWishlist, currency, ui, onQuickView })
         <Link href={`/product-category/${categoryUrl}/${p.slug}`} className="jw-card" onMouseEnter={startHover} onMouseLeave={stopHover}>
             <div className="jw-card-img-wrap">
                 {isSale && <span className="jw-sale-badge">{ui.sale}</span>}
-                <img src={imgSrc} alt={p.title} className="jw-card-img" loading="lazy" onError={(e) => { e.target.src = "/placeholder.jpg"; }} />
-                {images.length > 1 && (
+
+                {currentItem?.type === 'video' ? (
+                    <video
+                        ref={videoRef}
+                        src={`${API_BASE}${currentItem.src}`}
+                        className="jw-card-img"
+                        muted
+                        playsInline
+                        autoPlay
+                        onEnded={handleVideoEnded}
+                    />
+                ) : (
+                    <img
+                        src={currentItem ? `${API_BASE}${currentItem.src}` : "/placeholder.jpg"}
+                        alt={p.title}
+                        className="jw-card-img"
+                        loading="lazy"
+                        onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+                    />
+                )}
+
+                {mediaList.length > 1 && (
                     <div className="jw-img-dots">
-                        {images.map((_, i) => <span key={i} className={`jw-img-dot ${i === currentImg ? 'jw-img-dot--active' : ''}`} />)}
+                        {mediaList.map((_, i) => <span key={i} className={`jw-img-dot ${i === currentIdx ? 'jw-img-dot--active' : ''}`} />)}
                     </div>
                 )}
                 <div className="jw-card-actions">
@@ -825,11 +985,33 @@ export default function GiftsForHer() {
               <div className="jw-bottom-accordions">
                         <AccordionItem title={ui.fashionJewellery}>
                             <div className="jw-accordion-text">
-                                {translatedFashionContent.map((item, i) =>
-                                    item.type === 'h'
-                                        ? <h3 key={i} className="jw-accordion-heading" dangerouslySetInnerHTML={{ __html: item.text }} />
-                                        : <p key={i} dangerouslySetInnerHTML={{ __html: item.text }} />
-                                )}
+                                {translatedFashionContent.map((item, i) => {
+                                    if (item.type === 'h' || item.type === 'h2') {
+                                        return <h2 key={i} className="jw-accordion-heading" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    if (item.type === 'h3') {
+                                        return <h3 key={i} className="jw-accordion-subheading" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    if (item.type === 'h3link') {
+                                        return (
+                                            <h3 key={i} className="jw-accordion-subheading">
+                                                <Link href={item.href} style={{ color: '#007bff', textDecoration: 'underline' }}>
+                                                    <span dangerouslySetInnerHTML={{ __html: item.text }} />
+                                                </Link>
+                                            </h3>
+                                        );
+                                    }
+                                    if (item.type === 'h4') {
+                                        return <h4 key={i} className="jw-accordion-subsubheading" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    if (item.type === 'ul') {
+                                        return <ul key={i} className="jw-accordion-list" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    if (item.type === 'ol') {
+                                        return <ol key={i} className="jw-accordion-list" dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                    }
+                                    return <p key={i} dangerouslySetInnerHTML={{ __html: item.text }} />;
+                                })}
                             </div>
                         </AccordionItem>
                         <AccordionItem title={ui.faq}>

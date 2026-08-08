@@ -43,9 +43,6 @@ function formatDate(dateStr) {
   }
 }
 
-// ✅ Single source of truth for building a blog's URL.
-// Always prefer urlHandle (same field the main Blog listing page uses),
-// fall back to slug only if urlHandle isn't present.
 function getBlogUrlKey(blog) {
   return blog?.urlHandle || blog?.slug || "";
 }
@@ -160,7 +157,8 @@ export default function LatestBlog() {
   );
 
   return (
-    <section className="latest-blog-section">
+    <>
+     <section className="latest-blog-section">
       <div className="latest-blog-header">
         <h2 className="latest-blog-heading">{uiText.heading}</h2>
         <p className="latest-blog-subheading">{uiText.subheading}</p>
@@ -217,5 +215,6 @@ export default function LatestBlog() {
           })}
       </div>
     </section>
+    </>
   );
 }

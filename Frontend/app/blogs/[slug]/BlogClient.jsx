@@ -21,7 +21,7 @@ function resolveImage(img) {
   if (!img) return "/placeholder.png";
   return img.startsWith("http") ? img : `${BACKEND_URL}${img}`;
 }
-
+  
 function stripUnderlineTags(text) {
   if (!text) return "";
   return text.replace(/<\/?u[^>]*>/gi, "");
@@ -40,8 +40,6 @@ export default function BlogClient({ initialBlog = null, slug = null }) {
 
   const skippedInitialFetch = useRef(false);
 
-  // STEP 1: Agar SSR se blog nahi mila (build-time list-match fail hua),
-  // client-side fallback fetch karo — yeh safety net hai
   useEffect(() => {
     async function fetchFallback() {
       if (initialBlog || !slug || slug === "placeholder") {
@@ -59,7 +57,6 @@ export default function BlogClient({ initialBlog = null, slug = null }) {
       }
     }
     fetchFallback();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, initialBlog]);
 
   // STEP 2: Translation
